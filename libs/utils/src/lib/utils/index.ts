@@ -25,8 +25,8 @@ import { Platform } from '../hooks/platform';
 import {
 	ChannelMembersEntity,
 	EBacktickType,
-	EMimeTypes,
 	ETokenMessage,
+	EUserStatus,
 	IAttachmentEntity,
 	IChannel,
 	IEmojiOnMessage,
@@ -47,6 +47,7 @@ import {
 	UsersClanEntity
 } from '../types';
 import { Foreman } from './foreman';
+import { isMezonCdnUrl, isTenorUrl } from './urlSanitization';
 import { getPlatform } from './windowEnvironment';
 export * from './animateScroll';
 export * from './audio';
@@ -187,12 +188,20 @@ export const calculateTotalCount = (senders: SenderInfoOptionals[]) => {
 };
 
 export const notImplementForGifOrStickerSendFromPanel = (data: ApiMessageAttachment) => {
-	if (data.url?.includes('tenor.com') || data.filetype === 'image/gif') {
+	if (isTenorUrl(data.url) || data.filetype === 'image/gif') {
 		return true;
 	} else {
 		return false;
 	}
 };
+
+export {
+	isFromAllowedDomain,
+	isMezonCdnUrl,
+	isSecureAttachmentUrl,
+	sanitizeUrl as sanitizeUrlSecure,
+	type SecureURLOptions
+} from './urlSanitization';
 
 export const getVoiceChannelName = (clanName?: string, channelLabel?: string) => {
 	return clanName?.replace(' ', '-') + '-' + channelLabel?.replace(' ', '-');
@@ -687,8 +696,8 @@ export async function getWebUploadedAttachments(payload: {
 	if (!attachments || attachments?.length === 0) {
 		return [];
 	}
-	const directLinks = attachments.filter((att) => att.url?.includes(EMimeTypes.tenor) || att.url?.includes(EMimeTypes.cdnmezon));
-	const nonDirectAttachments = attachments.filter((att) => !att.url?.includes(EMimeTypes.tenor) && !att.url?.includes(EMimeTypes.cdnmezon));
+	const directLinks = attachments.filter((att) => isTenorUrl(att.url) || isMezonCdnUrl(att.url));
+	const nonDirectAttachments = attachments.filter((att) => !isTenorUrl(att.url) && !isMezonCdnUrl(att.url));
 
 	if (nonDirectAttachments.length > 0) {
 		const uploadPromises = nonDirectAttachments.map(async (attachment, index) => {
@@ -750,8 +759,8 @@ export async function getMobileUploadedAttachments(payload: {
 	if (!attachments || attachments?.length === 0) {
 		return [];
 	}
-	const directLinks = attachments.filter((att) => att.url?.includes(EMimeTypes.tenor) || att.url?.includes(EMimeTypes.cdnmezon));
-	const nonDirectAttachments = attachments.filter((att) => !att.url?.includes(EMimeTypes.tenor) && !att.url?.includes(EMimeTypes.cdnmezon));
+	const directLinks = attachments.filter((att) => isTenorUrl(att.url) || isMezonCdnUrl(att.url));
+	const nonDirectAttachments = attachments.filter((att) => !isTenorUrl(att.url) && !isMezonCdnUrl(att.url));
 
 	if (nonDirectAttachments.length > 0) {
 		const uploadPromises = nonDirectAttachments.map(async (att) => {
@@ -1161,6 +1170,7 @@ export function isYouTubeLink(url: string): boolean {
 }
 
 export function getYouTubeEmbedUrl(url: string): string {
+	// check xss
 	const match = url.match(/(?:youtube\.com\/(?:watch\?v=|v\/|e\/|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
 	return match ? `https://www.youtube.com/embed/${match[1]}` : '';
 }
@@ -1258,4 +1268,30 @@ export const mapChannelToAppEntity = (
 		id: timestamp,
 		url: payload.app_url
 	};
+};
+
+export const getIdSaleItemFromSource = (src: string) => {
+	const fileName = src.split('/').pop() || '';
+	const idFromSource = fileName.split('.').slice(0, -1).join('.') || '';
+	return idFromSource;
+};
+
+export const saveParseUserStatus = (metadata: string): { status: string; user_status: EUserStatus } => {
+	try {
+		const statusParse = safeJSONParse(metadata || '{}') || '';
+		return {
+			status: typeof statusParse.status === 'string' ? statusParse.status : JSON.stringify(statusParse.status) || '',
+			user_status: statusParse.user_status || EUserStatus.ONLINE
+		};
+	} catch (e) {
+		const unescapedJSON = metadata?.replace(/\\./g, (match) => {
+			switch (match) {
+				case '\\"':
+					return '"';
+				default:
+					return match[1];
+			}
+		});
+		return safeJSONParse(unescapedJSON || '{}')?.status;
+	}
 };

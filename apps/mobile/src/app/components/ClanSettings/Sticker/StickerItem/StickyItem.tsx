@@ -1,7 +1,6 @@
 import { useClanRestriction } from '@mezon/core';
 import { baseColor, size, useTheme } from '@mezon/mobile-ui';
-import { deleteSticker, selectMemberClanByUserId2, updateSticker, useAppDispatch } from '@mezon/store';
-import { selectCurrentUserId, useAppSelector } from '@mezon/store-mobile';
+import { deleteSticker, selectCurrentUserId, selectMemberClanByUserId2, updateSticker, useAppDispatch, useAppSelector } from '@mezon/store-mobile';
 import { EPermission } from '@mezon/utils';
 import { ClanSticker } from 'mezon-js';
 import React, { Ref, forwardRef, useCallback, useMemo, useState } from 'react';
@@ -104,25 +103,35 @@ export const StickerSettingItem = forwardRef(({ data, clanID, onSwipeOpen }: ISt
 	}, [sticker, stickerName]);
 
 	return (
-		<Swipeable ref={ref} renderRightActions={renderRightAction} onSwipeableWillOpen={handleSwipeOpen} enabled={hasDeleteOrEditPermission}>
+		<Swipeable
+			ref={ref}
+			renderRightActions={renderRightAction}
+			onSwipeableWillOpen={handleSwipeOpen}
+			enabled={hasDeleteOrEditPermission}
+			childrenContainerStyle={{ marginBottom: -size.s_10 }}
+		>
 			<View style={styles.container}>
 				<View style={styles.flexRow}>
 					<FastImage
 						source={{ uri: sticker.source ? sticker.source : `${process.env.NX_BASE_IMG_URL}/stickers/` + sticker.id + `.webp` }}
-						style={{ height: size.s_40, width: size.s_40 }}
+						style={{ height: size.s_36, width: size.s_36 }}
 					/>
 
-					<TextInput
-						value={stickerName}
-						style={{ color: themeValue.text }}
-						onChangeText={setStickerName}
-						onBlur={handleUpdateSticker}
-						editable={hasDeleteOrEditPermission}
-					/>
+					<View style={styles.stickerName}>
+						<TextInput
+							value={stickerName}
+							style={styles.lightTitle}
+							onChangeText={setStickerName}
+							onBlur={handleUpdateSticker}
+							editable={hasDeleteOrEditPermission}
+						/>
+					</View>
 				</View>
 
 				<View style={styles.flexRow}>
-					<Text style={styles.text}>{user?.user?.username}</Text>
+					<Text style={styles.text} numberOfLines={1}>
+						{user?.user?.username}
+					</Text>
 					<MezonAvatar height={size.s_30} width={size.s_30} avatarUrl={user?.user?.avatar_url} username={user?.user?.username} />
 				</View>
 			</View>

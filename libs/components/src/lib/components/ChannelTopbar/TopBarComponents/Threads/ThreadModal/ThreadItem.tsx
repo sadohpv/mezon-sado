@@ -13,13 +13,14 @@ import {
 	useAppDispatch,
 	useAppSelector
 } from '@mezon/store';
-import { ChannelMembersEntity, IChannel, IChannelMember, convertTimeMessage } from '@mezon/utils';
+import { ChannelMembersEntity, IChannel, IChannelMember, convertTimeMessage, createImgproxyUrl } from '@mezon/utils';
+import { AvatarImage } from 'libs/components/src/lib/components';
 import { ChannelType } from 'mezon-js';
 import { MutableRefObject, useCallback, useMemo, useRef, useState } from 'react';
 import { useModal } from 'react-modal-hook';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import AvatarGroup, { AvatarCount, AvatarRound } from '../../../../Avatar/AvatarGroup';
+import AvatarGroup, { AvatarCount } from '../../../../Avatar/AvatarGroup';
 import { Coords } from '../../../../ChannelLink';
 import SettingChannel from '../../../../ChannelSetting';
 import { useMessageSender } from '../../../../MessageWithUser/useMessageSender';
@@ -149,16 +150,26 @@ const ThreadItem = ({ thread, setIsShowThread, isPublicThread = false, isHasCont
 	return (
 		<div
 			onClick={() => handleLinkThread(thread.channel_id as string, thread.clan_id || '')}
-			className="relative overflow-y-hidden p-4 mb-2 cursor-pointer rounded-lg h-[72px] dark:bg-bgPrimary bg-bgLightPrimary border border-transparent dark:hover:border-bgModifierHover hover:border-bgModifierHover hover:bg-bgLightModeButton"
+			className="relative overflow-y-hidden p-4 mb-2 cursor-pointer rounded-lg h-[72px] bg-item-theme"
 			role="button"
 			ref={panelRef}
 			onContextMenu={handlePannelThread}
 		>
 			<div className="flex flex-row justify-between items-center">
 				<div className="flex flex-col gap-1">
-					<p className="text-base font-semibold leading-5 dark:text-white text-black one-line">{thread?.channel_label}</p>
+					<p className="text-base font-semibold leading-5 one-line">{thread?.channel_label}</p>
 					<div className="flex flex-row items-center h-6">
-						<AvatarRound src={user?.clan_avatar ?? avatarImg} className="mr-2 h-4" />
+						<AvatarImage
+							alt={`${user?.user?.username}'s avatar`}
+							username={user?.user?.username}
+							className="size-4 rounded-md object-cover mr-2"
+							srcImgProxy={createImgproxyUrl(user?.clan_avatar || user?.user?.avatar_url || '', {
+								width: 300,
+								height: 300,
+								resizeType: 'fit'
+							})}
+							src={user?.clan_avatar || avatarImg}
+						/>
 						<span className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap text-[#17AC86] text-sm font-semibold leading-4">
 							{user?.clan_nick ?? user?.user?.display_name ?? username}:&nbsp;
 						</span>
@@ -167,14 +178,14 @@ const ThreadItem = ({ thread, setIsShowThread, isPublicThread = false, isHasCont
 						</div>
 						<div className="overflow-x-hidden">
 							<p className="text-xs font-medium leading-4 ml-2">
-								<span className="truncate dark:text-white text-colorTextLightMode">•&nbsp;{timeMessage}</span>
+								<span className="truncate text-theme-primary">•&nbsp;{timeMessage}</span>
 							</p>
 						</div>
 					</div>
 				</div>
 				<div className="w-[120px]">
 					{threadMembers && (
-						<AvatarGroup className="flex gap-3 justify-end items-center">
+						<AvatarGroup className="flex justify-end items-center">
 							{previewAvatarList?.map((avatar, index) => (
 								<img
 									key={(avatar.clan_avatar || avatar.user?.avatar_url || avatar.id) + index}

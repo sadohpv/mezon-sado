@@ -1,6 +1,6 @@
 import { useMemberContext } from '@mezon/core';
-import { Icons } from '@mezon/ui';
-import { Dropdown, Pagination } from 'flowbite-react';
+import { Icons, Menu } from '@mezon/ui';
+import { Pagination } from 'flowbite-react';
 import { useMemo, useState } from 'react';
 import MemberTopBar from './MemberTopBar';
 import TableMember from './TableMember';
@@ -23,48 +23,44 @@ const MemberClan = () => {
 	};
 
 	return (
-		<div className="flex flex-col flex-1 shrink min-w-0 w-full dark:bg-bgSecondaryHover bg-bgLightModeThird h-[100%] z-0 p-4 thread-scroll">
-			<div className="flex flex-col dark:bg-bgPrimary bg-bgLightMode rounded-lg dark:text-textDarkTheme text-textLightTheme">
+		<div className="flex flex-col flex-1 shrink min-w-0 w-full bg-theme-chat text-theme-primary h-[100%] z-0 p-4 thread-scroll">
+			<div className="flex flex-col rounded-lg">
 				<MemberTopBar />
 
 				<TableMember dataMember={filteredMembers} currentPage={currentPage} pageSize={pageSize} />
 
-				<div className="flex flex-row justify-between items-center px-4 h-[54px] border-t-[1px] dark:border-borderDivider border-buttonLightTertiary mb-2">
+				<div className="flex flex-row justify-between items-center px-4 h-[54px] my-2">
 					<div className={'flex flex-row items-center'}>
 						Show
-						<Dropdown
-							value={pageSize}
-							renderTrigger={() => (
-								<div
-									className={
-										'flex flex-row items-center justify-center text-center dark:bg-slate-800 bg-slate-300 dark:text-contentTertiary text-colorTextLightMode border-[1px] dark:border-borderDivider border-buttonLightTertiary rounded mx-1 px-3 w-12'
-									}
-								>
+						<Menu>
+							<Menu.Trigger>
+								<div className={'flex flex-row items-center justify-center text-center rounded mx-1 px-3 w-12'}>
 									<span className="mr-1">{pageSize}</span>
 									<Icons.ArrowDown />
 								</div>
-							)}
-							label={''}
-						>
-							<Dropdown.Item
-								className={'dark:hover:bg-bgModifierHover hover:bg-bgModifierHoverLight'}
-								onClick={() => handleChangePageSize(10)}
-							>
-								10
-							</Dropdown.Item>
-							<Dropdown.Item
-								className={'dark:hover:bg-bgModifierHover hover:bg-bgModifierHoverLight'}
-								onClick={() => handleChangePageSize(50)}
-							>
-								50
-							</Dropdown.Item>
-							<Dropdown.Item
-								className={'dark:hover:bg-bgModifierHover hover:bg-bgModifierHoverLight'}
-								onClick={() => handleChangePageSize(100)}
-							>
-								100
-							</Dropdown.Item>
-						</Dropdown>
+							</Menu.Trigger>
+
+							<Menu.Content>
+								<Menu.Item
+									className={'dark:hover:bg-bgModifierHover hover:bg-bgModifierHoverLight'}
+									onClick={() => handleChangePageSize(10)}
+								>
+									10
+								</Menu.Item>
+								<Menu.Item
+									className={'dark:hover:bg-bgModifierHover hover:bg-bgModifierHoverLight'}
+									onClick={() => handleChangePageSize(50)}
+								>
+									50
+								</Menu.Item>
+								<Menu.Item
+									className={'dark:hover:bg-bgModifierHover hover:bg-bgModifierHoverLight'}
+									onClick={() => handleChangePageSize(100)}
+								>
+									100
+								</Menu.Item>
+							</Menu.Content>
+						</Menu>
 						members of {filteredMembers.length}
 					</div>
 					<Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />

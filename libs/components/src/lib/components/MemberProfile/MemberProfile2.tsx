@@ -44,6 +44,8 @@ export const BaseMemberProfile = ({ id, creator_id }: BaseMemberProfileProps) =>
 
 	const isOffline = !userMeta?.online;
 
+	
+
 	return (
 		<div className={`relative group w-full ${isOffline ? 'opacity-50' : ''}`}>
 			<div onContextMenu={handleContextMenu} onClick={handleClick} className="cursor-pointer flex items-center gap-[9px] relative">
@@ -56,16 +58,14 @@ export const BaseMemberProfile = ({ id, creator_id }: BaseMemberProfileProps) =>
 						srcImgProxy={createImgproxyUrl(avatar ?? '')}
 						src={avatar}
 					/>
-					<div className="rounded-full right-[-4px] absolute bottom-0 inline-flex items-center justify-center gap-1 p-[3px] text-sm text-white dark:bg-bgSecondary bg-bgLightMode">
+					<div className="rounded-full right-[-4px] absolute bottom-0 inline-flex items-center justify-center gap-1 p-[3px] text-sm text-theme-primary">
 						<UserStatusIconClan status={userMeta?.status} online={userMeta?.online} />
 					</div>
 				</div>
 
 				<div className="flex flex-col font-medium">
 					<ClanUserName userId={user?.id} name={username} isOwnerClan={isOwnerClan} />
-					<p className="dark:text-channelTextLabel text-black w-full text-[12px] line-clamp-1 break-all max-w-[176px] ">
-						{userCustomStatus}
-					</p>
+					<p className="text-theme-primary w-full text-[12px] line-clamp-1 break-all max-w-[176px] ">{userCustomStatus}</p>
 				</div>
 			</div>
 		</div>
@@ -76,7 +76,7 @@ export function ClanUserName({ name, userId, isOwnerClan }: { name: string; user
 	const userRolesClan = useColorsRoleById(userId || '');
 
 	return (
-		<span className="one-line text-start" style={{ color: userRolesClan.highestPermissionRoleColor }}>
+		<span className="one-line text-start " style={{ color: userRolesClan.highestPermissionRoleColor }}>
 			{name}
 
 			{isOwnerClan && (

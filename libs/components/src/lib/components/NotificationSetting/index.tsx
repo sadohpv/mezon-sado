@@ -10,15 +10,16 @@ import {
 	selectCurrentClanId,
 	selectDefaultNotificationClan,
 	selectNotifiSettingsEntitiesById,
-	selectTheme,
-	useAppDispatch
+	useAppDispatch,
+	useAppSelector
 } from '@mezon/store';
-import { Modal } from '@mezon/ui';
-import { ICategoryChannel, IChannel, ThemeApp } from '@mezon/utils';
+import { Button } from '@mezon/ui';
+import { ICategoryChannel, IChannel } from '@mezon/utils';
 import { ChannelType } from 'mezon-js';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import Creatable from 'react-select/creatable';
+import { ModalLayout } from '../../components';
 import { notificationTypesList } from '../PanelChannel';
 export type ModalParam = {
 	onClose: () => void;
@@ -28,77 +29,51 @@ export type ModalParam = {
 export const customStyles = {
 	control: (provided: any) => ({
 		...provided,
-		backgroundColor: '#2B2D31'
+		backgroundColor: 'var(--bg-tertiary)',
+		borderRadius: '8px',
+		color: 'var(--text-secondary)'
 	}),
 	menu: (provided: any) => ({
 		...provided,
-		backgroundColor: 'bg-[#36393e]'
+		backgroundColor: 'var(--bg-option-theme)'
 	}),
 	option: (provided: any, state: any) => ({
 		...provided,
-		backgroundColor: state.isFocused ? '#36393e' : '#1f2023',
-		color: 'white'
+		backgroundColor: state.isFocused ? 'var(--bg-option-active)' : '',
+		color: 'var(--text-secondary)'
 	}),
 	multiValue: (provided: any) => ({
 		...provided,
-		backgroundColor: '#1f2023'
+		backgroundColor: 'var(--bg-tertiary)'
 	}),
 	multiValueLabel: (provided: any) => ({
 		...provided,
-		color: 'black'
+		color: 'var(--text-secondary)'
 	}),
 	multiValueRemove: (provided: any) => ({
 		...provided,
 		color: 'red',
 		':hover': {
-			backgroundColor: '#36393e',
-			color: 'white'
+			backgroundColor: 'var(--bg-tertiary)',
+			color: 'var(--text-secondary)'
 		}
 	}),
 	input: (provided: any) => ({
 		...provided,
-		color: '#FFFFFF'
-	})
-};
-
-export const lightCustomStyles = {
-	control: (provided: any) => ({
-		...provided,
-		backgroundColor: 'white'
+		color: 'var(--text-secondary)'
 	}),
-	menu: (provided: any) => ({
+	singleValue: (provided: any) => ({
 		...provided,
-		backgroundColor: 'bg-[#d5d6d7]'
-	}),
-	option: (provided: any, state: any) => ({
-		...provided,
-		backgroundColor: state.isFocused ? 'white' : '#e8e9e9',
-		color: 'black'
-	}),
-	multiValue: (provided: any) => ({
-		...provided,
-		backgroundColor: '#c5c6c7'
-	}),
-	multiValueLabel: (provided: any) => ({
-		...provided,
-		color: 'black'
-	}),
-	multiValueRemove: (provided: any) => ({
-		...provided,
-		color: 'red',
-		':hover': {
-			backgroundColor: '#cecfd0',
-			color: 'white'
-		}
+		color: 'var(--text-secondary)'
 	})
 };
 
 const ModalNotificationSetting = (props: ModalParam) => {
-	const appearanceTheme = useSelector(selectTheme);
 	const currentClan = useSelector(selectCurrentClan);
 	const defaultNotificationClan = useSelector(selectDefaultNotificationClan);
 	const currentChannel = useSelector(selectCurrentChannel);
-	const notificatonSelected = useSelector(selectNotifiSettingsEntitiesById(currentChannel?.id || ''));
+	const notificatonSelected = useAppSelector((state) => selectNotifiSettingsEntitiesById(state, currentChannel?.id || ''));
+
 	const channelCategorySettings = useSelector(selectAllchannelCategorySetting);
 	const currentClanId = useSelector(selectCurrentClanId);
 	const dispatch = useAppDispatch();
@@ -134,7 +109,7 @@ const ModalNotificationSetting = (props: ModalParam) => {
 	const [selectedOption, setSelectedOption] = useState(null);
 	const handleChange = (newValue: any) => {
 		setSelectedOption(newValue);
-		if (newValue.title === 'category') {
+		if (newValue?.title === 'category') {
 			dispatch(
 				defaultNotificationCategoryActions.setDefaultNotificationCategory({
 					category_id: newValue.id,
@@ -232,23 +207,25 @@ const ModalNotificationSetting = (props: ModalParam) => {
 	};
 
 	return (
-		<Modal
-			title="Notification Setting"
-			onClose={props.onClose}
-			showModal={props.open}
-			subTitleBox={`${currentClan?.clan_name}`}
-			classSubTitleBox="ml-[0px] cursor-default dark:text-zinc-400 text-colorTextLightMode"
-			borderBottomTitle="border-b "
-		>
-			<div>
-				<div className={`${appearanceTheme === 'light' ? 'customScrollLightMode' : ''}`}>
-					<div className="text-xs font-bold dark:text-textSecondary text-textSecondary800 uppercase mb-2">CLAN NOTIFICATION SETTINGS</div>
+		<ModalLayout onClose={props.onClose}>
+			<div className="flex flex-col bg-theme-setting-primary rounded-xl overflow-hidden max-w-[684px] w-screen">
+				<div className="flex-1 flex items-center justify-between border-b-theme-primary rounded-t p-4">
+					<div className="flex flex-col">
+						<p className="font-bold text-xl text-theme-primary-active">Notification Setting</p>
+						<p>{currentClan?.clan_name}</p>
+					</div>
+					<Button
+						className="rounded-full aspect-square w-6 h-6 text-5xl leading-3 !p-0 opacity-50 text-theme-primary-hover"
+						onClick={props.onClose}
+					>
+						×
+					</Button>
+				</div>
+				<div className={`px-5 py-4 max-h-[500px] overflow-y-auto hide-scrollbar`}>
+					<div className="text-xs font-bold  uppercase mb-2 text-theme-primary-active">CLAN NOTIFICATION SETTINGS</div>
 					<div className="space-y-2">
 						{notificationTypesList.map((notificationType, index) => (
-							<div
-								key={index}
-								className="flex items-center gap-x-3 p-[12px] dark:bg-bgModifierHover bg-bgModifierHoverLight hover:dark:bg-black hover:bg-bgLightModeButton rounded text-sm"
-							>
+							<div key={index} className="flex items-center gap-x-3 p-[12px]  rounded text-sm">
 								<input
 									type="radio"
 									id={`notification-${index}`}
@@ -264,39 +241,32 @@ const ModalNotificationSetting = (props: ModalParam) => {
 					</div>
 
 					<hr className="border-zinc-500 my-4" />
-					<div className="text-xs font-bold dark:text-textSecondary text-textSecondary800 uppercase mb-2">NOTIFICATION OVERRIDES</div>
-					<div className="text-sm font-normal dark:text-textSecondary text-textSecondary800 mb-2">
-						Add a channel to override its default notification settings
-					</div>
-					<div className={appearanceTheme === ThemeApp.Dark ? '' : 'lightModeScrollBarMention'}>
+					<div className="text-xs font-bold  uppercase mb-2 text-theme-primary-active">NOTIFICATION OVERRIDES</div>
+					<div className="text-sm font-normal  mb-2">Add a channel to override its default notification settings</div>
+					<div className="bg-theme-setting-primary">
 						<Creatable
 							isClearable
 							onChange={handleChange}
 							options={options}
 							value={selectedOption}
 							placeholder="Select or create an option..."
-							styles={appearanceTheme === ThemeApp.Dark ? customStyles : lightCustomStyles}
+							styles={customStyles}
 						/>
 					</div>
-					<div className={`mt-4 overflow-visible ${appearanceTheme === 'light' ? 'customScrollLightMode' : ''} `}>
+					<div className={`mt-4 overflow-visible bg-theme-setting-primary `}>
 						<table className="w-full mt-4 hide-scrollbar overflow-hidden space-y-2">
 							<thead>
-								<tr className="grid grid-cols-7">
-									<th className="text-xs font-bold dark:text-white text-colorTextLightMode uppercase mb-2 col-span-3">
-										CHANNEL OR CATEGORY
-									</th>
-									<th className="text-xs font-bold dark:text-white text-colorTextLightMode uppercase mb-2 col-span-1">ALL</th>
-									<th className="text-xs font-bold dark:text-white text-colorTextLightMode uppercase mb-2 col-span-1">MENTIONS</th>
-									<th className="text-xs font-bold dark:text-white text-colorTextLightMode uppercase mb-2 col-span-1">NOTHING</th>
-									<th className="text-xs font-bold dark:text-white text-colorTextLightMode uppercase mb-2 col-span-1">Mute</th>
+								<tr className="grid grid-cols-7 text-theme-primary-active">
+									<th className="text-xs font-bold  uppercase mb-2 text-theme-primary-active col-span-3">CHANNEL OR CATEGORY</th>
+									<th className="text-xs font-bold  uppercase mb-2 text-theme-primary-active col-span-1">ALL</th>
+									<th className="text-xs font-bold  uppercase mb-2 text-theme-primary-active col-span-1">MENTIONS</th>
+									<th className="text-xs font-bold  uppercase mb-2 text-theme-primary-active col-span-1">NOTHING</th>
+									<th className="text-xs font-bold  uppercase mb-2 text-theme-primary-active col-span-1">Mute</th>
 								</tr>
 							</thead>
 							<tbody>
 								{sortedChannelCategorySettings.map((channelCategorySetting) => (
-									<tr
-										key={channelCategorySetting.id}
-										className="group relative grid grid-cols-7 mb-2.5 dark:bg-bgModifierHover bg-bgModifierHoverLight hover:dark:bg-black hover:bg-bgLightModeButton rounded p-[10px]"
-									>
+									<tr key={channelCategorySetting.id} className="group relative grid grid-cols-7 mb-2.5  rounded p-[10px]">
 										<td className="col-span-3">{channelCategorySetting.channel_category_label}</td>
 										{notificationTypesList.map((notificationType) => (
 											<td key={notificationType.value} className="col-span-1 text-center">
@@ -328,7 +298,7 @@ const ModalNotificationSetting = (props: ModalParam) => {
 												}
 											/>
 											<button
-												className="absolute top-0 right-0 text-red-500 rounded-full dark:bg-white bg-bgLightModeThird size-[15px] justify-center items-center hidden group-hover:flex px-3 py-3"
+												className="absolute top-0 right-0 text-red-500 rounded-full  size-[15px] justify-center items-center hidden group-hover:flex px-3 py-3"
 												onClick={() =>
 													handleRemoveOverride(
 														channelCategorySetting.channel_category_title || '',
@@ -348,7 +318,7 @@ const ModalNotificationSetting = (props: ModalParam) => {
 					</div>
 				</div>
 			</div>
-		</Modal>
+		</ModalLayout>
 	);
 };
 export default ModalNotificationSetting;

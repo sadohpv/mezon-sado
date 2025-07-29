@@ -25,19 +25,18 @@ import {
 	removeDuplicatesById,
 	sortFilteredList
 } from '@mezon/utils';
-import { Modal } from 'flowbite-react';
 import debounce from 'lodash.debounce';
 import { ChannelType } from 'mezon-js';
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { ModalLayout } from '../../components';
 import { ListGroupSearchModal } from './ListGroupSeacrhModal';
 
 export type SearchModalProps = {
-	readonly open: boolean;
 	onClose: () => void;
 };
 
-function SearchModal({ open, onClose }: SearchModalProps) {
+function SearchModal({ onClose }: SearchModalProps) {
 	const dispatch = useAppDispatch();
 	const allClanUsersEntitiesRef = useRef(useSelector(selectEntitesUserClans));
 	const dmGroupChatListRef = useRef(useAppSelector(selectAllDirectMessages));
@@ -323,19 +322,15 @@ function SearchModal({ open, onClose }: SearchModalProps) {
 	);
 
 	return (
-		<Modal
-			show={open}
-			dismissible={true}
-			onClose={onClose}
-			className="bg-[#111111] text-contentPrimary bg-opacity-90 focus-visible:[&>*]:outline-none"
-		>
-			<Modal.Body className="dark:bg-[#36393e] bg-bgLightMode px-6 py-4 rounded-[6px] h-[200px] w-full">
+		<ModalLayout onClose={onClose}>
+			<div className=" relative z-10 !w-[640px] px-6 py-4 rounded-[6px] shadow-shadowBorder bg-modal-theme">
 				<div className="flex flex-col">
 					<InputField
 						type="text"
 						placeholder="Where would you like to go?"
-						className="py-[18px] dark:bg-bgTertiary bg-bgLightModeThird dark:text-textDarkTheme text-textLightTheme text-[16px] mt-2 mb-[15px]"
+						className="py-[18px] text-[16px] mt-2 mb-[15px] bg-input-secondary rounded-lg text-theme-message border-theme-primary"
 						onChange={(e) => debouncedSetSearchText(e.target.value)}
+						autoFocus
 					/>
 				</div>
 				<ListGroupSearchModal
@@ -345,8 +340,8 @@ function SearchModal({ open, onClose }: SearchModalProps) {
 					handleItemClick={handleItemClick}
 				/>
 				<FooterNoteModal />
-			</Modal.Body>
-		</Modal>
+			</div>
+		</ModalLayout>
 	);
 }
 
@@ -355,7 +350,7 @@ export default memo(SearchModal);
 const FooterNoteModal = memo(() => {
 	return (
 		<div className="pt-2">
-			<span className="text-[13px] font-medium dark:text-contentTertiary text-textLightTheme">
+			<span className="text-[13px] font-medium text-theme-primary">
 				<span className="text-[#2DC770] opacity-100 font-bold">PROTIP: </span>Start searches with @, # to narrow down results.
 			</span>
 		</div>

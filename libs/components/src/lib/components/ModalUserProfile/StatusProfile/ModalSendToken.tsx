@@ -1,14 +1,12 @@
-import { FriendsEntity, ISendTokenDetailType, selectAllFriends, selectAllUserClans } from '@mezon/store';
-import { Icons } from '@mezon/ui';
+import { FriendsEntity, ISendTokenDetailType, selectAllFriends, selectAllUsersByUser, UsersEntity } from '@mezon/store';
+import { ButtonLoading, Icons } from '@mezon/ui';
 import { createImgproxyUrl, formatNumber } from '@mezon/utils';
-import { Label, Modal } from 'flowbite-react';
 import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { AvatarImage, useVirtualizer } from '../../../components';
+import { AvatarImage, ModalLayout, useVirtualizer } from '../../../components';
 
 type ModalSendTokenProps = {
-	openModal: boolean;
-	onClose?: () => void;
+	onClose: () => void;
 	token: number;
 	setToken: (token: number) => void;
 	setSelectedUserId: (id: string) => void;
@@ -27,8 +25,14 @@ type ModalSendTokenProps = {
 	isButtonDisabled: boolean;
 };
 
+type User = {
+	id: string;
+	username: string;
+	avatar_url: string;
+	search_key?: string;
+	display_name?: string;
+};
 const ModalSendToken = ({
-	openModal,
 	onClose,
 	token,
 	setToken,
@@ -44,9 +48,8 @@ const ModalSendToken = ({
 	infoSendToken,
 	isButtonDisabled
 }: ModalSendTokenProps) => {
-	const usersClan = useSelector(selectAllUserClans);
+	const usersClan = useSelector(selectAllUsersByUser);
 	const friends = useSelector(selectAllFriends);
-
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const [searchTerm, setSearchTerm] = useState(infoSendToken?.receiver_name || '');
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -54,14 +57,11 @@ const ModalSendToken = ({
 	const [noteSendToken, setNoteSendToken] = useState(note || '');
 
 	useEffect(() => {
-		if (!openModal) {
+		return () => {
 			setSearchTerm('');
 			setToken(0);
-		}
-		if (openModal) {
-			setSelectedUserId('');
-		}
-	}, [openModal]);
+		};
+	}, []);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -101,16 +101,18 @@ const ModalSendToken = ({
 		setNoteSendToken(value);
 	};
 
-	const mergeUniqueUsers = (usersClan: any[], directMessages: any[]) => {
-		const userMap = new Map();
+	const mergeUniqueUsers = (usersClan: UsersEntity[], directMessages: FriendsEntity[]) => {
+		const userMap: Map<string, User> = new Map();
 
 		usersClan.forEach((itemUserClan) => {
 			const userId = itemUserClan?.id ?? '';
 			if (userId && !userMap.has(userId)) {
 				userMap.set(userId, {
 					id: userId,
-					username: itemUserClan?.user?.username ?? '',
-					avatar_url: itemUserClan?.user?.avatar_url ?? ''
+					username: itemUserClan?.username ?? '',
+					avatar_url: itemUserClan?.avatar_url ?? '',
+					search_key: itemUserClan.list_nick_names?.join('./'),
+					display_name: itemUserClan.display_name
 				});
 			}
 		});
@@ -121,7 +123,8 @@ const ModalSendToken = ({
 				userMap.set(userId, {
 					id: userId,
 					username: (itemDM?.user?.display_name || itemDM?.user?.username) ?? '',
-					avatar_url: itemDM?.user?.avatar_url ?? ''
+					avatar_url: itemDM?.user?.avatar_url ?? '',
+					display_name: (itemDM?.user?.display_name || itemDM?.user?.username) ?? ''
 				});
 			}
 		});
@@ -131,7 +134,11 @@ const ModalSendToken = ({
 
 	const mergedUsers = mergeUniqueUsers(usersClan, friends);
 
-	const filteredUsers = mergedUsers.filter((user: any) => user.username?.toLowerCase().includes(searchTerm.toLowerCase()) && user.id !== userId);
+	const filteredUsers = mergedUsers.filter(
+		(user) =>
+			(user.username?.toLowerCase().includes(searchTerm.toLowerCase()) || user.search_key?.includes(searchTerm.toLowerCase())) &&
+			user.id !== userId
+	);
 
 	const rowVirtualizer = useVirtualizer({
 		count: filteredUsers?.length,
@@ -160,37 +167,31 @@ const ModalSendToken = ({
 	const amountRef = useRef<HTMLInputElement | null>(null);
 
 	return (
-		<Modal className="bg-bgModalDark" theme={{ content: { base: 'w-[480px]' } }} show={openModal} dismissible={true} onClose={onClose}>
-			<div className="dark:bg-bgPrimary bg-bgLightMode rounded-xl overflow-hidden">
+		<ModalLayout onClose={onClose}>
+			<div className="bg-theme-chat rounded-xl overflow-hidden w-[480px]">
 				<div className="flex items-center justify-between p-6 border-b dark:border-gray-700 border-gray-200">
 					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 rounded-full dark:bg-blue-600 bg-blue-500 flex items-center justify-center">
-							<Icons.DollarIcon isWhite className="w-5 h-5" />
+						<div className="w-10 h-10 rounded-full btn-primary text-theme-primary-hover flex items-center justify-center">
+							<Icons.DollarIcon className="w-5 h-5" defaultFill="text-white" />
 						</div>
 						<div>
-							<h1 className="dark:text-white text-gray-900 text-lg font-semibold">Send Tokens</h1>
-							<p className="dark:text-gray-400 text-gray-500 text-sm">Transfer tokens to another user</p>
+							<h1 className="text-theme-primary text-lg font-semibold">Send Tokens</h1>
+							<p className="text-theme-secondary">Transfer tokens to another user</p>
 						</div>
 					</div>
-					<button
-						onClick={onClose}
-						className="dark:text-gray-400 text-gray-500 hover:dark:text-white hover:text-gray-900 transition-colors"
-					>
+					<button onClick={onClose} className="text-theme-primary text-theme-primary-hover transition-colors">
 						<Icons.Close className="w-5 h-5" />
 					</button>
 				</div>
 
-				<div className="p-6 space-y-6">
+				<div className="p-6 space-y-6 border-t-theme-primary">
 					<div className="space-y-3">
-						<Label value="To" className="dark:text-gray-300 text-gray-700 text-sm font-medium flex items-center gap-2">
-							<Icons.UserIcon className="w-4 h-4" />
-							Recipient
-						</Label>
+						<p className="text-theme-primary  text-sm font-medium flex items-center gap-2">To</p>
 						<div className="relative">
 							<input
 								type="text"
 								placeholder="Search users..."
-								className="w-full h-12 px-4 pr-10 dark:bg-gray-800 bg-gray-50 dark:text-white text-gray-900 border dark:border-gray-600 border-gray-300 rounded-xl outline-none focus:ring-2 dark:focus:ring-blue-500 focus:ring-blue-400 transition-all placeholder:dark:text-gray-500 placeholder:text-gray-400"
+								className="w-full h-12 px-4 pr-10 bg-input-theme border-theme-primary rounded-xl outline-none focus:ring-2  transition-all "
 								value={searchTerm}
 								onClick={() => setIsDropdownOpen(true)}
 								onChange={handleChangeSearchTerm}
@@ -199,7 +200,7 @@ const ModalSendToken = ({
 							/>
 							{isDropdownOpen && (
 								<div
-									className="absolute z-20 w-full mt-2 dark:bg-gray-800 bg-white border dark:border-gray-600 border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto thread-scroll "
+									className="absolute z-20 w-full mt-2 base-theme-color border-b-theme-primary rounded-xl shadow-lg max-h-48 overflow-y-auto thread-scroll text-theme-primary bg-theme-surface "
 									ref={dropdownRef}
 								>
 									<div
@@ -227,7 +228,7 @@ const ModalSendToken = ({
 													>
 														<div
 															onClick={() => handleSelectUser(user.id, user.username)}
-															className="flex items-center gap-3 p-3 hover:dark:bg-gray-700 hover:bg-gray-50 cursor-pointer transition-colors"
+															className="flex items-center gap-3 p-3 bg-item-theme-hover cursor-pointer transition-colors"
 														>
 															<AvatarImage
 																alt={user?.username ?? ''}
@@ -241,14 +242,12 @@ const ModalSendToken = ({
 																className="w-8 h-8"
 																classNameText="text-xs w-8 h-8"
 															/>
-															<span className="dark:text-white text-gray-900 font-medium">{user.username}</span>
+															<span className=" font-medium">{user.username}</span>
 														</div>
 													</div>
 												);
 											})}
-										{filteredUsers.length === 0 && (
-											<div className="p-4 text-center dark:text-gray-400 text-gray-500">No users found</div>
-										)}
+										{filteredUsers.length === 0 && <div className="p-4 text-center text-">No users found</div>}
 									</div>
 								</div>
 							)}
@@ -257,61 +256,51 @@ const ModalSendToken = ({
 					</div>
 
 					<div className="space-y-3">
-						<Label value="Amount" className="dark:text-gray-300 text-gray-700 text-sm font-medium flex items-center gap-2">
-							<Icons.DollarIcon className="w-4 h-4" />
-							Amount
-						</Label>
+						<p className="text-theme-primary  text-sm font-medium flex items-center gap-2">Amount</p>
 						<div className="relative">
 							<input
 								ref={amountRef}
 								type="text"
 								value={tokenNumber}
-								className="w-full h-12 px-4 dark:bg-gray-800 bg-gray-50 dark:text-white text-gray-900 border dark:border-gray-600 border-gray-300 rounded-xl outline-none focus:ring-2 dark:focus:ring-blue-500 focus:ring-blue-400 transition-all text-lg font-medium"
+								className="w-full h-12 px-4 pr-10 bg-input-theme border-theme-primary rounded-xl outline-none focus:ring-2  transition-all "
 								placeholder="0"
 								onChange={handleChangeSendToken}
 								disabled={sendTokenInputsState.isSendTokenInputDisabled}
 							/>
-							<span className="absolute right-4 top-1/2 transform -translate-y-1/2 dark:text-gray-400 text-gray-500 font-medium">
-								VND
-							</span>
+							<span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-theme-primary font-medium">VND</span>
 						</div>
 						{error && <p className="text-red-500 text-sm">{error}</p>}
 					</div>
 
 					<div className="space-y-3">
-						<Label value="Note" className="dark:text-gray-300 text-gray-700 text-sm font-medium flex items-center gap-2">
-							<Icons.ThreadIcon className="w-4 h-4" />
-							Note (Optional)
-						</Label>
+						<p className="text-theme-primary  text-sm font-medium flex items-center gap-2">Note (Optional)</p>
 						<input
 							type="text"
 							defaultValue={noteSendToken}
-							className="w-full h-12 px-4 dark:bg-gray-800 bg-gray-50 dark:text-white text-gray-900 border dark:border-gray-600 border-gray-300 rounded-xl outline-none focus:ring-2 dark:focus:ring-blue-500 focus:ring-blue-400 transition-all placeholder:dark:text-gray-500 placeholder:text-gray-400"
+							className="w-full h-12 px-4 pr-10 bg-input-theme border-theme-primary rounded-xl outline-none focus:ring-2  transition-all "
 							placeholder="Add a note..."
 							onChange={handleChangeNote}
 						/>
 					</div>
 				</div>
 
-				<div className="p-6 border-t dark:border-gray-700 border-gray-200 flex gap-3">
+				<div className="p-6 border-t-theme-primary flex gap-3">
 					<button
-						className="flex-1 h-12 px-4 rounded-xl border dark:border-gray-600 border-gray-300 dark:text-gray-300 text-gray-700 font-medium hover:dark:bg-gray-800 hover:bg-gray-50 transition-all"
+						className="flex-1 h-12 px-4 rounded-xl text-theme-primary bg-item-theme-hover border-theme-primary font-medium  transition-all"
 						type="button"
 						onClick={onClose}
 					>
 						Cancel
 					</button>
-					<button
-						className="flex-1 h-12 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium transition-all flex items-center justify-center gap-2"
-						type="button"
+					<ButtonLoading
+						className="flex-1 h-12 px-4 rounded-xl bg-indigo-500 hover:bg-indigo-600 hover:text-white  text-white font-medium"
 						onClick={handleSendToken}
 						disabled={isButtonDisabled || !selectedUserId || token <= 0}
-					>
-						Send Tokens
-					</button>
+						label="Send Tokens"
+					/>
 				</div>
 			</div>
-		</Modal>
+		</ModalLayout>
 	);
 };
 

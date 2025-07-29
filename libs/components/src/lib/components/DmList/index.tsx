@@ -26,13 +26,13 @@ function DirectMessageList() {
 					) : null}
 				</div>
 
-				<div className="text-xs font-semibold tracking-wide left-sp dark:text-[#AEAEAE] text-[#585858] mt-6 flex flex-row items-center w-full justify-between px-2 pb-0 h-5 cursor-default dark:hover:text-white hover:text-black">
+				<div className="text-xs font-semibold tracking-wide left-sp text-theme-primary mt-6 flex flex-row items-center w-full justify-between px-2 pb-0 h-5 cursor-default text-theme-primary-hover">
 					<p>DIRECT MESSAGES</p>
 					<CreateMessageGroupModal />
 				</div>
 			</div>
-			<div className={`flex-1 font-medium text-gray-300 pl-2`}>
-				<div className="flex flex-col gap-1 text-[#AEAEAE] text-center relative">
+			<div className={`flex-1 font-medium  px-2`}>
+				<div className="flex flex-col gap-1 text-center relative">
 					<ListDMChannel listDM={dmGroupChatList} />
 				</div>
 			</div>
@@ -47,7 +47,7 @@ const CreateMessageGroupModal = memo(
 		const [openCreateMessageGroup, closeCreateMessageGroup] = useModal(
 			() => (
 				<div className="fixed inset-0 flex items-center justify-center z-50">
-					<div className="absolute inset-0 bg-black bg-opacity-50" />
+					<div className="absolute inset-0 bg-black bg-opacity-80" />
 					<CreateMessageGroup
 						onClose={closeCreateMessageGroup}
 						isOpen={true}
@@ -91,7 +91,7 @@ const FriendsButton = memo(({ navigateToFriend }: { navigateToFriend: boolean })
 
 	return (
 		<button
-			className={`py-2 px-3 rounded-[4px] dark:text-white text-black w-full flex gap-4 items-center ${pathname.includes('friends') ? 'dark:bg-bgModifierHover bg-[#F7F7F7]' : ''}`}
+			className={`py-2 px-3 rounded-lg font-medium text-theme-primary-hover w-full flex gap-4 items-center ${pathname.includes('friends') ? 'text-theme-secondary bg-button-secondary' : 'text-theme-primary'}`}
 			onClick={handleOpenFriendList}
 		>
 			<Icons.IconFriends />

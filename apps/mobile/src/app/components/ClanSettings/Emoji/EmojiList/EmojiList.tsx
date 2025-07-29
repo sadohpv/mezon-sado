@@ -1,55 +1,79 @@
-import { DEFAULT_MAX_EMOJI_SLOTS } from '@mezon/mobile-components';
-import { size, useTheme } from '@mezon/mobile-ui';
-import { FlashList } from '@shopify/flash-list';
+import { size } from '@mezon/mobile-ui';
 import { ClanEmoji } from 'mezon-js';
-import { useCallback, useMemo } from 'react';
+import { memo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Text, View } from 'react-native';
+import { FlatList, ListRenderItem } from 'react-native';
 import { EmojiDetail } from '../EmojiDetail';
-import { style } from './styles';
 
 type EmojiListProps = {
 	emojiList: ClanEmoji[];
+	ListHeaderComponent: any;
 };
 
-export const EmojiList = ({ emojiList }: EmojiListProps) => {
-	const { themeValue } = useTheme();
-	const styles = style(themeValue);
+type ListItem = ClanEmoji | { id: string; clan_id?: string };
+
+const MemoizedEmojiDetail = memo(EmojiDetail);
+
+export const EmojiList = ({ emojiList, ListHeaderComponent }: EmojiListProps) => {
 	const { t } = useTranslation(['clanEmojiSetting']);
 	const row: Array<any> = [];
 	let prevOpenedRow: { close: () => void };
-	const slots: number = useMemo(() => {
-		return DEFAULT_MAX_EMOJI_SLOTS - emojiList.length;
-	}, [emojiList]);
+	const ITEM_HEIGHT = size.s_60;
 
 	const closeRow = (id: string) => {
-		if (prevOpenedRow && prevOpenedRow !== row[parseInt(id)]) {
+		if (prevOpenedRow && prevOpenedRow !== row?.[parseInt(id)]) {
 			prevOpenedRow.close();
 		}
-		prevOpenedRow = row[parseInt(id)];
+		prevOpenedRow = row?.[parseInt(id)];
 	};
 
 	const handleSwipe = useCallback((item: ClanEmoji) => {
 		closeRow(item.id);
 	}, []);
 
-	const renderItem = ({ item }) => {
-		return (
-			<EmojiDetail
-				item={item}
-				key={`emoji_${item.clan_id}_${item.id}`}
-				ref={(ref) => {
-					row[parseInt(item.id)] = ref;
-				}}
-				onSwipeOpen={handleSwipe}
-			/>
-		);
-	};
+	const getItemLayout = useCallback(
+		(data: any, index: number) => ({
+			length: ITEM_HEIGHT,
+			offset: index * ITEM_HEIGHT,
+			index
+		}),
+		[ITEM_HEIGHT]
+	);
+
+	const keyExtractor = useCallback((item: ListItem) => `emoji_${item?.clan_id || 'text'}_${item?.id}`, []);
+
+	const renderItem: ListRenderItem<ListItem> = useCallback(
+		({ item }) => {
+			return (
+				<MemoizedEmojiDetail
+					item={item as ClanEmoji}
+					ref={(ref) => {
+						row[parseInt(item?.id)] = ref;
+					}}
+					onSwipeOpen={handleSwipe}
+				/>
+			);
+		},
+		[handleSwipe, row]
+	);
 
 	return (
-		<View>
-			<Text style={styles.emojiSlotsTitle}>{t('emojiList.slotsDetails', { slots })}</Text>
-			<FlashList data={emojiList} keyExtractor={(item) => item.id} renderItem={renderItem} estimatedItemSize={size.s_60} />
-		</View>
+		<FlatList
+			data={emojiList}
+			keyExtractor={keyExtractor}
+			initialNumToRender={5}
+			maxToRenderPerBatch={3}
+			windowSize={5}
+			removeClippedSubviews={true}
+			getItemLayout={getItemLayout}
+			renderItem={renderItem}
+			ListHeaderComponent={ListHeaderComponent}
+			keyboardShouldPersistTaps="handled"
+			onEndReachedThreshold={0.5}
+			maintainVisibleContentPosition={{
+				minIndexForVisible: 0,
+				autoscrollToTopThreshold: 10
+			}}
+		/>
 	);
 };

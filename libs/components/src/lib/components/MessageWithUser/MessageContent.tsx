@@ -12,6 +12,7 @@ import {
 } from '@mezon/utils';
 import { safeJSONParse } from 'mezon-js';
 import React, { memo, useCallback } from 'react';
+import { AvatarImage } from '../AvatarImage/AvatarImage';
 import { MessageLine } from './MessageLine';
 
 type IMessageContentProps = {
@@ -27,7 +28,7 @@ type IMessageContentProps = {
 	isEphemeral?: boolean;
 };
 
-const MessageContent = ({ message, mode, isSearchMessage, isEphemeral }: IMessageContentProps) => {
+const MessageContent = ({ message, mode, isSearchMessage, isEphemeral, isSending }: IMessageContentProps) => {
 	const lines = message?.content?.t;
 	const contentUpdatedMention = addMention(message.content, message?.mentions as any);
 	const isOnlyContainEmoji = isValidEmojiData(contentUpdatedMention);
@@ -79,6 +80,7 @@ const MessageContent = ({ message, mode, isSearchMessage, isEphemeral }: IMessag
 			mode={mode}
 			onCopy={handleCopyMessage}
 			isEphemeral={isEphemeral}
+			isSending={isSending}
 		/>
 	);
 };
@@ -87,7 +89,6 @@ export const TopicViewButton = ({ message }: { message: IMessageWithUser }) => {
 	const dispatch = useAppDispatch();
 	const topicCreator = useAppSelector((state) => selectMemberClanByUserId2(state, message?.content?.cid as string));
 	const avatarToDisplay = topicCreator?.clan_avatar ? topicCreator?.clan_avatar : topicCreator?.user?.avatar_url;
-
 	const handleOpenTopic = useCallback(() => {
 		dispatch(topicsActions.setIsShowCreateTopic(true));
 		dispatch(threadsActions.setIsShowCreateThread({ channelId: message.channel_id as string, isShowCreateThread: false }));
@@ -97,20 +98,21 @@ export const TopicViewButton = ({ message }: { message: IMessageWithUser }) => {
 
 	return (
 		<div
-			className="border border-colorTextLightMode dark:border-contentTertiary dark:text-contentTertiary text-colorTextLightMode rounded-md my-1 p-1 w-[70%] flex justify-between items-center bg-textPrimary dark:bg-bgSearchHover cursor-pointer hover:border-black hover:text-black dark:hover:border-white dark:hover:text-white group/view-topic-btn"
+			className=" border-theme-primary text-theme-primary bg-item-theme text-theme-primary-hover rounded-lg my-1 p-1 w-[70%] flex justify-between items-center  cursor-pointer   group/view-topic-btn"
 			onClick={handleOpenTopic}
 		>
 			<div className="flex items-center gap-2 text-sm h-fit">
-				<img
-					src={createImgproxyUrl(avatarToDisplay ?? '', { width: 300, height: 300, resizeType: 'fit' })}
+				<AvatarImage
 					alt={`${topicCreator?.user?.username}'s avatar`}
+					username={topicCreator?.user?.username}
 					className="size-7 rounded-md object-cover"
-					title={`${topicCreator?.user?.username}'s avatar`}
+					srcImgProxy={createImgproxyUrl(avatarToDisplay ?? '', { width: 300, height: 300, resizeType: 'fit' })}
+					src={avatarToDisplay}
 				/>
 				<div className="font-semibold text-blue-500 group-hover/view-topic-btn:text-blue-700">Creator</div>
 				<p>View topic</p>
 			</div>
-			<Icons.ArrowRight defaultFill={'#AEAEAE'} defaultSize={'w-4 h-4 min-w-4 hover:text-white text-borderDividerLight'} />
+			<Icons.ArrowRight />
 		</div>
 	);
 };
@@ -122,7 +124,8 @@ export default memo(
 		prev.mode === curr.mode &&
 		prev.isSearchMessage === curr.isSearchMessage &&
 		prev.isInTopic === curr.isInTopic &&
-		prev.isEphemeral === curr.isEphemeral
+		prev.isEphemeral === curr.isEphemeral &&
+		prev.isSending === curr.isSending
 );
 
 const MessageText = ({
@@ -133,7 +136,8 @@ const MessageText = ({
 	isOnlyContainEmoji,
 	isSearchMessage,
 	onCopy,
-	isEphemeral
+	isEphemeral,
+	isSending
 }: {
 	message: IMessageWithUser;
 	lines: string;
@@ -143,6 +147,7 @@ const MessageText = ({
 	isOnlyContainEmoji?: boolean;
 	onCopy?: (event: React.ClipboardEvent<HTMLDivElement>, startIndex: number, endIndex: number) => void;
 	isEphemeral?: boolean;
+	isSending?: boolean;
 }) => {
 	let patchedContent = content;
 	if ((!content?.mk || content.mk.length === 0) && Array.isArray(content?.lk) && content.lk.length > 0) {
@@ -193,6 +198,7 @@ const MessageText = ({
 					onCopy={onCopy}
 					messageId={message.id}
 					isEphemeral={isEphemeral}
+					isSending={isSending}
 				/>
 			) : null}
 		</>

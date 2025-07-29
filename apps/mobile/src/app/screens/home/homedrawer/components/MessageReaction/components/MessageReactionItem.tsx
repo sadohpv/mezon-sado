@@ -13,9 +13,10 @@ export type IReactionItem = {
 	message: any;
 	mode: number;
 	styles: any;
+	topicId: string;
 };
 export const ReactionItem = React.memo(
-	({ emojiItemData, userId, preventAction, onReactItemLongPress, message, mode, styles }: IReactionItem) => {
+	({ emojiItemData, userId, preventAction, onReactItemLongPress, message, mode, styles, topicId = '' }: IReactionItem) => {
 		const isMyReaction = emojiItemData?.senders?.find?.((sender: SenderInfoOptionals) => sender.sender_id === userId);
 		const countReacts = calculateTotalCount(emojiItemData.senders);
 
@@ -28,12 +29,12 @@ export const ReactionItem = React.memo(
 				channelId: message?.channel_id ?? '',
 				emojiId: emojiItemData?.emojiId ?? '',
 				emoji: emojiItemData.emoji ?? '',
-				senderId: userId ?? '',
+				senderId: message?.sender_id ?? '',
 				countToRemove: 1,
 				actionDelete: false,
-				topicId: message.topic_id || ''
+				topicId: topicId || ''
 			} as IReactionMessageProps);
-		}, [emojiItemData, preventAction, message, mode, userId]);
+		}, [emojiItemData, preventAction, message, mode, topicId]);
 
 		const handleLongPress = useCallback(() => {
 			if (!preventAction) onReactItemLongPress(emojiItemData.emojiId);

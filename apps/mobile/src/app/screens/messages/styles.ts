@@ -206,7 +206,7 @@ export const style = (colors: Attributes, isTablet?: boolean) =>
 		},
 		textAvatar: {
 			textAlign: 'center',
-			fontSize: size.h6,
+			fontSize: size.h4,
 			color: Colors.white
 		},
 		lottie: { width: size.s_30, height: size.s_20 },
@@ -232,7 +232,6 @@ export const style = (colors: Attributes, isTablet?: boolean) =>
 			borderColor: colors.secondaryLight
 		},
 		placeholderSearchBox: {
-			textTransform: 'capitalize',
 			color: colors.text,
 			fontSize: size.s_14,
 			lineHeight: size.s_18

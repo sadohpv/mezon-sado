@@ -1,17 +1,21 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { ActionEmitEvent, CheckIcon, STORAGE_DATA_CLAN_CHANNEL_CACHE, getUpdateOrAddClanChannelCache, isEqual, save } from '@mezon/mobile-components';
+import { usePermissionChecker } from '@mezon/core';
+import { ActionEmitEvent, CheckIcon, isEqual } from '@mezon/mobile-components';
 import { Colors, useTheme } from '@mezon/mobile-ui';
 import {
+	appActions,
+	channelUsersActions,
 	channelsActions,
-	getStoreAsync,
+	fetchSystemMessageByClanId,
 	selectAllChannels,
 	selectChannelById,
+	selectClanSystemMessage,
 	selectCurrentUserId,
 	threadsActions,
 	useAppDispatch,
 	useAppSelector
 } from '@mezon/store-mobile';
-import { checkIsThread } from '@mezon/utils';
+import { EOverriddenPermission, EPermission, checkIsThread } from '@mezon/utils';
 import { ChannelType } from 'mezon-js';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -48,6 +52,7 @@ export function ChannelSetting({ navigation, route }: MenuChannelScreenProps<Scr
 	const [isCheckValid, setIsCheckValid] = useState<boolean>(true);
 	const [isCheckDuplicateNameChannel, setIsCheckDuplicateNameChannel] = useState<boolean>(false);
 	const channelsClan = useSelector(selectAllChannels);
+	const currentSystemMessage = useSelector(selectClanSystemMessage);
 	const [originSettingValue, setOriginSettingValue] = useState<IChannelSettingValue>({
 		channelName: '',
 		channelTopic: ''
@@ -61,6 +66,15 @@ export function ChannelSetting({ navigation, route }: MenuChannelScreenProps<Scr
 	}, [originSettingValue, currentSettingValue]);
 
 	const currentUserId = useSelector(selectCurrentUserId);
+
+	const [isCanManageThread, isCanManageChannel] = usePermissionChecker(
+		[EOverriddenPermission.manageThread, EPermission.manageChannel],
+		channel?.channel_id ?? ''
+	);
+
+	useEffect(() => {
+		dispatch(fetchSystemMessageByClanId({ clanId: channel?.clan_id }));
+	}, []);
 
 	useEffect(() => {
 		navigation.setOptions({
@@ -148,7 +162,7 @@ export function ChannelSetting({ navigation, route }: MenuChannelScreenProps<Scr
 						navigation.navigate(APP_SCREEN.MENU_CHANNEL.STACK, {
 							screen: APP_SCREEN.MENU_CHANNEL.QUICK_ACTION,
 							params: {
-								channelId,
+								channelId
 							}
 						});
 					}
@@ -193,16 +207,19 @@ export function ChannelSetting({ navigation, route }: MenuChannelScreenProps<Scr
 			[
 				{
 					title: isChannel ? t('fields.channelDelete.delete') : t('fields.threadDelete.delete'),
-					textStyle: { color: 'red' },
+					textStyle: { color: Colors.textRed },
 					onPress: () => handlePressDeleteChannel(),
-					icon: <MezonIconCDN icon={IconCDN.trashIcon} color={Colors.textRed} />
+					icon: <MezonIconCDN icon={IconCDN.trashIcon} color={Colors.textRed} />,
+					isShow: isChannel ? isCanManageChannel : isCanManageThread || channel?.creator_id === currentUserId
 				},
 				{
 					title: isChannel ? t('fields.channelDelete.leave') : t('fields.threadLeave.leave'),
-					textStyle: { color: 'red' },
+					textStyle: { color: Colors.textRed },
 					onPress: () => handlePressLeaveChannel(),
 					icon: <MezonIconCDN icon={IconCDN.leaveGroupIcon} color={Colors.textRed} />,
-					isShow: channel?.creator_id !== currentUserId && channel?.type !== ChannelType.CHANNEL_TYPE_APP
+					isShow:
+						channel?.creator_id !== currentUserId &&
+						(!isChannel || (channel?.channel_private === 1 && channel?.type !== ChannelType.CHANNEL_TYPE_APP))
 				}
 			] satisfies IMezonMenuItemProps[],
 		[channel?.creator_id, channel?.type, currentUserId, isChannel, t]
@@ -250,49 +267,76 @@ export function ChannelSetting({ navigation, route }: MenuChannelScreenProps<Scr
 	// );
 
 	const handleDeleteChannel = useCallback(async () => {
-		await dispatch(
-			channelsActions.deleteChannel({
-				channelId: channel?.channel_id,
-				clanId: channel?.clan_id
-			})
-		);
-		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true });
-		navigation.navigate(APP_SCREEN.HOME);
-		if (channel?.parent_id !== '0') {
-			await dispatch(
-				channelsActions.joinChannel({
-					clanId: channel?.clan_id,
-					channelId: channel?.parent_id,
-					noFetchMembers: false
+		try {
+			DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true });
+			dispatch(appActions.setLoadingMainMobile(true));
+			if (channel?.channel_id === currentSystemMessage?.channel_id) {
+				Toast.show({ type: 'error', text1: t('confirm.delete.systemChannel') });
+				return;
+			}
+
+			const response = await dispatch(
+				channelsActions.deleteChannel({
+					channelId: channel?.channel_id,
+					clanId: channel?.clan_id
 				})
 			);
+			if (response?.meta?.requestStatus === 'rejected') {
+				throw response?.error?.message;
+			}
+			navigation.navigate(APP_SCREEN.HOME);
+			if (channel?.parent_id !== '0') {
+				await dispatch(
+					channelsActions.joinChannel({
+						clanId: channel?.clan_id,
+						channelId: channel?.parent_id,
+						noFetchMembers: false
+					})
+				);
+			}
+		} catch (error) {
+			Toast.show({ type: 'error', text1: t('confirm.delete.error', { error }) });
+		} finally {
+			dispatch(appActions.setLoadingMainMobile(false));
 		}
-	}, [channel?.channel_id, channel?.clan_id, channel?.parent_id]);
-
-	const handleJoinChannel = async () => {
-		const channelId = channel?.parent_id || '';
-		const clanId = channel?.clan_id || '';
-		const dataSave = getUpdateOrAddClanChannelCache(clanId, channelId);
-		const store = await getStoreAsync();
-		requestAnimationFrame(async () => {
-			store.dispatch(channelsActions.joinChannel({ clanId: clanId ?? '', channelId: channelId, noFetchMembers: false }));
-		});
-		save(STORAGE_DATA_CLAN_CHANNEL_CACHE, dataSave);
-	};
+	}, [channel?.channel_id, channel?.clan_id, channel?.parent_id, currentSystemMessage?.channel_id]);
 
 	const handleConfirmLeaveThread = useCallback(async () => {
-		await dispatch(
-			threadsActions.leaveThread({
-				clanId: channel?.clan_id || '',
-				channelId: channel?.parent_id || '',
-				threadId: channel?.id || '',
-				isPrivate: channel?.channel_private || 0
-			})
-		);
-		navigation.navigate(APP_SCREEN.HOME);
-		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true });
-		handleJoinChannel();
-	}, [channel?.channel_private, channel?.clan_id, channel?.id, channel?.parent_id]);
+		try {
+			DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true });
+			dispatch(appActions.setLoadingMainMobile(true));
+			if (isChannel) {
+				const body = {
+					channelId: channel.id,
+					userId: currentUserId,
+					channelType: channel.type,
+					clanId: channel.clan_id
+				};
+				const response = await dispatch(channelUsersActions.removeChannelUsers(body));
+				if (response?.meta?.requestStatus === 'rejected') {
+					throw new Error(response?.meta?.requestStatus);
+				}
+			} else {
+				const response = await dispatch(
+					threadsActions.leaveThread({
+						clanId: channel?.clan_id || '',
+						channelId: channel?.parent_id || '',
+						threadId: channel?.id || '',
+						isPrivate: channel?.channel_private || 0
+					})
+				);
+				if (response?.meta?.requestStatus === 'rejected') {
+					throw new Error(response?.meta?.requestStatus);
+				}
+			}
+
+			navigation.navigate(APP_SCREEN.HOME);
+		} catch (error) {
+			Toast.show({ type: 'error', text1: t('confirm.leave.error', { error }) });
+		} finally {
+			dispatch(appActions.setLoadingMainMobile(false));
+		}
+	}, [channel?.channel_private, channel?.clan_id, channel?.id, channel?.parent_id, isChannel, currentUserId, channel?.type]);
 
 	const handlePressLeaveChannel = () => {
 		const data = {

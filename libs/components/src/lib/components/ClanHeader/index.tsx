@@ -47,10 +47,9 @@ function ClanHeader({ name, type }: ClanHeaderProps) {
 	const currentChannelId = useSelector(selectCurrentVoiceChannelId);
 	const currentClan = useSelector(selectCurrentClan);
 	const navigate = useNavigate();
-	const [openSearchModal, closeSearchModal] = useModal(() => <SearchModal onClose={closeSearchModal} open={true} />);
+	const [openSearchModal, closeSearchModal] = useModal(() => <SearchModal onClose={closeSearchModal} />);
 
 	const [openCreateCate, setOpenCreateCate] = useState(false);
-	const [openServerSettings, setOpenServerSettings] = useState(false);
 	const [isShowModalPanelClan, setIsShowModalPanelClan] = useState<boolean>(false);
 	const hasChildModal = useSelector(hasGrandchildModal);
 	const hasChildModalRef = useRef(false);
@@ -163,11 +162,11 @@ function ClanHeader({ name, type }: ClanHeaderProps) {
 	return (
 		<>
 			{type === 'direct' ? (
-				<div className="contain-strict px-3 font-semibold text-white h-heightHeader flex items-center shadow border-b-[1px] dark:border-bgTertiary border-gray-200">
+				<div className="contain-strict px-3 font-semibold  h-heightHeader flex items-center border-b-theme-primary ">
 					<input
 						ref={inputRef}
 						placeholder="Find or start a conversation"
-						className={`font-[400] px-[16px] rounded dark:text-white text-black outline-none text-[14px] w-full dark:bg-bgTertiary bg-[#E1E1E1] dark:border-borderDefault h-[36px]`}
+						className={`font-[500] px-[16px] rounded-lg outline-none text-[14px] w-full h-[36px] bg-theme-input color-text-secondary border-theme-primary`}
 						type="text"
 						onFocus={handleInputFocus}
 					/>
@@ -198,8 +197,7 @@ function ClanHeader({ name, type }: ClanHeaderProps) {
 					buttonName="Leave Clan"
 				/>
 			)}
-
-			<ModalCreateCategory openCreateCate={openCreateCate} onClose={onClose} onCreateCategory={handleCreateCate} />
+			{openCreateCate && <ModalCreateCategory onClose={onClose} onCreateCategory={handleCreateCate} />}
 			<InviteClanModal />
 		</>
 	);

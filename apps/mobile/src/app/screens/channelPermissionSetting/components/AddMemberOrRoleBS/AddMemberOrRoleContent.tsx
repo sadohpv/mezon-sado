@@ -1,20 +1,19 @@
 import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { debounce } from '@mezon/mobile-components';
-import { Colors, size, Text, useTheme } from '@mezon/mobile-ui';
+import { Colors, size, useTheme, verticalScale } from '@mezon/mobile-ui';
 import {
 	channelUsersActions,
 	selectAllChannelMembers,
 	selectAllRolesClan,
 	selectAllUserClans,
 	selectCurrentClanId,
-	selectEveryoneRole,
 	selectRolesByChannelId,
 	useAppDispatch,
 	useAppSelector
 } from '@mezon/store-mobile';
 import { memo, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useSelector } from 'react-redux';
 import MezonIconCDN from '../../../../componentUI/MezonIconCDN';
@@ -31,7 +30,6 @@ export const AddMemberOrRoleContent = memo(({ channel, onDismiss }: IAddMemberOr
 	const [searchText, setSearchText] = useState('');
 	const debouncedSetSearchText = debounce((text) => setSearchText(text), 300);
 	const currentClanId = useSelector(selectCurrentClanId);
-	const everyoneRole = useSelector(selectEveryoneRole);
 	const dispatch = useAppDispatch();
 	const { t } = useTranslation('channelSetting');
 	const [selectedMemberIdList, setSelectedMemberIdList] = useState<string[]>([]);
@@ -52,10 +50,8 @@ export const AddMemberOrRoleContent = memo(({ channel, onDismiss }: IAddMemberOr
 
 	const listOfRoleCanAdd = useMemo(() => {
 		const addedRoleIdList = listOfChannelRole?.map((role) => role?.id) || [];
-		return allClanRoles
-			?.filter((role) => !addedRoleIdList.includes(role?.id) && everyoneRole?.id !== role?.id)
-			?.map((role) => ({ ...role, type: EOverridePermissionType.Role }));
-	}, [listOfChannelRole, allClanRoles, everyoneRole?.id]);
+		return allClanRoles?.filter((role) => !addedRoleIdList.includes(role?.id))?.map((role) => ({ ...role, type: EOverridePermissionType.Role }));
+	}, [listOfChannelRole, allClanRoles]);
 
 	const disableAddButton = useMemo(() => {
 		return !(selectedMemberIdList.length || selectedRoleIdList.length);
@@ -148,7 +144,14 @@ export const AddMemberOrRoleContent = memo(({ channel, onDismiss }: IAddMemberOr
 			if (!type && headerTitle && isShowHeaderTitle) {
 				return (
 					<View style={{ paddingTop: size.s_12, paddingLeft: size.s_12 }}>
-						<Text color={themeValue.text} h4>
+						<Text
+							style={{
+								fontSize: verticalScale(18),
+								marginLeft: 0,
+								marginRight: 0,
+								color: themeValue.text
+							}}
+						>
 							{headerTitle}:
 						</Text>
 					</View>
@@ -187,10 +190,26 @@ export const AddMemberOrRoleContent = memo(({ channel, onDismiss }: IAddMemberOr
 		<View style={{ paddingHorizontal: size.s_14, flex: 1 }}>
 			<View style={{ flexDirection: 'row', justifyContent: 'center' }}>
 				<View style={{ alignItems: 'center' }}>
-					<Text h4 bold color={themeValue.white}>
+					<Text
+						style={{
+							fontSize: verticalScale(18),
+							marginLeft: 0,
+							marginRight: 0,
+							fontWeight: 'bold',
+							color: themeValue.white
+						}}
+					>
 						{t('channelPermission.bottomSheet.addMembersOrRoles')}
 					</Text>
-					<Text color={themeValue.text}>#{channel?.channel_label}</Text>
+					<Text
+						style={{
+							marginLeft: 0,
+							marginRight: 0,
+							color: themeValue.text
+						}}
+					>
+						#{channel?.channel_label}
+					</Text>
 				</View>
 				<TouchableOpacity
 					onPress={addMemberOrRole}
@@ -202,7 +221,15 @@ export const AddMemberOrRoleContent = memo(({ channel, onDismiss }: IAddMemberOr
 					disabled={disableAddButton}
 				>
 					<View style={{ padding: size.s_10 }}>
-						<Text bold h4 color={disableAddButton ? Colors.bgGrayLight : Colors.textViolet}>
+						<Text
+							style={{
+								fontSize: verticalScale(18),
+								marginLeft: 0,
+								marginRight: 0,
+								fontWeight: 'bold',
+								color: disableAddButton ? Colors.bgGrayLight : Colors.textViolet
+							}}
+						>
 							{t('channelPermission.bottomSheet.add')}
 						</Text>
 					</View>

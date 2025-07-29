@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { useSendForwardMessage } from '@mezon/core';
 import { CheckIcon } from '@mezon/mobile-components';
-import { Colors, Text, size, useTheme } from '@mezon/mobile-ui';
+import { Colors, size, useTheme, verticalScale } from '@mezon/mobile-ui';
 import {
 	DirectEntity,
 	MessagesEntity,
@@ -21,7 +21,8 @@ import { FlashList } from '@shopify/flash-list';
 import { ChannelStreamMode, ChannelType } from 'mezon-js';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TouchableOpacity, View } from 'react-native';
+import { Platform, StatusBar, Text, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Toast from 'react-native-toast-message';
 import { useSelector } from 'react-redux';
 import MezonIconCDN from '../../../../../componentUI/MezonIconCDN';
@@ -107,7 +108,11 @@ const ForwardMessageScreen = () => {
 			.map(mapDirectMessageToForwardObject);
 
 		const listTextChannel = listChannels
-			?.filter((channel) => channel?.type === ChannelType.CHANNEL_TYPE_CHANNEL && channel?.channel_label)
+			?.filter(
+				(channel) =>
+					(channel?.type === ChannelType.CHANNEL_TYPE_CHANNEL || channel?.type === ChannelType.CHANNEL_TYPE_THREAD) &&
+					channel?.channel_label
+			)
 			.map(mapChannelToForwardObject);
 
 		return [...listTextChannel, ...listGroupForward, ...listDMForward];
@@ -115,7 +120,7 @@ const ForwardMessageScreen = () => {
 
 	const filteredForwardObjects = useMemo(() => {
 		if (searchText?.trim()?.charAt(0) === '#') {
-			return allForwardObject.filter((ob) => ob.type === ChannelType.CHANNEL_TYPE_CHANNEL);
+			return allForwardObject.filter((ob) => ob?.type === ChannelType.CHANNEL_TYPE_CHANNEL || ob?.type === ChannelType.CHANNEL_TYPE_THREAD);
 		}
 		return allForwardObject.filter((ob) => normalizeString(ob?.name).includes(normalizeString(searchText)));
 	}, [searchText, allForwardObject]);
@@ -167,6 +172,11 @@ const ForwardMessageScreen = () => {
 							sendForwardMessage(clanId, channelId, ChannelStreamMode.STREAM_MODE_CHANNEL, isPublic, message);
 						}
 						break;
+					case ChannelType.CHANNEL_TYPE_THREAD:
+						for (const message of combineMessages) {
+							sendForwardMessage(clanId, channelId, ChannelStreamMode.STREAM_MODE_THREAD, isPublic, message);
+						}
+						break;
 					default:
 						break;
 				}
@@ -199,6 +209,9 @@ const ForwardMessageScreen = () => {
 						break;
 					case ChannelType.CHANNEL_TYPE_CHANNEL:
 						sendForwardMessage(clanId, channelId, ChannelStreamMode.STREAM_MODE_CHANNEL, isChannelPublic, message);
+						break;
+					case ChannelType.CHANNEL_TYPE_THREAD:
+						sendForwardMessage(clanId, channelId, ChannelStreamMode.STREAM_MODE_THREAD, isChannelPublic, message);
 						break;
 					default:
 						break;
@@ -234,7 +247,11 @@ const ForwardMessageScreen = () => {
 	};
 
 	return (
-		<View style={{ flex: 1, backgroundColor: themeValue.primary, paddingHorizontal: size.s_16, paddingTop: size.s_16 }}>
+		<KeyboardAvoidingView
+			behavior="padding"
+			keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight}
+			style={{ flex: 1, backgroundColor: themeValue.primary, paddingHorizontal: size.s_16, paddingTop: size.s_16 }}
+		>
 			<StatusBarHeight />
 			<View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: size.s_18 }}>
 				<View style={{ flex: 1 }}>
@@ -242,7 +259,12 @@ const ForwardMessageScreen = () => {
 						<MezonIconCDN icon={IconCDN.closeLargeIcon} color={themeValue.textStrong} />
 					</TouchableOpacity>
 				</View>
-				<Text h3 color={themeValue.white}>
+				<Text
+					style={{
+						fontSize: verticalScale(20),
+						color: themeValue.white
+					}}
+				>
 					{t('forwardTo')}
 				</Text>
 				<View style={{ flex: 1 }} />
@@ -256,17 +278,18 @@ const ForwardMessageScreen = () => {
 				inputWrapperStyle={{ backgroundColor: themeValue.primary, paddingHorizontal: size.s_6 }}
 			/>
 
-			<View style={{ marginTop: size.s_24, flex: 1 }}>
+			<View style={{ marginTop: size.s_12, marginBottom: size.s_12, flex: 1 }}>
 				<FlashList
 					keyExtractor={(item) => `${item.channelId}_${item.type}`}
 					estimatedItemSize={70}
 					data={filteredForwardObjects}
 					renderItem={renderForwardObject}
+					keyboardShouldPersistTaps="handled"
 				/>
 			</View>
 
 			<TouchableOpacity
-				style={[styles.btn, !selectedForwardObjectsRef.current?.length && { backgroundColor: themeValue.charcoal }]}
+				style={[styles.btn, !selectedForwardObjectsRef.current?.length && { backgroundColor: themeValue.textDisabled }]}
 				onPress={handleForward}
 			>
 				<Text style={styles.btnText}>
@@ -274,7 +297,7 @@ const ForwardMessageScreen = () => {
 					{count}
 				</Text>
 			</TouchableOpacity>
-		</View>
+		</KeyboardAvoidingView>
 	);
 };
 

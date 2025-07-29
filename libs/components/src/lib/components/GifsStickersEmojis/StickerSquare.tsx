@@ -25,8 +25,16 @@ type ChannelMessageBoxProps = {
 };
 
 interface ICategorizedStickerProps {
-	stickerList: any[];
+	stickerList: {
+		id: string | undefined;
+		url: string | undefined;
+		type: string | undefined;
+		clanName: string | undefined;
+		clanId: string | undefined;
+		forSale: boolean | undefined;
+	}[];
 	categoryName: string;
+	logo?: string;
 	onClickSticker: (stickerUrl: StickerPanel) => void;
 	valueInputToCheckHandleSearch?: string;
 	onOpenBuySticker: (sticker: StickerPanel) => void;
@@ -79,7 +87,7 @@ function StickerSquare({ channel, mode, onClose, isTopic = false }: ChannelMessa
 
 	const categoryLogo = useMemo(() => {
 		const categorizedStickers = clanStickers
-			.filter((sticker) => sticker.clan_name !== FOR_SALE_CATE)
+			.filter((sticker) => !sticker.is_for_sale)
 			.reduce((acc: { id?: string; type?: string; url?: string }[], sticker) => {
 				if (!acc.some((item) => item.id === sticker.clan_id)) {
 					acc.push({
@@ -90,7 +98,7 @@ function StickerSquare({ channel, mode, onClose, isTopic = false }: ChannelMessa
 				}
 				return acc;
 			}, []);
-		return [{ id: FOR_SALE_CATE, type: FOR_SALE_CATE, url: '' }, ...categorizedStickers];
+		return [{ id: FOR_SALE_CATE, type: FOR_SALE_CATE, url: FOR_SALE_CATE }, ...categorizedStickers];
 	}, [clanStickers]);
 	const stickers = useMemo(() => {
 		return [
@@ -159,12 +167,12 @@ function StickerSquare({ channel, mode, onClose, isTopic = false }: ChannelMessa
 	}, [stickerBuy]);
 
 	return (
-		<div ref={modalRef} tabIndex={-1} className="outline-none flex h-full w-full md:w-[500px] max-sm:ml-1">
+		<div ref={modalRef} tabIndex={-1} className="outline-none flex h-full w-full md:w-[500px] max-sm:ml-1 pt-3">
 			<div className="overflow-y-auto overflow-x-hidden hide-scrollbar h-[25rem] rounded md:ml-2 ">
 				<div
 					className="w-11 max-sm:gap-x-1
 				flex flex-col max-sm:flex-row max-sm:justify-end max-sbm:justify-start gap-y-1
-				max-sm:w-full max-sbm:w-11 dark:bg-[#1E1F22] bg-bgLightModeSecond pt-1
+				max-sm:w-full max-sbm:w-11 bg-item-theme pt-1
 				px-1 md:items-start pb-1 rounded max-sbm:flex-col
 				items-center min-h-[25rem]"
 				>
@@ -172,12 +180,12 @@ function StickerSquare({ channel, mode, onClose, isTopic = false }: ChannelMessa
 						<button
 							key={avt.id}
 							onClick={(e) => scrollToCategory(e, avt.type || '')}
-							className="flex justify-center items-center max-sm:px-1 w-9 h-9 rounded-lg hover:bg-[#41434A]"
+							className="flex justify-center items-center max-sm:px-1 w-9 h-9 rounded-lg bg-item-hover"
 						>
 							{avt.type === FOR_SALE_CATE ? (
 								<div
 									onClick={(e) => scrollToCategory(e, FOR_SALE_CATE)}
-									className="w-9 h-9 py-2 dark:text-textPrimary max-sm:hidden flex flex-row justify-center items-center dark:hover:bg-[#41434A] hover:bg-bgLightModeButton hover:rounded-md"
+									className="w-9 h-9 py-2  max-sm:hidden flex flex-row justify-center items-center hover:rounded-md"
 								>
 									<Icons.MarketIcons />
 								</div>
@@ -187,11 +195,11 @@ function StickerSquare({ channel, mode, onClose, isTopic = false }: ChannelMessa
 										<img
 											src={avt.url}
 											alt={`avt ${avt.id}`}
-											className={`w-7 h-7 object-cover aspect-square cursor-pointer dark:hover:bg-bgDisable hover:bg-bgLightModeButton ${avt.type === selectedType ? 'bg-bgDisable' : ''} hover:rounded-full justify-center items-center border border-bgHoverMember rounded-full aspect-square`}
+											className={`w-7 h-7 object-cover aspect-square cursor-pointer  bg-item-hover ${avt.type === selectedType ? 'bg-item-theme' : ''} hover:rounded-full justify-center items-center border-theme-primary rounded-full aspect-square`}
 											role="button"
 										/>
 									) : (
-										<div className="dark:text-textDarkTheme text-textLightTheme">{avt?.type?.charAt(0).toUpperCase()}</div>
+										<div className="">{avt?.type?.charAt(0).toUpperCase()}</div>
 									)}
 								</>
 							)}
@@ -211,6 +219,7 @@ function StickerSquare({ channel, mode, onClose, isTopic = false }: ChannelMessa
 									stickerList={stickers}
 									onClickSticker={handleClickImage}
 									categoryName={avt.type || ''}
+									logo={avt.url}
 									onOpenBuySticker={handleOpenBuySticker}
 								/>
 							</div>
@@ -223,15 +232,11 @@ function StickerSquare({ channel, mode, onClose, isTopic = false }: ChannelMessa
 }
 export default StickerSquare;
 
-const CategorizedStickers: React.FC<ICategorizedStickerProps> = ({
-	stickerList,
-	categoryName,
-	onClickSticker,
-	valueInputToCheckHandleSearch,
-	onOpenBuySticker
-}) => {
-	const stickersListByCategoryName = stickerList.filter((sticker) => sticker.type === categoryName);
-	const [isShowStickerList, setIsShowStickerList] = useState(true);
+const CategorizedStickers: React.FC<ICategorizedStickerProps> = ({ stickerList, categoryName, onClickSticker, onOpenBuySticker, logo }) => {
+	const stickersListByCategoryName = stickerList.filter((sticker) =>
+		categoryName === FOR_SALE_CATE ? sticker.forSale : sticker.type === categoryName && !sticker.forSale
+	);
+	const [isShowStickerList, setIsShowStickerList] = useState(categoryName === FOR_SALE_CATE ? false : true);
 	const currentClan = useAppSelector(selectCurrentClan);
 
 	const handleToggleButton = () => {
@@ -242,11 +247,23 @@ const CategorizedStickers: React.FC<ICategorizedStickerProps> = ({
 		<div>
 			<button
 				onClick={handleToggleButton}
-				className="w-full flex flex-row justify-start items-center pl-1 mb-1 mt-0 py-1 gap-[2px] sticky top-[-0.5rem] dark:bg-[#2B2D31] bg-bgLightModeSecond z-10 dark:text-white text-black max-h-full"
+				className="w-full flex flex-row justify-start items-center pl-1 mb-1 mt-0 py-1 sticky top-[-0.5rem]  z-10  max-h-full bg-theme-setting-primary"
 			>
-				<p className="uppercase">{categoryName !== 'custom' ? categoryName : currentClan?.clan_name}</p>
+				{logo === FOR_SALE_CATE ? (
+					<Icons.MarketIcons className="w-4 h4" />
+				) : logo !== '' ? (
+					<img src={logo} className="w-4 !h-4 flex items-center justify-center rounded-full object-cover" />
+				) : (
+					<div className="dark:text-textDarkTheme text-xs text-textLightTheme w-4 h-4 rounded-full bg-theme-primary">
+						{categoryName?.charAt(0).toUpperCase()}
+					</div>
+				)}
+
+				<p className={'ml-2 uppercase text-left truncate text-xs font-semibold'}>
+					{categoryName !== 'custom' ? categoryName : currentClan?.clan_name}
+				</p>
 				<span className={`${isShowStickerList ? ' rotate-90' : ''}`}>
-					<Icons.ArrowRight />
+					<Icons.ArrowRight defaultSize="w-4 h-4" />
 				</span>
 			</button>
 			{isShowStickerList && (
@@ -271,15 +288,21 @@ const StickerPanel: React.FC<IStickerPanelProps> = ({ stickerList, onClickSticke
 								<img
 									src={sticker.url ? sticker.url : `${process.env.NX_BASE_IMG_URL}/stickers/` + sticker.id + `.webp`}
 									alt="sticker"
-									className={`w-full h-full aspect-square object-cover dark:hover:bg-bgDisable hover:bg-bgLightModeButton ${sticker.id === '0' ? 'blur-sm' : ''}`}
+									className={`w-full h-full aspect-square object-cover  hover:bg-bgLightModeButton ${sticker.id === '0' ? 'blur-sm' : ''}`}
 									onClick={() => (!sticker.forSale || sticker.url ? onClickSticker(sticker) : onOpenBuySticker(sticker))}
 									role="button"
 								/>
-								{sticker.forSale && !sticker.url && (
-									<div className="absolute left-8 flex items-center justify-center aspect-square pointer-events-none">
-										<Icons.LockIcon defaultSize="w-16 h-16 text-white block group-hover:hidden" defaultFill="white" />
-										<Icons.UnLockIcon defaultSize="w-16 h-16 text-white hidden group-hover:block" defaultFill="white" />
-									</div>
+								{sticker.forSale && (
+									<>
+										{!sticker.url && (
+											<div className="absolute left-8 flex items-center justify-center aspect-square pointer-events-none group">
+												<Icons.LockIcon defaultSize="w-16 h-16 text-white block group-hover:hidden" defaultFill="white" />
+												<Icons.UnLockIcon defaultSize="w-16 h-16 text-white hidden group-hover:block" defaultFill="white" />
+											</div>
+										)}
+
+										<Icons.MarketIcons className="absolute top-1 right-1 w-4 h-4 text-yellow-300" />
+									</>
 								)}
 							</div>
 						))}

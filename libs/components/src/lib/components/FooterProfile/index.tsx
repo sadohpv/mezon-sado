@@ -1,13 +1,11 @@
-import { useAuth, useDirect, useMenu, useSendInviteMessage, useSettingFooter } from '@mezon/core';
+import { useAuth, useDirect, useSendInviteMessage, useSettingFooter } from '@mezon/core';
 import {
 	ChannelsEntity,
 	TOKEN_FAILED_STATUS,
 	TOKEN_SUCCESS_STATUS,
 	authActions,
-	channelMembersActions,
 	giveCoffeeActions,
 	selectAccountCustomStatus,
-	selectCurrentClanId,
 	selectGroupCallJoined,
 	selectInfoSendToken,
 	selectIsElectronDownloading,
@@ -17,14 +15,13 @@ import {
 	selectShowModalCustomStatus,
 	selectShowModalSendToken,
 	selectStatusMenu,
-	selectTheme,
 	selectVoiceJoined,
 	useAppDispatch,
 	userClanProfileActions
 } from '@mezon/store';
 import { Icons } from '@mezon/ui';
-import { ESummaryInfo, EUserStatus, ONE_MINUTE, TypeMessage, createImgproxyUrl, formatMoney } from '@mezon/utils';
-import { ChannelStreamMode, safeJSONParse } from 'mezon-js';
+import { ESummaryInfo, EUserStatus, ONE_MINUTE, TypeMessage, createImgproxyUrl, formatMoney, saveParseUserStatus } from '@mezon/utils';
+import { ChannelStreamMode } from 'mezon-js';
 import { ApiTokenSentEvent } from 'mezon-js/dist/api.gen';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useModal } from 'react-modal-hook';
@@ -49,42 +46,23 @@ export type FooterProfileProps = {
 
 function FooterProfile({ name, status, avatar, userId, isDM }: FooterProfileProps) {
 	const dispatch = useAppDispatch();
-	const currentClanId = useSelector(selectCurrentClanId);
 	const showModalCustomStatus = useSelector(selectShowModalCustomStatus);
 	const showModalSendToken = useSelector(selectShowModalSendToken);
 	const infoSendToken = useSelector(selectInfoSendToken);
-	const appearanceTheme = useSelector(selectTheme);
 	const userStatusProfile = useSelector(selectAccountCustomStatus);
 	const statusMenu = useSelector(selectStatusMenu);
 	const myProfile = useAuth();
 
-	const { setStatusMenu } = useMenu();
-
 	const userCustomStatus: { status: string; user_status: EUserStatus } = useMemo(() => {
 		const metadata = myProfile.userProfile?.user?.metadata;
-		try {
-			return safeJSONParse(metadata || '{}') || '';
-		} catch (e) {
-			const unescapedJSON = metadata?.replace(/\\./g, (match) => {
-				switch (match) {
-					case '\\"':
-						return '"';
-					default:
-						return match[1];
-				}
-			});
-			return safeJSONParse(unescapedJSON || '{}')?.status;
-		}
+		return saveParseUserStatus(metadata || '');
 	}, [myProfile, myProfile.userProfile?.user?.metadata]);
-	const [customStatus, setCustomStatus] = useState<string>(userCustomStatus.status ?? '');
 	const [token, setToken] = useState<number>(0);
 	const [selectedUserId, setSelectedUserId] = useState<string>('');
 	const [note, setNote] = useState<string>('Transfer funds');
 	const [extraAttribute, setExtraAttribute] = useState<string>('');
 	const [error, setError] = useState<string | null>(null);
 	const [userSearchError, setUserSearchError] = useState<string | null>(null);
-	const [resetTimerStatus, setResetTimerStatus] = useState<number>(0);
-	const [noClearStatus, setNoClearStatus] = useState<boolean>(false);
 	const [sendTokenInputsState, setSendTokenInputsState] = useState<{
 		isSendTokenInputDisabled: boolean;
 		isUserSelectionDisabled: boolean;
@@ -103,25 +81,13 @@ function FooterProfile({ name, status, avatar, userId, isDM }: FooterProfileProp
 
 	const handleCloseModalCustomStatus = () => {
 		dispatch(userClanProfileActions.setShowModalCustomStatus(false));
-		setCustomStatus(userCustomStatus.status ?? '');
+		closeSetCustomStatus();
 	};
 
 	const { setIsShowSettingFooterStatus, setIsUserProfile } = useSettingFooter();
 	const openSetting = () => {
 		setIsUserProfile(true);
 		setIsShowSettingFooterStatus(true);
-	};
-
-	const handleSaveCustomStatus = () => {
-		dispatch(
-			channelMembersActions.updateCustomStatus({
-				clanId: currentClanId ?? '',
-				customStatus: customStatus,
-				minutes: resetTimerStatus,
-				noClear: noClearStatus
-			})
-		);
-		dispatch(userClanProfileActions.setShowModalCustomStatus(false));
 	};
 
 	const handleCloseModalSendToken = () => {
@@ -192,6 +158,7 @@ function FooterProfile({ name, status, avatar, userId, isDM }: FooterProfileProp
 	const handleClosePopup = () => {
 		dispatch(giveCoffeeActions.setSendTokenEvent({ tokenEvent: null, status: TOKEN_FAILED_STATUS }));
 		handleCloseModalSendToken();
+		closeModalSendToken();
 	};
 
 	const loadParamsSendTokenFromURL = () => {
@@ -231,7 +198,7 @@ function FooterProfile({ name, status, avatar, userId, isDM }: FooterProfileProp
 
 			return () => clearTimeout(timer);
 		}
-	}, [showModalSendToken]);
+	}, [showModalSendToken, infoSendToken]);
 
 	const rootRef = useRef<HTMLDivElement>(null);
 
@@ -258,16 +225,46 @@ function FooterProfile({ name, status, avatar, userId, isDM }: FooterProfileProp
 		);
 	}, [userStatusProfile, rootRef.current, avatar, name]);
 
-	const handleCloseMenu = useCallback(() => {
-		setStatusMenu(false);
-	}, [setStatusMenu]);
+	const [openSetCustomStatus, closeSetCustomStatus] = useModal(() => {
+		return <ModalCustomStatus status={userCustomStatus.status || ''} name={name} onClose={handleCloseModalCustomStatus} />;
+	}, [userCustomStatus.status]);
+
+	const [openModalSendToken, closeModalSendToken] = useModal(() => {
+		return (
+			<ModalSendToken
+				setToken={setToken}
+				token={token}
+				selectedUserId={selectedUserId}
+				handleSaveSendToken={handleSaveSendToken}
+				onClose={handleClosePopup}
+				setSelectedUserId={setSelectedUserId}
+				setNote={setNote}
+				error={error}
+				userSearchError={userSearchError}
+				userId={myProfile.userId as string}
+				note={note}
+				sendTokenInputsState={sendTokenInputsState}
+				infoSendToken={infoSendToken}
+				isButtonDisabled={isButtonDisabled}
+			/>
+		);
+	}, [token, selectedUserId, note, infoSendToken, isButtonDisabled, sendTokenInputsState, myProfile.userId]);
+
+	useEffect(() => {
+		if (showModalCustomStatus) {
+			openSetCustomStatus();
+			return;
+		}
+		if (showModalSendToken) {
+			openModalSendToken();
+		} else {
+			closeModalSendToken();
+		}
+	}, [closeModalSendToken, openModalSendToken, openSetCustomStatus, showModalCustomStatus, showModalSendToken]);
 
 	return (
 		<div
-			className={`fixed bottom-0 left-[72px] min-h-14 w-widthChannelList z-10 ${statusMenu
-				? 'max-sbm:fixed max-sbm:left-[72px] max-sbm:w-[calc(100vw-72px)] max-sbm:z-20 sbm:!w-widthChannelList'
-				: 'hidden'
-				} sbm:block`}
+			className={`fixed md:bottom-3 bottom-0 md:left-[12px] left-[72px] border-theme-primary md:rounded-xl shadow-lg bg-theme-surface min-h-14 w-widthChannelList md:w-widthProfile z-10 overflow-hidden ${statusMenu ? '!w-[calc(100vw_-_72px)] sbm:!w-widthProfile' : 'hidden'} sbm:block `}
 			id="clan-footer"
 		>
 			{isInCall && <StreamInfo type={ESummaryInfo.CALL} />}
@@ -275,15 +272,13 @@ function FooterProfile({ name, status, avatar, userId, isDM }: FooterProfileProp
 			{(isVoiceJoined || GroupCallJoined) && <VoiceInfo />}
 			{(isElectronUpdateAvailable || IsElectronDownloading) && <UpdateButton isDownloading={!isElectronUpdateAvailable} />}
 			<div
-				className={`z-10 flex items-center gap-2 pr-4 pl-2 py-2 font-title text-[15px]
-			 font-[500] text-white hover:bg-gray-550/[0.16]
-			 shadow-sm transition dark:bg-bgSecondary600 bg-channelTextareaLight
-			 w-full group focus-visible:outline-none footer-profile ${appearanceTheme === 'light' && 'lightMode'}`}
+				className={`flex items-center gap-2 pr-4 pl-2 py-2 font-title text-[15px]
+			 font-[500]
+			  transition
+			 w-full group focus-visible:outline-none footer-profile  `}
 			>
-				<div
-					className={`footer-profile h-10 flex-1 flex pl-2 items-center dark:hover:bg-bgHoverMember hover:bg-bgLightSecondary rounded-md ${appearanceTheme === 'light' && 'lightMode'} max-sbm:w-[60%]`}
-				>
-					<div className="cursor-pointer flex items-center gap-3 relative flex-1 overflow-hidden" onClick={openProfileModal}>
+				<div className={`footer-profile h-10 flex-1 flex pl-2 items-center  text-theme-primary bg-item-hover rounded-md`}>
+					<div className="cursor-pointer flex items-center gap-3 relative flex-1" onClick={openProfileModal}>
 						<AvatarImage
 							alt={''}
 							username={name}
@@ -292,65 +287,28 @@ function FooterProfile({ name, status, avatar, userId, isDM }: FooterProfileProp
 							srcImgProxy={createImgproxyUrl(avatar ?? '')}
 							src={avatar}
 						/>
-						<div className="absolute bottom-1 left-6">
+						<div className="absolute bottom-0 left-0 w-[32px] h-[32px] ">
 							<UserStatusIconDM status={userCustomStatus?.user_status} />
 						</div>
-						<div className="flex flex-col dark:text-contentSecondary text-colorTextLightMode overflow-hidden">
-							<p className="text-base font-medium truncate dark:text-contentSecondary text-black max-w-[150px] max-sbm:max-w-[100px]">{name}</p>
-							<p className="text-[11px] text-left line-clamp-1 leading-[14px] truncate max-w-[150px] max-sbm:max-w-[100px]">{customStatus}</p>
+						<div className="flex flex-col overflow-hidden flex-1">
+							<p className="text-sm font-medium truncate max-w-[150px] max-sbm:max-w-[100px] text-theme-secondary">{name}</p>
+							<p className="text-[11px] text-left line-clamp-1 leading-[14px] truncate max-w-[150px] max-sbm:max-w-[100px]">
+								{userCustomStatus.status}
+							</p>
 						</div>
 					</div>
 				</div>
-				<div className="flex items-center gap-2 flex-shrink-0">
-					{statusMenu && (
-						<div
-							onClick={handleCloseMenu}
-							className="cursor-pointer p-1 group/close opacity-80 dark:text-textIconFooterProfile text-black dark:hover:bg-bgDarkFooterProfile hover:bg-bgLightModeButton hover:rounded-md flex sbm:hidden"
-						>
-							<Icons.ArrowLeftCircle className="w-5 h-5" />
-						</div>
-					)}
-					<Icons.MicIcon className="ml-auto w-[18px] h-[18px] opacity-80 text-[#f00] dark:hover:bg-[#5e5e5e] hover:bg-bgLightModeButton hidden" />
-					<Icons.HeadPhoneICon className="ml-auto w-[18px] h-[18px] opacity-80 dark:text-[#AEAEAE] text-black  dark:hover:bg-[#5e5e5e] hover:bg-bgLightModeButton hidden" />
+				<div className="flex items-center gap-2">
+					<Icons.MicIcon className="ml-auto w-[18px] h-[18px] opacity-80 text-[#f00] bg-item-hover hidden" />
+					<Icons.HeadPhoneICon className="ml-auto w-[18px] h-[18px] opacity-80 text-theme-primary  bg-item-hover hidden" />
 					<div
 						onClick={openSetting}
-						className="cursor-pointer ml-auto p-1 group/setting opacity-80 dark:text-textIconFooterProfile text-black dark:hover:bg-bgDarkFooterProfile hover:bg-bgLightModeButton hover:rounded-md"
+						className="cursor-pointer ml-auto p-1 group/setting opacity-80  text-theme-primary bg-item-hover hover:rounded-md "
 					>
-						<Icons.SettingProfile className="w-5 h-5 group-hover/setting:rotate-180 duration-500" />
+						<Icons.SettingProfile className="w-5 h-5  group-hover/setting:rotate-180 duration-500" />
 					</div>
 				</div>
 			</div>
-			{showModalCustomStatus && (
-				<ModalCustomStatus
-					setCustomStatus={setCustomStatus}
-					customStatus={userCustomStatus.status || ''}
-					handleSaveCustomStatus={handleSaveCustomStatus}
-					name={name}
-					openModal={showModalCustomStatus}
-					onClose={handleCloseModalCustomStatus}
-					setNoClearStatus={setNoClearStatus}
-					setResetTimerStatus={setResetTimerStatus}
-				/>
-			)}
-			{showModalSendToken && (
-				<ModalSendToken
-					setToken={setToken}
-					token={token}
-					selectedUserId={selectedUserId}
-					handleSaveSendToken={handleSaveSendToken}
-					openModal={showModalSendToken}
-					onClose={handleClosePopup}
-					setSelectedUserId={setSelectedUserId}
-					setNote={setNote}
-					error={error}
-					userSearchError={userSearchError}
-					userId={myProfile.userId as string}
-					note={note}
-					sendTokenInputsState={sendTokenInputsState}
-					infoSendToken={infoSendToken}
-					isButtonDisabled={isButtonDisabled}
-				/>
-			)}
 		</div>
 	);
 }

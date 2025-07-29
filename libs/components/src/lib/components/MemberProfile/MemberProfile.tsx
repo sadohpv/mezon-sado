@@ -6,7 +6,7 @@ import { memo, useMemo, useRef } from 'react';
 import { AvatarImage } from '../../components';
 import { useDirectMessageContextMenu } from '../../contexts/DirectMessageContextMenu';
 import { DataMemberCreate } from '../DmList/MemberListGroupChat';
-import StatusUser from '../StatusUser';
+import StatusUser, { StatusUser2 } from '../StatusUser';
 
 export type MemberProfileProps = {
 	avatar: string;
@@ -139,15 +139,13 @@ const MemberProfileCore = ({
 							className={`absolute top-[22px] mr-5 max-w-full overflow-x-hidden transition-all duration-300 flex flex-col items-start justify-start  ${isHideAnimation ? '' : 'group-hover:-translate-y-4'}`}
 						>
 							{customStatus && isListFriend ? (
-								<span className={`text-[11px] text-left dark:text-contentSecondary text-colorTextLightMode line-clamp-1 `}>
-									{customStatus}
-								</span>
+								<span className={`text-[11px] text-left text-theme-primary opacity-60 line-clamp-1 `}>{customStatus}</span>
 							) : (
-								<span className={`text-[11px] dark:text-contentSecondary text-colorTextLightMode `}>
+								<span className={`text-[11px] text-theme-primary opacity-60 `}>
 									{typeof userStatus === 'string' && userStatus ? userStatus : !status?.status ? 'Offline' : 'Online'}
 								</span>
 							)}
-							<p className="text-[11px] dark:text-contentSecondary text-colorTextLightMode overflow-x-hidden whitespace-nowrap text-ellipsis text-left w-full">
+							<p className="text-[11px] text-theme-primary opacity-60 overflow-x-hidden whitespace-nowrap text-ellipsis text-left w-full">
 								{user?.user?.username}
 							</p>
 						</div>
@@ -160,9 +158,9 @@ const MemberProfileCore = ({
 									${!isOwnerClanOrGroup && 'w-full'}
 									${isListFriend ? ' inline-flex justify-start' : ''}
 									${positionType === MemberProfileType.DM_MEMBER_GROUP ? ` ${isOwnerClanOrGroup ? 'max-w-[150px]' : 'max-w-[176px]'}  whitespace-nowrap overflow-x-hidden text-ellipsis` : ''}
-									${positionType === MemberProfileType.DM_LIST ? `${isOwnerClanOrGroup ? 'max-w-[150px]' : 'max-w-[176px]'} whitespace-nowrap overflow-x-hidden text-ellipsis group-hover/itemListDm:text-black dark:group-hover/itemListDm:text-white` : ''}
-									${classParent === '' ? 'bg-transparent' : 'relative dark:bg-transparent bg-channelTextareaLight'}
-									${isUnReadDirect && !isMute ? 'dark:text-white text-black dark:font-medium font-semibold' : 'font-medium dark:text-channelTextLabel text-colorTextLightMode'}
+									${positionType === MemberProfileType.DM_LIST ? `${isOwnerClanOrGroup ? 'max-w-[150px]' : 'max-w-[176px]'} whitespace-nowrap overflow-x-hidden text-ellipsis text-theme-primary-hover` : ''}
+									${classParent === '' ? 'bg-transparent' : 'relative '}
+									${isUnReadDirect && !isMute ? ' font-semibold text-theme-primary-active' : 'font-medium  '}
 								`}
 									title={name}
 								>
@@ -185,7 +183,7 @@ const MemberProfileCore = ({
 							</div>
 							{customStatus && isMemberDMGroup && (
 								<p
-									className={`dark:text-channelTextLabel text-black w-full text-[12px] line-clamp-1 break-all max-w-[176px]`}
+									className={`text-theme-primary opacity-60 w-full text-[12px] line-clamp-1 break-all max-w-[176px]`}
 									title={customStatus}
 								>
 									{customStatus}
@@ -194,7 +192,7 @@ const MemberProfileCore = ({
 						</div>
 					)}
 					{Number(user?.type) === ChannelType.CHANNEL_TYPE_GROUP && (
-						<p className="dark:text-channelTextLabel text-colorTextLightMode text-xs">{countMember} Members</p>
+						<p className="text-theme-primary opacity-60 text-xs">{countMember} Members</p>
 					)}
 				</div>
 			</div>
@@ -246,15 +244,38 @@ export const BaseMemberProfile = (props: BaseMemberProfileProps) => {
 export const UserStatusIconDM = ({ status }: { status?: EUserStatus }) => {
 	switch (status) {
 		case EUserStatus.ONLINE:
-			return <Icons.OnlineStatus />;
+			return <StatusUser2 status="online" />;
 		case EUserStatus.IDLE:
-			return <Icons.DarkModeIcon className="text-[#F0B232] -rotate-90 w-[10px] h-[10px]" />;
+			return (
+				<span className="flex justify-end items-end h-full">
+					<Icons.DarkModeIcon className="text-[#F0B232] -rotate-90 w-3 h-3 bg-theme-primary p-[2px] rounded-full" />
+				</span>
+			);
 		case EUserStatus.DO_NOT_DISTURB:
-			return <Icons.MinusCircleIcon className=" w-[10px] h-[10px]" />;
+			return <StatusUser2 status="dnd" />;
 		case EUserStatus.INVISIBLE:
-			return <Icons.OfflineStatus />;
+			return (
+				<span className="flex justify-end items-end h-full">
+					<Icons.OfflineStatus className=" w-3 h-3 bg-theme-primary p-[2px] rounded-full" />
+				</span>
+			);
 		default:
-			return <Icons.OnlineStatus />;
+			return <StatusUser2 status="online" />;
+	}
+};
+
+export const UserStatusIcon = ({ status }: { status?: EUserStatus }) => {
+	switch (status) {
+		case EUserStatus.ONLINE:
+			return <StatusUser2 status="online" className="w-5 h-5 p-1" />;
+		case EUserStatus.IDLE:
+			return <Icons.DarkModeIcon className="text-[#F0B232] -rotate-90 w-5 h-5 bg-theme-primary p-1 rounded-full" />;
+		case EUserStatus.DO_NOT_DISTURB:
+			return <StatusUser2 status="dnd" className="w-5 h-5 p-1" />;
+		case EUserStatus.INVISIBLE:
+			return <Icons.OfflineStatus className="w-5 h-5 bg-theme-primary p-1 rounded-full" />;
+		default:
+			return <StatusUser2 status="online" className="w-5 h-5 p-1" />;
 	}
 };
 
@@ -262,20 +283,20 @@ export const UserStatusIconClan = ({ status, online }: { status?: EUserStatus; o
 	const normalizedStatus = typeof status === 'object' && status !== null ? (status as UserStatus).status?.toUpperCase() : status?.toUpperCase();
 
 	if (!online) {
-		return <Icons.OfflineStatus />;
+		return <StatusUser2 status="offline" />;
 	}
 
 	switch (normalizedStatus) {
 		case 'IDLE':
 			return <Icons.DarkModeIcon className="text-[#F0B232] -rotate-90 w-[10px] h-[10px]" />;
 		case 'DO NOT DISTURB':
-			return <Icons.MinusCircleIcon className=" w-[10px] h-[10px]" />;
+			return <StatusUser2 status="dnd" />;
 		case 'INVISIBLE':
-			return <Icons.OfflineStatus />;
+			return <StatusUser2 status="offline" />;
 	}
 
 	if (online) {
-		return <Icons.OnlineStatus />;
+		return <StatusUser2 status="online" />;
 	}
 
 	return <Icons.OfflineStatus />;
@@ -312,7 +333,7 @@ const DMUserName = ({
 		<span
 			className={`one-line text-start ${hideLongName && 'truncate !block'} ${
 				isOwnerClanOrGroup && 'max-w-[140px]'
-			} ${isListFriend ? 'dark:text-white text-black' : ''}`}
+			} ${isListFriend ? 'text-theme-primary' : ''}`}
 		>
 			{!isHiddenAvatarPanel && name}
 		</span>

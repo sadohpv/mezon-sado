@@ -1,7 +1,8 @@
-import { appActions, useAppDispatch } from '@mezon/store';
+import { appActions, useAppDispatch } from '@mezon/store-mobile';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 import { useCallback } from 'react';
-import { Platform } from 'react-native';
+import { Alert, Platform } from 'react-native';
+import { PERMISSIONS, RESULTS, check, request } from 'react-native-permissions';
 import Toast from 'react-native-toast-message';
 import RNFetchBlob from 'rn-fetch-blob';
 
@@ -11,17 +12,28 @@ export function useImage() {
 	const downloadImage = useCallback(
 		async (imageUrl: string, type: string) => {
 			try {
-				const response = await RNFetchBlob.config({
-					fileCache: true,
-					appendExt: type
-				}).fetch('GET', imageUrl);
+				let filePath = '';
 
-				if (response.info().status === 200) {
-					const filePath = response.path();
+				if (imageUrl.startsWith('data:image/')) {
+					const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, '');
+					const extension = type || 'png';
+					filePath = `${RNFetchBlob.fs.dirs.CacheDir}/image_${Date.now()}.${extension}`;
+
+					await RNFetchBlob.fs.writeFile(filePath, base64Data, 'base64');
 					return filePath;
 				} else {
-					console.error('Error downloading image:', response.info());
-					return null;
+					const response = await RNFetchBlob.config({
+						fileCache: true,
+						appendExt: type || 'png'
+					}).fetch('GET', imageUrl);
+
+					if (response.info().status === 200) {
+						filePath = response.path();
+						return filePath;
+					} else {
+						console.error('Error downloading image:', response.info());
+						return null;
+					}
 				}
 			} catch (error) {
 				console.error('Error downloading image:', error);
@@ -32,9 +44,47 @@ export function useImage() {
 		[dispatch]
 	);
 
+	const checkAndRequestPermission = async () => {
+		const permission = Platform.select({
+			ios: PERMISSIONS.IOS.PHOTO_LIBRARY,
+			android:
+				typeof Platform.Version === 'number' && Platform.Version >= 33
+					? PERMISSIONS.ANDROID.READ_MEDIA_IMAGES
+					: PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE
+		});
+
+		if (!permission) return false;
+
+		try {
+			const result = await check(permission);
+
+			switch (result) {
+				case RESULTS.GRANTED:
+					return true;
+				case RESULTS.DENIED: {
+					const requestResult = await request(permission);
+					return requestResult === RESULTS.GRANTED;
+				}
+				case RESULTS.BLOCKED:
+					Alert.alert('Permission Required', 'Please enable storage permission in your device settings to save images.', [{ text: 'OK' }]);
+					return false;
+				default:
+					return false;
+			}
+		} catch {
+			return false;
+		}
+	};
+
 	const saveImageToCameraRoll = useCallback(
 		async (filePath: string, type: string, isShowSuccessToast = true) => {
 			try {
+				const hasPermission = await checkAndRequestPermission();
+				if (!hasPermission) {
+					throw {
+						message: 'Permission Required'
+					};
+				}
 				await CameraRoll.save(filePath, { type: type === 'video' ? 'video' : 'photo' });
 
 				isShowSuccessToast &&
@@ -44,9 +94,10 @@ export function useImage() {
 					});
 			} catch (err) {
 				Toast.show({
-					text1: 'Error saving image',
+					text1: err?.message ? err?.message : 'Error saving image',
 					type: 'error'
 				});
+				throw err;
 			} finally {
 				if (Platform.OS === 'android') {
 					await RNFetchBlob.fs.unlink(filePath);

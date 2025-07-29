@@ -11,7 +11,8 @@ export default {
 
 		highlighter: {
 			padding: 1,
-			border: '1px inset transparent'
+			border: '1px inset transparent',
+			height: '26px'
 		},
 		input: {
 			padding: 1,
@@ -25,7 +26,7 @@ export default {
 		top: -16,
 		left: -7,
 		list: {
-			backgroundColor: '#111214',
+			backgroundColor: 'var(--theme-setting-primary)',
 			fontSize: 14,
 			overflowY: 'scroll' as OverflowY,
 			maxHeight: '500px',
@@ -34,7 +35,7 @@ export default {
 		},
 		item: {
 			'&focused': {
-				backgroundColor: '#282A2E'
+				backgroundColor: 'var(--bg-item-hover)'
 			}
 		}
 	}

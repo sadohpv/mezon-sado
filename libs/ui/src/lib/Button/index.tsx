@@ -1,20 +1,24 @@
 import React, { ButtonHTMLAttributes } from 'react';
-interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'dangerouslySetInnerHTML'> {
-	className?: string;
-	label: string;
-	image?: string;
-	disable?: boolean;
-	noNeedOpacity?: boolean;
-}
 
-const Button: React.FC<ButtonProps> = ({ disable, label, className, noNeedOpacity, ...rest }) => {
+export type ButtonVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'ghost' | 'link';
+
+export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+
+export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'dangerouslySetInnerHTML'> {
+	className?: string;
+	children?: React.ReactNode;
+	disabled?: boolean;
+	variant?: ButtonVariant;
+	size?: ButtonSize;
+}
+const Button: React.FC<ButtonProps> = ({ variant, size, disabled, children, className, ...rest }) => {
 	return (
 		<button
-			className={`bg-primary text-white font-[500] py-2 px-4 rounded ${disable ? `text-contentTertiary ${noNeedOpacity ? 'dark:bg-[#3b428a] bg-[#9da5ed]' : 'opacity-50'} cursor-not-allowed` : 'hover:bg-hoverPrimary bg-primary'} ${className}`}
+			className={`font-[500] capitalize disabled:opacity-50 disabled:cursor-not-allowed ease-linear transition-all duration-150  ${className}`}
 			{...rest}
-			disabled={disable}
+			disabled={disabled}
 		>
-			{label}
+			{children}
 		</button>
 	);
 };

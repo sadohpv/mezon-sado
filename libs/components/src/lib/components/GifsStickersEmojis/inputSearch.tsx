@@ -13,7 +13,7 @@ export const InputSearch: React.FC = () => {
 	const { trendingClickingStatus, setClickedTrendingGif, categoriesStatus, setShowCategories, buttonArrowBackStatus, setButtonArrowBack } =
 		useGifs();
 
-	const { setValueInputSearch, valueInputToCheckHandleSearch, valuePlaceHolder } = useGifsStickersEmoji();
+	const { setValueInputSearch, valuePlaceHolder } = useGifsStickersEmoji();
 
 	const debouncedSetValueSearchGif = useDebouncedCallback((value) => {
 		setValueSearchGif(value);
@@ -56,7 +56,7 @@ export const InputSearch: React.FC = () => {
 	};
 
 	return (
-		<div className="flex flex-row items-center">
+		<div className="flex flex-row items-center pt-4">
 			{buttonArrowBackStatus && (
 				<div className="px-2 cursor-pointer" onClick={(e) => onclickBackArrow(e)} role="button">
 					<Icons.BackToCategoriesGif />
@@ -70,19 +70,17 @@ export const InputSearch: React.FC = () => {
 			)}
 
 			{!trendingClickingStatus && (
-				<div
-					className={`transition-all duration-300 h-8 pl-4 pr-2 py-3 dark:bg-[#1E1F22] bg-white relative rounded items-center inline-flex w-[97%] m-2 text-center`}
-				>
+				<div className={`transition-all duration-300 h-8 pl-4 pr-2 py-3 relative rounded items-center inline-flex w-[97%] text-center`}>
 					<input
 						onChange={handleInputChange}
 						type="text"
 						placeholder={valuePlaceHolder || 'search'}
-						className="dark:text-[#AEAEAE] text-black dark:placeholder-[#AEAEAE] placeholder-colorTextLightMode outline-none bg-transparent w-full"
+						className="bg-theme-input outline-none bg-theme-input flex-1 p-2 rounded-md "
 						value={valueInput}
 						ref={searchInputRef}
 					/>
 
-					<div className="w-5 h-6 flex flex-row items-center pl-1 absolute right-1 dark:bg-[#1E1F22] bg-white top-1/4 transform -translate-y-1/2 m-2 cursor-pointer">
+					<div className="w-5 h-6 flex flex-row items-center pl-1 absolute right-1  top-1/4 transform -translate-y-1/2 m-2 cursor-pointer">
 						<Icons.Search />
 					</div>
 				</div>

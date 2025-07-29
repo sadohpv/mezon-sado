@@ -44,13 +44,19 @@ const HomeDefault = React.memo(
 		const openBottomSheet = useCallback(() => {
 			Keyboard.dismiss();
 			setIsShowSettingNotifyBottomSheet(!isShowSettingNotifyBottomSheet);
-			timeoutRef.current = setTimeout(() => {
-				const data = {
-					heightFitContent: true,
-					children: <NotificationSetting />
-				};
+
+			const data = {
+				heightFitContent: true,
+				children: <NotificationSetting />
+			};
+
+			if (Platform.OS === 'ios') {
+				timeoutRef.current = setTimeout(() => {
+					DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_BOTTOM_SHEET, { isDismiss: false, data });
+				}, 200);
+			} else {
 				DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_BOTTOM_SHEET, { isDismiss: false, data });
-			}, 200);
+			}
 		}, []);
 
 		useEffect(() => {
@@ -67,7 +73,7 @@ const HomeDefault = React.memo(
 				keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight + 5}
 			>
 				{Platform.OS === 'ios' && <LicenseAgreement />}
-				<DrawerListener />
+				<DrawerListener channelId={channelId} />
 				<HomeDefaultHeader openBottomSheet={openBottomSheet} navigation={props.navigation} onOpenDrawer={onOpenDrawer} />
 				<View style={{ flex: 1 }}>
 					<ChannelMessages

@@ -9,7 +9,7 @@ interface IClientInformationProps {
 const ClientInformation = ({ currentApp }: IClientInformationProps) => {
 	const [isShowResetSecretPO, setIsShowSecretPO] = useState(false);
 	const dispatch = useAppDispatch();
-
+	const [idCopied, setIdCopied] = useState(false);
 	useEffect(() => {
 		if (currentApp?.id) {
 			dispatch(fetchMezonOauthClient({ appId: currentApp.id, appName: currentApp.appname }));
@@ -22,6 +22,10 @@ const ClientInformation = ({ currentApp }: IClientInformationProps) => {
 
 	const handleCopyUrl = (url: string) => {
 		navigator.clipboard.writeText(url);
+		setIdCopied(true);
+		setTimeout(() => {
+			setIdCopied(false);
+		}, 2000);
 	};
 
 	return (
@@ -37,9 +41,10 @@ const ClientInformation = ({ currentApp }: IClientInformationProps) => {
 						<div className="text-black dark:text-white font-bold text-xs">{currentApp?.oAuthClient?.client_id}</div>
 						<button
 							onClick={() => handleCopyUrl(currentApp?.oAuthClient?.client_id as string)}
-							className="py-[7px] px-4 cursor-pointer bg-blue-600 hover:bg-blue-800 transition-colors rounded-sm w-fit select-none font-medium text-white"
+							className={`py-[7px] px-4 cursor-pointer ${idCopied ? 'bg-gray-500' : 'bg-indigo-600  hover:bg-indigo-700'
+								} transition-colors rounded-lg w-fit select-none font-medium text-white`}
 						>
-							Copy
+							{idCopied ? 'Copied!' : 'Copy'}
 						</button>
 					</div>
 					<div className="flex flex-col gap-2 xl:w-1/3 max-xl:w-1/2">
@@ -47,7 +52,7 @@ const ClientInformation = ({ currentApp }: IClientInformationProps) => {
 						<div className="text-xs">Hidden for security</div>
 						<div
 							onClick={toggleResetSecretePopup}
-							className="py-[7px] px-4 cursor-pointer transition-colors rounded-sm w-fit select-none font-medium dark:text-white text-black dark:hover:bg-[#35373c] dark:bg-[#3b3d44] hover:bg-[#dfe1e5] bg-[#d7d9dc]"
+							className="py-[7px] px-4 cursor-pointer transition-colors rounded-lg w-fit select-none font-medium dark:text-white text-black dark:hover:bg-[#35373c] dark:bg-[#3b3d44] hover:bg-[#dfe1e5] bg-[#d7d9dc]"
 						>
 							Reset secret
 						</div>
@@ -131,22 +136,22 @@ const ResetSecretPopup = ({ handleClosePopup, currentApp, handleCopyKey }: IRese
 							Your app will stop working until you update the secret key in your app code.
 						</div>
 						<div className="relative">
-							<div className="bg-bgLightModeThird dark:bg-[#1e1f22] border border-primary p-[10px] rounded-sm">{newSecretKey}</div>
+							<div className="bg-bgLightModeThird dark:bg-[#1e1f22] border border-bgSelectItemHover p-[10px] mb-2 rounded-lg">{newSecretKey}</div>
 							<button
 								onClick={() => handleCopyKey(newSecretKey)}
-								className="absolute right-2 top-2 text-sm py-[5px] px-[6px] cursor-pointer bg-blue-600 hover:bg-blue-800 transition-colors rounded-sm w-fit select-none font-medium text-white"
+								className="absolute right-2 top-2 text-sm py-[5px] px-[6px] cursor-pointer bg-indigo-600  hover:bg-indigo-700  transition-colors rounded-lg w-fit select-none font-medium text-white"
 							>
 								Copy
 							</button>
 						</div>
 					</div>
 				</div>
-				<div className="dark:bg-[#2b2d31] bg-[#f2f3f5] rounded-b-md dark:text-textDarkTheme text-textLightTheme flex justify-end items-center gap-4 p-[16px] text-[14px] font-medium">
+				<div className="dark:bg-slate-800 bg-slate-400  rounded-b-md dark:text-textDarkTheme text-textLightTheme flex justify-end items-center gap-4 p-[16px] text-[14px] font-medium">
 					<div onClick={handleClosePopup} className="hover:underline cursor-pointer">
 						Nevermind
 					</div>
 					<div
-						className="bg-red-600 hover:bg-red-700 text-white rounded-sm px-[25px] py-[8px] cursor-pointer"
+						className="bg-red-600 hover:bg-red-700 text-white rounded-lg px-[25px] py-[8px] cursor-pointer"
 						onClick={handleSaveSecretKey}
 					>
 						Yes, do it!

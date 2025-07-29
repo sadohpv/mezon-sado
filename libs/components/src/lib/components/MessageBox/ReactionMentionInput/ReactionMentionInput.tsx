@@ -31,9 +31,8 @@ import {
 } from '@mezon/store';
 import {
 	CHANNEL_INPUT_ID,
+	CREATING_TOPIC,
 	ChannelMembersEntity,
-	EBacktickType,
-	ETypeMEntion,
 	GENERAL_INPUT_ID,
 	IEmojiOnMessage,
 	IHashtagOnMessage,
@@ -45,6 +44,7 @@ import {
 	MIN_THRESHOLD_CHARS,
 	MentionDataProps,
 	MentionReactInputProps,
+	QUICK_MENU_TYPE,
 	RequestInput,
 	SubPanelName,
 	TITLE_MENTION_HERE,
@@ -60,6 +60,7 @@ import {
 	formatMentionsToString,
 	getDisplayMention,
 	parseHtmlAsFormattedText,
+	processBoldEntities,
 	processMarkdownEntities,
 	searchMentionsHashtag,
 	threadError,
@@ -170,17 +171,16 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 	const dataReferences = useAppSelector((state) => selectDataReferences(state, props.currentChannelId ?? ''));
 	const dataReferencesTopic = useAppSelector((state) => selectDataReferences(state, currTopicId ?? ''));
 
-	const attachmentFilteredByChannelId = useAppSelector((state) =>
-		selectAttachmentByChannelId(state, !props.isTopic ? props.currentChannelId! : currTopicId!)
-	);
+	const scopeId = props.isTopic ? currTopicId || CREATING_TOPIC : props.currentChannelId!;
+
+	const attachmentFiltered = useAppSelector((state) => selectAttachmentByChannelId(state, scopeId || ''));
 
 	const isDm = props.mode === ChannelStreamMode.STREAM_MODE_DM;
 
 	const appearanceTheme = useSelector(selectTheme);
 	const userProfile = useSelector(selectAllAccount);
 	const idMessageRefEdit = useSelector(selectIdMessageRefEdit);
-	const { setOpenThreadMessageState, checkAttachment } = useReference(props.currentChannelId || '');
-
+	const { setOpenThreadMessageState, checkAttachment } = useReference(scopeId || '');
 	const [mentionData, setMentionData] = useState<ApiMessageMention[]>([]);
 	const [valueHighlight, setValueHightlight] = useState<string>('');
 	const [titleModalMention, setTitleModalMention] = useState('');
@@ -214,7 +214,7 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 		editMessageId: idMessageRefEdit,
 		currentChannelId: props.currentChannelId,
 		currentDmGroupId: props.currentDmGroupId,
-		hasAttachments: attachmentFilteredByChannelId?.files.length > 0
+		hasAttachments: attachmentFiltered?.files?.length > 0
 	});
 
 	useEmojiPicker({
@@ -254,17 +254,7 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 			const { text, entities } = parseHtmlAsFormattedText(hasToken ? checkedRequest.content : checkedRequest.content.trim());
 			const mk: IMarkdownOnMessage[] = processMarkdownEntities(text, entities);
 
-			const boldMarkdownArr: IMarkdownOnMessage[] = [];
-
-			checkedRequest?.mentionRaw?.forEach((mention: any) => {
-				if (mention.childIndex === ETypeMEntion.BOLD) {
-					boldMarkdownArr.push({
-						type: EBacktickType.BOLD,
-						s: mention.plainTextIndex,
-						e: mention.plainTextIndex + mention.display.length
-					});
-				}
-			});
+			const boldMarkdownArr = processBoldEntities(checkedRequest.mentionRaw, mk);
 
 			const { adjustedMentionsPos, adjustedHashtagPos, adjustedEmojiPos } = adjustPos(mk, mentionList, hashtagList, emojiList, text);
 			const payload: {
@@ -307,7 +297,9 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 			if ((!text && !checkAttachment) || ((draftRequest?.valueTextInput || '').trim() === '' && !checkAttachment)) {
 				return;
 			}
-
+			if (props.isTopic && !text && checkAttachment) {
+				payload.t = '';
+			}
 			if (
 				draftRequest?.valueTextInput &&
 				typeof draftRequest?.valueTextInput === 'string' &&
@@ -492,12 +484,12 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 	const closeMenu = useSelector(selectCloseMenu);
 
 	const attachmentData = useMemo(() => {
-		if (attachmentFilteredByChannelId === null) {
+		if (!attachmentFiltered) {
 			return [];
 		} else {
-			return attachmentFilteredByChannelId.files;
+			return attachmentFiltered.files;
 		}
-	}, [attachmentFilteredByChannelId?.files]);
+	}, [attachmentFiltered?.files]);
 
 	const isReplyOnChannel = dataReferences.message_ref_id && !props.isTopic ? true : false;
 	const isReplyOnTopic = dataReferencesTopic.message_ref_id && props.isTopic ? true : false;
@@ -699,7 +691,7 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 			const builtInCommands = slashCommands.filter((cmd) => cmd.display.toLowerCase().includes(search.toLowerCase()));
 
 			const quickMenuCommands = channelQuickMenuItems
-				.filter((item) => item.menu_name?.toLowerCase().includes(search.toLowerCase()))
+				.filter((item) => item.menu_name?.toLowerCase().includes(search.toLowerCase()) && item.menu_type === QUICK_MENU_TYPE.FLASH_MESSAGE)
 				.map((item) => ({
 					id: `quick_menu_${item.id}`,
 					display: item.menu_name || '',
@@ -724,7 +716,9 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 				callback(generateCommandsList(search));
 				if (props.currentChannelId) {
 					try {
-						await dispatch(quickMenuActions.listQuickMenuAccess({ channelId: props.currentChannelId }));
+						await dispatch(
+							quickMenuActions.listQuickMenuAccess({ channelId: props.currentChannelId, menuType: QUICK_MENU_TYPE.FLASH_MESSAGE })
+						);
 						callback(generateCommandsList(search));
 					} catch (error) {
 						console.error('Error fetching fresh commands:', error);
@@ -734,7 +728,9 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 				callback([{ id: 'loading', display: 'loading', description: 'Loading commands...', isLoading: true }]);
 				try {
 					if (props.currentChannelId) {
-						await dispatch(quickMenuActions.listQuickMenuAccess({ channelId: props.currentChannelId }));
+						await dispatch(
+							quickMenuActions.listQuickMenuAccess({ channelId: props.currentChannelId, menuType: QUICK_MENU_TYPE.FLASH_MESSAGE })
+						);
 					}
 					callback(generateCommandsList(search));
 				} catch (error) {
@@ -807,10 +803,10 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 	};
 
 	return (
-		<div className="contain-layout relative" ref={containerRef}>
+		<div className={`contain-layout relative bg-theme-surface rounded-lg `} ref={containerRef}>
 			<div className="relative">
 				<span
-					className={`absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none z-10 truncate transition-opacity duration-300 ${
+					className={`absolute left-2 top-1/2 transform -translate-y-1/2 text-theme-primary   pointer-events-none z-10 truncate transition-opacity duration-300 ${
 						draftRequest?.valueTextInput ? 'hidden' : 'opacity-100'
 					} sm:opacity-100 max-sm:opacity-100`}
 					style={{
@@ -858,6 +854,9 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 							width: `${!closeMenu ? props.mentionWidth : '90vw'}`,
 							left: `${!closeMenu ? '-40px' : '-30px'}`
 						},
+						control: {
+							padding: props.isThread ? '1px 0' : '0'
+						},
 
 						'&multiLine': {
 							highlighter: {
@@ -868,15 +867,16 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 								scrollbarWidth: 'none'
 							},
 							input: {
-								padding: props.isThread && !threadCurrentChannel ? '10px' : '9px 120px 9px 9px',
-								border: 'none',
+								padding: props.isThread && !threadCurrentChannel ? '8px' : '9px 120px 9px 9px',
+								border: props.isThread && !threadCurrentChannel ? '1px solid var(--border-primary)' : 'none',
 								outline: 'none',
 								maxHeight: '350px',
-								overflow: 'auto'
+								overflow: 'auto',
+								borderRadius: '8px'
 							}
 						}
 					}}
-					className={`mentions min-h-11 dark:bg-channelTextarea  bg-channelTextareaLight dark:text-white text-colorTextLightMode rounded-lg ${appearanceTheme === 'light' ? 'lightMode lightModeScrollBarMention' : 'darkMode'} cursor-not-allowed`}
+					className={`mentions min-h-11 cursor-not-allowed text-theme-message rounded-lg`}
 					allowSpaceInQuery={true}
 					onKeyDown={onKeyDown}
 					forceSuggestionsAboveCursor={true}
@@ -917,7 +917,7 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 							);
 						}}
 						style={mentionStyle}
-						className="dark:bg-[#3B416B] bg-bgLightModeButton"
+						className="bg-mention"
 					/>
 					<Mention
 						markup="#[__display__](__id__)"
@@ -940,7 +940,7 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 								/>
 							) : null
 						}
-						className="dark:bg-[#3B416B] bg-bgLightModeButton"
+						className="bg-mention"
 					/>
 					<Mention
 						trigger=":"
@@ -968,7 +968,7 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 						displayTransform={(id: any, display: any) => {
 							return `${display}`;
 						}}
-						className="dark:!text-white !text-black"
+						className="color-mention"
 						style={{ WebkitTextStroke: 1, WebkitTextStrokeColor: appearanceTheme === 'dark' ? 'white' : 'black' }}
 					/>
 					<Mention

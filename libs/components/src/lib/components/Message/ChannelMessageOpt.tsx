@@ -103,9 +103,9 @@ const ChannelMessageOpt = ({
 	const items = useMenuBuilder([createTopicMenu, reactMenu, replyMenu, editMenu, threadMenu, addToNote, giveACoffeeMenu, optionMenu]);
 	return (
 		<div
-			className={`chooseForText z-[1] absolute h-8 p-0.5 rounded block ${!isCombine ? (message?.references ? '-top-5' : 'top-0') : '-top-5'} ${isDifferentDay ? '-top-12 mt-1' : ''} right-6 w-fit`}
+			className={`chooseForText z-[1] absolute min-h-[34px] p-0.5 bg-theme-contexify rounded-lg block ${!isCombine ? (message?.references ? '-top-5' : 'top-0') : '-top-5'} ${isDifferentDay ? '-top-12 mt-1' : ''} right-6 w-fit`}
 		>
-			<div className="flex justify-between dark:bg-bgDarkPopover bg-bgLightMode border border-bgSecondary rounded select-none">
+			<div className="flex justify-between bg-theme-contexify rounded select-none">
 				<div className="w-fit h-full flex items-center justify-between" ref={refOpt}>
 					<RecentEmoji message={message} isTopic={isTopic} />
 					{items
@@ -114,9 +114,13 @@ const ChannelMessageOpt = ({
 						})
 						.map((item, index) => (
 							<button
+								title={item.label}
 								key={index}
 								onClick={(e) => (item?.handleItemClick ? item?.handleItemClick(e) : undefined)}
-								className={clx('h-full p-1 cursor-pointer popup-btn', item.classNames)}
+								className={clx(
+									'h-full p-1 rounded-lg cursor-pointer popup-btn text-theme-primary text-theme-primary-hover bg-item-hover',
+									item.classNames
+								)}
 							>
 								{item.icon}
 							</button>
@@ -172,12 +176,7 @@ function useTopicMenuBuilder(message: IMessageWithUser, doNotAllowCreateTopic: b
 				builder.when(
 					clanId && clanId !== '0' && realTimeMessage?.code !== TypeMessage.Topic && !doNotAllowCreateTopic && notAllowedType,
 					(builder: MenuBuilder) => {
-						builder.addMenuItem(
-							'topic',
-							'topic',
-							handleCreateTopic,
-							<Icons.TopicIcon2 className="w-5 h-5 dark:hover:text-white hover:text-black dark:text-textSecondary text-colorTextLightMode" />
-						);
+						builder.addMenuItem('topic', 'Topic', handleCreateTopic, <Icons.TopicIcon2 className="w-5 h-5 " />);
 					}
 				);
 			}
@@ -416,7 +415,7 @@ function useMenuReplyMenuBuilder(message: IMessageWithUser, hasPermission: boole
 
 	return useMenuBuilderPlugin((builder) => {
 		builder.when(userId !== message.sender_id && hasPermission, (builder) => {
-			builder.addMenuItem('reply', 'reply', handleItemClick, <Icons.Reply />, null, false, false, 'rotate-180');
+			builder.addMenuItem('reply', 'Reply', handleItemClick, <Icons.Reply />, null, false, false, 'rotate-180');
 		});
 	});
 }
@@ -449,12 +448,7 @@ function useEditMenuBuilder(message: IMessageWithUser) {
 		builder.when(
 			userId === message.sender_id && !message?.content?.callLog?.callLogType && !(message.code === TypeMessage.SendToken),
 			(builder) => {
-				builder.addMenuItem(
-					'edit',
-					'edit',
-					handleItemClick,
-					<Icons.PenEdit className={`w-5 h-5 dark:hover:text-white hover:text-black dark:text-textSecondary text-colorTextLightMode`} />
-				);
+				builder.addMenuItem('edit', 'Edit', handleItemClick, <Icons.PenEdit className={`w-5 h-5`} />);
 			}
 		);
 	});
@@ -484,7 +478,7 @@ function useReactMenuBuilder(message: IMessageWithUser) {
 	);
 
 	return useMenuBuilderPlugin((builder) => {
-		builder.addMenuItem('react', 'react', handleItemClick, <Icons.Smile defaultSize="w-5 h-5" />);
+		builder.addMenuItem('react', 'React', handleItemClick, <Icons.Smile defaultSize="w-5 h-5" />);
 	});
 }
 
@@ -519,12 +513,12 @@ function useThreadMenuBuilder(message: IMessageWithUser, isShowIconThread: boole
 		setIsShowCreateThread(true);
 		setOpenThreadMessageState(true);
 		dispatch(threadsActions.setOpenThreadMessageState(true));
-		setValueThread(message);
+		setValueThread({ ...message, references: [] });
 	}, [dispatch, message, setIsShowCreateThread, setOpenThreadMessageState, setThread, thread, setValueThread]);
 
 	return useMenuBuilderPlugin((builder) => {
 		builder.when(isShowIconThread && hasPermission && !isAppChannel, (builder) => {
-			builder.addMenuItem('thread', 'thread', handleItemClick, <Icons.ThreadIcon isWhite={thread} />);
+			builder.addMenuItem('thread', 'Thread', handleItemClick, <Icons.ThreadIcon isWhite={thread} />);
 		});
 	});
 }

@@ -2,19 +2,32 @@ import { captureSentryError } from '@mezon/logger';
 import { INotifiReactMessage, LoadingStatus } from '@mezon/utils';
 import { PayloadAction, createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
 import { ApiNotifiReactMessage } from 'mezon-js/api.gen';
-import { MezonValueContext, ensureSession, getMezonCtx } from '../helpers';
-import { memoizeAndTrack } from '../memoize';
+import { CacheMetadata, createApiKey, createCacheMetadata, markApiFirstCalled, shouldForceApiCall } from '../cache-metadata';
+import { MezonValueContext, ensureSession, fetchDataWithSocketFallback, getMezonCtx } from '../helpers';
+import { RootState } from '../store';
+
 export const NOTIFI_REACT_MESSAGE_FEATURE_KEY = 'notifireactmessage';
 
 export interface NotifiReactMessageState {
+	byChannels: Record<
+		string,
+		{
+			notifiReactMessage?: INotifiReactMessage | null;
+			cache?: CacheMetadata;
+		}
+	>;
 	loadingStatus: LoadingStatus;
 	error?: string | null;
-	notifiReactMessage?: INotifiReactMessage | null;
 }
 
-export const initialNotifiReactMessageState: NotifiReactMessageState = {
-	loadingStatus: 'not loaded',
+const getInitialChannelState = () => ({
 	notifiReactMessage: null
+});
+
+export const initialNotifiReactMessageState: NotifiReactMessageState = {
+	byChannels: {},
+	loadingStatus: 'not loaded',
+	error: null
 };
 
 type fetchNotifiReactMessArgs = {
@@ -22,33 +35,68 @@ type fetchNotifiReactMessArgs = {
 	noCache?: boolean;
 };
 
-export const fetchNotifiReactMessageCached = memoizeAndTrack(
-	async (mezon: MezonValueContext, channelId: string) => {
-		const response = await mezon.client.getNotificationReactMessage(mezon.session, channelId);
-		return { ...response, time: Date.now() };
-	},
-	{
-		promise: true,
-		maxAge: 1000 * 60 * 60,
-		normalizer: (args) => {
-			return args[1] + args[0]?.session?.username || '';
-		}
+export const fetchNotifiReactMessageCached = async (getState: () => RootState, mezon: MezonValueContext, channelId: string, noCache = false) => {
+	const currentState = getState();
+	const notifiReactState = currentState[NOTIFI_REACT_MESSAGE_FEATURE_KEY];
+	const channelData = notifiReactState.byChannels[channelId] || getInitialChannelState();
+
+	const apiKey = createApiKey('fetchNotifiReactMessage', channelId, mezon.session.username || '');
+
+	const shouldForceCall = shouldForceApiCall(apiKey, channelData.cache, noCache);
+
+	if (!shouldForceCall) {
+		return {
+			...channelData.notifiReactMessage,
+			fromCache: true,
+			time: channelData.cache?.lastFetched || Date.now()
+		};
 	}
-);
+
+	const response = await fetchDataWithSocketFallback(
+		mezon,
+		{
+			api_name: 'GetNotificationReactMessage',
+			notification_message: {
+				channel_id: channelId
+			}
+		},
+		() => mezon.client.getNotificationReactMessage(mezon.session, channelId),
+		'notification_react_message'
+	);
+
+	markApiFirstCalled(apiKey);
+
+	return {
+		...response,
+		fromCache: false,
+		time: Date.now()
+	};
+};
 
 export const getNotifiReactMessage = createAsyncThunk(
 	'notifireactmessage/getNotifiReactMessage',
 	async ({ channelId, noCache }: fetchNotifiReactMessArgs, thunkAPI) => {
 		try {
 			const mezon = await ensureSession(getMezonCtx(thunkAPI));
-			if (noCache) {
-				fetchNotifiReactMessageCached.delete(mezon, channelId);
-			}
-			const response = await fetchNotifiReactMessageCached(mezon, channelId);
+			const response = await fetchNotifiReactMessageCached(thunkAPI.getState as () => RootState, mezon, channelId, Boolean(noCache));
+
 			if (!response) {
 				return thunkAPI.rejectWithValue('Invalid getNotifiReactMessage');
 			}
-			return response;
+
+			if (response.fromCache) {
+				return {
+					channelId: channelId,
+					notifiReactMessage: {},
+					fromCache: true
+				};
+			}
+
+			return {
+				channelId: channelId,
+				notifiReactMessage: response,
+				fromCache: false
+			};
 		} catch (error) {
 			captureSentryError(error, 'notifireactmessage/getNotifiReactMessage');
 			return thunkAPI.rejectWithValue(error);
@@ -109,10 +157,26 @@ export const notifiReactMessageSlice = createSlice({
 			.addCase(getNotifiReactMessage.pending, (state: NotifiReactMessageState) => {
 				state.loadingStatus = 'loading';
 			})
-			.addCase(getNotifiReactMessage.fulfilled, (state: NotifiReactMessageState, action: PayloadAction<ApiNotifiReactMessage>) => {
-				state.notifiReactMessage = action.payload;
-				state.loadingStatus = 'loaded';
-			})
+			.addCase(
+				getNotifiReactMessage.fulfilled,
+				(
+					state: NotifiReactMessageState,
+					action: PayloadAction<{ channelId: string; notifiReactMessage: ApiNotifiReactMessage; fromCache?: boolean }>
+				) => {
+					const { channelId, fromCache, notifiReactMessage } = action.payload;
+
+					if (!state.byChannels[channelId]) {
+						state.byChannels[channelId] = getInitialChannelState();
+					}
+
+					if (!fromCache) {
+						state.byChannels[channelId].notifiReactMessage = notifiReactMessage as any;
+						state.byChannels[channelId].cache = createCacheMetadata();
+					}
+
+					state.loadingStatus = 'loaded';
+				}
+			)
 			.addCase(getNotifiReactMessage.rejected, (state: NotifiReactMessageState, action) => {
 				state.loadingStatus = 'error';
 				state.error = action.error.message;
@@ -135,4 +199,7 @@ export const notifiReactMessageActions = {
 export const getNotifiReactMessageState = (rootState: { [NOTIFI_REACT_MESSAGE_FEATURE_KEY]: NotifiReactMessageState }): NotifiReactMessageState =>
 	rootState[NOTIFI_REACT_MESSAGE_FEATURE_KEY];
 
-export const selectNotifiReactMessage = createSelector(getNotifiReactMessageState, (state: NotifiReactMessageState) => state.notifiReactMessage);
+export const selectNotifiReactMessageByChannelId = createSelector(
+	[getNotifiReactMessageState, (state: RootState, channelId: string) => channelId],
+	(state, channelId) => state?.byChannels[channelId]?.notifiReactMessage
+);

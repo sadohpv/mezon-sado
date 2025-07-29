@@ -1,18 +1,17 @@
 import { ActionEmitEvent } from '@mezon/mobile-components';
-import { Colors, size, Text, useTheme } from '@mezon/mobile-ui';
+import { Colors, size, useTheme } from '@mezon/mobile-ui';
 import {
 	AttachmentEntity,
 	getStore,
 	selectDmGroupCurrentId,
 	selectMemberClanByUserId2,
 	selectMessageByMessageId,
-	useAppDispatch,
 	useAppSelector
 } from '@mezon/store-mobile';
 import { convertTimeString, sleep } from '@mezon/utils';
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
-import { DeviceEventEmitter, Platform, TouchableOpacity, View } from 'react-native';
+import { DeviceEventEmitter, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { useSelector } from 'react-redux';
 import MezonClanAvatar from '../../componentUI/MezonClanAvatar';
 import MezonIconCDN from '../../componentUI/MezonIconCDN';
@@ -23,7 +22,7 @@ import { style } from './styles';
 
 interface IRenderFooterModalProps {
 	onClose?: () => void;
-	imageSelected?: AttachmentEntity;
+	imageSelected?: AttachmentEntity & { channelId?: string };
 	onImageSaved?: () => void;
 	onLoading?: (isLoading: boolean) => void;
 }
@@ -34,7 +33,6 @@ export const RenderHeaderModal = React.memo(({ onClose, imageSelected, onImageSa
 	const uploader = useAppSelector((state) => selectMemberClanByUserId2(state, imageSelected?.uploader || ''));
 	const { downloadImage, saveImageToCameraRoll } = useImage();
 	const currentDirectId = useSelector(selectDmGroupCurrentId);
-	const dispatch = useAppDispatch();
 	const navigation = useNavigation<any>();
 	const handleDownloadImage = async () => {
 		if (!imageSelected?.url) {
@@ -47,10 +45,10 @@ export const RenderHeaderModal = React.memo(({ onClose, imageSelected, onImageSa
 			const filePath = await downloadImage(url, filetypeParts[1]);
 			if (filePath) {
 				await saveImageToCameraRoll('file://' + filePath, filetypeParts[0], false);
+				onImageSaved();
 			}
-			onImageSaved();
 		} catch (error) {
-			console.error(error);
+			// Error is handled silently as the operation is user-facing
 		}
 		onLoading(false);
 	};

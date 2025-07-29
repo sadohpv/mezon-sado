@@ -21,8 +21,8 @@ type ImageProps = {
 
 type RenderImageProps = {
 	image: ImageProps;
-	imageOriginal: ImageProps;
-	index: number;
+	imageOriginal?: ImageProps;
+	index?: number;
 	disable?: boolean;
 	onPress: (image: ImageProps) => void;
 	onLongPress?: () => void;
@@ -260,6 +260,7 @@ const ImageRenderer = React.memo(
 							priority: FastImage.priority.high,
 							cache: FastImage.cacheControl.immutable
 						}}
+						resizeMode={isMultiple ? 'cover' : 'contain'}
 						style={{ width: '100%', height: '100%' }}
 						onError={() => onError(new Error(`FastImage load failed for ${imageProxyObj?.url}`))}
 					/>

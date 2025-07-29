@@ -32,17 +32,18 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import { ChannelStreamMode } from 'mezon-js';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DeviceEventEmitter, TextInput, View } from 'react-native';
+import { DeviceEventEmitter, Image, Platform, Pressable, TextInput, View } from 'react-native';
 import { TriggersConfig, useMentions } from 'react-native-controlled-mentions';
 import RNFS from 'react-native-fs';
 import { useSelector } from 'react-redux';
 import MezonIconCDN from '../../../../../../componentUI/MezonIconCDN';
+import { ClipboardImagePreview } from '../../../../../../components/ClipboardImagePreview';
 import { EmojiSuggestion, HashtagSuggestions, Suggestions } from '../../../../../../components/Suggestions';
 import { SlashCommandSuggestions } from '../../../../../../components/Suggestions/SlashCommandSuggestions';
 import { SlashCommandMessage } from '../../../../../../components/Suggestions/SlashCommandSuggestions/SlashCommandMessage';
 import { IconCDN } from '../../../../../../constants/icon_cdn';
 import { APP_SCREEN } from '../../../../../../navigation/ScreenTypes';
-import { resetCachedMessageActionNeedToResolve } from '../../../../../../utils/helpers';
+import { resetCachedChatbox, resetCachedMessageActionNeedToResolve } from '../../../../../../utils/helpers';
 import { EMessageActionType } from '../../../enums';
 import { IMessageActionNeedToResolve } from '../../../types';
 import AttachmentPreview from '../../AttachmentPreview';
@@ -93,6 +94,7 @@ interface IChatInputProps {
 	messageAction?: EMessageActionType;
 	onDeleteMessageActionNeedToResolve?: () => void;
 	isPublic: boolean;
+	topicChannelId?: string;
 }
 
 interface IEphemeralTargetUserInfo {
@@ -108,7 +110,8 @@ export const ChatBoxBottomBar = memo(
 		messageActionNeedToResolve,
 		messageAction,
 		onDeleteMessageActionNeedToResolve,
-		isPublic = false
+		isPublic = false,
+		topicChannelId = ''
 	}: IChatInputProps) => {
 		const { themeValue } = useTheme();
 		const dispatch = useAppDispatch();
@@ -127,6 +130,8 @@ export const ChatBoxBottomBar = memo(
 			id: '',
 			display: ''
 		});
+
+		const [imageBase64, setImageBase64] = useState<string | null>(null);
 
 		const anonymousMode = useSelector(selectAnonymousMode);
 
@@ -173,22 +178,15 @@ export const ChatBoxBottomBar = memo(
 			const allCachedMessage = load(STORAGE_KEY_TEMPORARY_INPUT_MESSAGES) || {};
 			save(STORAGE_KEY_TEMPORARY_INPUT_MESSAGES, {
 				...allCachedMessage,
-				[channelId]: text
+				[topicChannelId || channelId]: text
 			});
 		};
 
 		const setMessageFromCache = async () => {
 			const allCachedMessage = load(STORAGE_KEY_TEMPORARY_INPUT_MESSAGES) || {};
-			handleTextInputChange(allCachedMessage?.[channelId] || '');
-			textValueInputRef.current = convertMentionsToText(allCachedMessage?.[channelId] || '');
+			handleTextInputChange(allCachedMessage?.[topicChannelId || channelId] || '');
+			textValueInputRef.current = convertMentionsToText(allCachedMessage?.[topicChannelId || channelId] || '');
 		};
-
-		const resetCachedText = useCallback(async () => {
-			const allCachedMessage = load(STORAGE_KEY_TEMPORARY_INPUT_MESSAGES) || {};
-			if (allCachedMessage?.[channelId]) allCachedMessage[channelId] = '';
-
-			save(STORAGE_KEY_TEMPORARY_INPUT_MESSAGES, allCachedMessage);
-		}, [channelId]);
 
 		const handleEventAfterEmojiPicked = useCallback(
 			async (shortName: string) => {
@@ -203,21 +201,47 @@ export const ChatBoxBottomBar = memo(
 			[textChange]
 		);
 
+		const getImageDimension = (imageUri: string): Promise<{ width: number; height: number }> => {
+			return new Promise((resolve) => {
+				Image.getSize(
+					imageUri,
+					(width, height) => {
+						resolve({ width, height });
+					},
+					(error) => {
+						console.error('Error getting image dimensions:', error);
+					}
+				);
+			});
+		};
+
 		const handlePasteImage = async (imageBase64: string) => {
 			try {
 				if (imageBase64) {
 					const now = Date.now();
+					const mimeType = imageBase64.split(';')?.[0]?.split(':')?.[1] || 'image/jpeg';
+					const extension = mimeType?.split('/')?.[1]?.replace('jpeg', 'jpg')?.replace('svg+xml', 'svg') || 'jpg';
+
+					const fileName = `paste_image_${now}.${extension}`;
+					const destPath = `${RNFS.CachesDirectoryPath}/${fileName}`;
+
+					await RNFS.writeFile(destPath, imageBase64.split(',')?.[1], 'base64');
+					const fileInfo = await RNFS.stat(destPath);
+					const filePath = `file://${fileInfo?.path}`;
+					const { width, height } = await getImageDimension(filePath);
 
 					const imageFile = {
-						filename: `pasted-image-${now}.png`,
-						filetype: 'image/png',
-						size: imageBase64?.length,
-						url: imageBase64
+						filename: fileName,
+						filetype: mimeType,
+						url: filePath,
+						size: fileInfo?.size,
+						width: width ?? 250,
+						height: height ?? 250
 					};
 
 					dispatch(
 						referencesActions.setAtachmentAfterUpload({
-							channelId,
+							channelId: topicChannelId || channelId,
 							files: [imageFile]
 						})
 					);
@@ -239,8 +263,8 @@ export const ChatBoxBottomBar = memo(
 			mentionsOnMessage.current = [];
 			hashtagsOnMessage.current = [];
 			onDeleteMessageActionNeedToResolve();
-			resetCachedText();
-			resetCachedMessageActionNeedToResolve(channelId);
+			resetCachedChatbox(topicChannelId || channelId);
+			resetCachedMessageActionNeedToResolve(topicChannelId || channelId);
 			dispatch(
 				emojiSuggestionActions.setSuggestionEmojiObjPicked({
 					shortName: '',
@@ -248,7 +272,8 @@ export const ChatBoxBottomBar = memo(
 					isReset: true
 				})
 			);
-		}, [dispatch, onDeleteMessageActionNeedToResolve, resetCachedText, channelId]);
+			DeviceEventEmitter.emit(ActionEmitEvent.SHOW_KEYBOARD, null);
+		}, [dispatch, onDeleteMessageActionNeedToResolve, channelId]);
 
 		const handleKeyboardBottomSheetMode = useCallback((mode: IModeKeyboardPicker) => {
 			setModeKeyBoardBottomSheet(mode);
@@ -266,20 +291,8 @@ export const ChatBoxBottomBar = memo(
 			}
 		}, []);
 		const handleTextInputChange = async (text: string) => {
+			const store = getStore();
 			if (text?.length > MIN_THRESHOLD_CHARS) {
-				try {
-					const imageBase64 = await Clipboard.getImage();
-
-					if (imageBase64) {
-						textValueInputRef.current = ' ';
-						setTextChange(' ');
-						await handlePasteImage(imageBase64);
-						return;
-					}
-				} catch (error) {
-					console.log('Error checking clipboard:', error);
-				}
-
 				if (convertRef.current) {
 					return;
 				}
@@ -289,8 +302,6 @@ export const ChatBoxBottomBar = memo(
 				setTextChange('');
 				return;
 			}
-
-			const store = getStore();
 			setTextChange(text);
 			textValueInputRef.current = text;
 			if (!text || text === '') {
@@ -365,27 +376,24 @@ export const ChatBoxBottomBar = memo(
 			chatMessageLeftAreaRef?.current?.setAttachControlVisibility(false);
 		};
 
-		const handleMentionSelectForEphemeral = useCallback(
-			(text: string) => {
-				if (text?.includes('{@}[') && text?.includes('](') && text?.includes(')')) {
-					const startDisplayName = text.indexOf('{@}[') + 4;
-					const endDisplayName = text.indexOf('](', startDisplayName);
-					const startUserId = endDisplayName + 2;
-					const endUserId = text.indexOf(')', startUserId);
+		const handleMentionSelectForEphemeral = useCallback((text: string) => {
+			if (text?.includes('{@}[') && text?.includes('](') && text?.includes(')')) {
+				const startDisplayName = text.indexOf('{@}[') + 4;
+				const endDisplayName = text.indexOf('](', startDisplayName);
+				const startUserId = endDisplayName + 2;
+				const endUserId = text.indexOf(')', startUserId);
 
-					setEphemeralTargetUserInfo({
-						id: text.substring(startUserId, endUserId),
-						display: text.substring(startDisplayName, endDisplayName)
-					});
+				setEphemeralTargetUserInfo({
+					id: text.substring(startUserId, endUserId),
+					display: text.substring(startDisplayName, endDisplayName)
+				});
 
-					setTextChange('');
-					setMentionTextValue('');
-					textValueInputRef.current = '';
-					mentionsOnMessage.current = [];
-				}
-			},
-			[isEphemeralMode, ephemeralTargetUserInfo?.id]
-		);
+				setTextChange('');
+				setMentionTextValue('');
+				textValueInputRef.current = '';
+				mentionsOnMessage.current = [];
+			}
+		}, []);
 
 		const handleSelectionChange = (selection: { start: number; end: number }) => {
 			cursorPositionRef.current = selection.start;
@@ -438,7 +446,7 @@ export const ChatBoxBottomBar = memo(
 
 						dispatch(
 							referencesActions.setAtachmentAfterUpload({
-								channelId,
+								channelId: topicChannelId || channelId,
 								files: [
 									{
 										filename: fileTxtSaved.name,
@@ -507,12 +515,36 @@ export const ChatBoxBottomBar = memo(
 			}, 300);
 		};
 
-		const handleInputFocus = () => {
+		const checkPasteImage = async () => {
+			const imageUri = await Clipboard.getImage();
+
+			if (imageUri) {
+				setImageBase64(imageUri);
+			}
+		};
+
+		const handlePasteImageFromClipboard = async () => {
+			if (imageBase64) {
+				await handlePasteImage(imageBase64);
+				cancelPasteImage();
+			}
+		};
+		const cancelPasteImage = useCallback(() => {
+			if (Platform.OS === 'ios') {
+				Clipboard.setImage('');
+			} else if (Platform.OS === 'android') {
+				Clipboard.setString('');
+			}
+			setImageBase64(null);
+		}, []);
+
+		const handleInputFocus = async () => {
 			setModeKeyBoardBottomSheet('text');
 			DeviceEventEmitter.emit(ActionEmitEvent.ON_PANEL_KEYBOARD_BOTTOM_SHEET, {
 				isShow: false,
 				mode: ''
 			});
+			await checkPasteImage();
 		};
 
 		const handleInputBlur = () => {
@@ -558,7 +590,7 @@ export const ChatBoxBottomBar = memo(
 				textValueInputRef.current = '';
 			});
 			const addEmojiPickedListener = DeviceEventEmitter.addListener(ActionEmitEvent.ADD_EMOJI_PICKED, (emoji) => {
-				if (emoji?.channelId === channelId) {
+				if (emoji?.channelId === channelId || emoji?.channelId === topicChannelId) {
 					handleEventAfterEmojiPicked(emoji.shortName);
 				}
 			});
@@ -589,7 +621,8 @@ export const ChatBoxBottomBar = memo(
 									mentionsOnMessage.current = [];
 								} else {
 									if (command.display && command.description) {
-										setTextChange(`/${command.display} `);
+										setTextChange(`${command.display} `);
+										setMentionTextValue('');
 										textValueInputRef.current = `${command.description}`;
 									}
 								}
@@ -597,7 +630,7 @@ export const ChatBoxBottomBar = memo(
 						/>
 					)}
 				</View>
-				<AttachmentPreview channelId={channelId} />
+				<AttachmentPreview channelId={topicChannelId || channelId} />
 				<ChatBoxListener mode={mode} />
 				<View style={styles.containerInput}>
 					<ChatMessageLeftArea
@@ -619,6 +652,13 @@ export const ChatBoxBottomBar = memo(
 								onCancel={cancelEphemeralMode}
 							/>
 						)}
+
+						{imageBase64 && (
+							<Pressable style={{ position: 'absolute', bottom: '100%' }} onPress={handlePasteImageFromClipboard}>
+								<ClipboardImagePreview imageBase64={imageBase64} message={t('pasteImage')} onCancel={cancelPasteImage} />
+							</Pressable>
+						)}
+
 						<View style={styles.input}>
 							<TextInput
 								ref={inputRef}
@@ -666,6 +706,7 @@ export const ChatBoxBottomBar = memo(
 							clearInputAfterSendMessage={onSendSuccess}
 							anonymousMode={anonymousMode}
 							ephemeralTargetUserId={ephemeralTargetUserInfo?.id}
+							currentTopicId={topicChannelId}
 						/>
 					</View>
 				</View>

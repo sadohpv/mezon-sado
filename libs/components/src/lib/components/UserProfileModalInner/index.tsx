@@ -161,18 +161,18 @@ const UserProfileModalInner = ({
 		<div
 			ref={modalRef}
 			tabIndex={-1}
-			className="outline-none w-[100vw] h-[100vh] fixed top-0 left-0 z-50 bg-black bg-opacity-80 flex flex-row justify-center items-center dark:text-contentTertiary text-black"
+			className="outline-none w-[100vw] h-[100vh] fixed top-0 left-0 z-50 bg-black bg-opacity-80 flex flex-row justify-center items-center text-theme-primary"
 		>
 			<div
 				ref={userProfileRef}
-				className="w-[600px] h-[90vh] dark:bg-bgPrimary bg-bgLightModeThird rounded-lg flex-col justify-start items-start inline-flex"
+				className="w-[600px] h-[90vh] bg-theme-setting-primary rounded-lg flex-col justify-start items-start inline-flex"
 			>
 				<div
 					className={`relative flex justify-end w-full h-[210px] rounded-t-md ${!color && 'dark:bg-bgAvatarDark bg-bgAvatarLight'}`}
 					style={{ backgroundColor: color }}
 					onClick={() => setGroupIconBanner(initOpenModal)}
 				>
-					<div className={`rounded-tl-lg rounded-tr-lg h-[60px] flex justify-end gap-x-2 p-2 `}>
+					<div className={`rounded-tl-lg rounded-tr-lg h-[60px]  flex justify-end gap-x-2 p-2 `}>
 						<GroupIconBanner
 							checkAddFriend={checkAddFriend}
 							openModal={openGroupIconBanner}
@@ -194,15 +194,15 @@ const UserProfileModalInner = ({
 							<div className="flex items-end pr-4">
 								<button
 									onClick={handleOpenEditOption}
-									className="relative flex items-center h-8 px-4 rounded-[3px] dark:bg-buttonProfile bg-buttonMessageHover dark:hover:bg-buttonMessageHover hover:bg-buttonProfile"
+									className="relative flex items-center h-8 px-4 rounded-[3px] text-theme-primary text-theme-primary-hover"
 								>
-									<Icons.PenEdit className="text-bgLightPrimary" />
-									<span className="text-sm text-bgLightPrimary font-semibold one-line">Edit Profile</span>
+									<Icons.PenEdit />
+									<span className="text-sm font-semibold one-line text-theme-primary-active">Edit Profile</span>
 								</button>
 								{isOPenEditOption && (
 									<div
 										ref={panelRef}
-										className={`absolute left-[calc(100%_+_10px)] top-[38px] dark:bg-bgSearchHover bg-gray-100 rounded-sm p-2 z-[1] mr-2 w-fit shadow-lg outline-none`}
+										className={`absolute left-[calc(100%_+_10px)] top-[38px] bg-theme-setting-primary rounded-sm p-2 z-[1] mr-2 w-fit shadow-lg outline-none`}
 									>
 										{modeResponsive === ModeResponsive.MODE_CLAN && (
 											<ItemPanel children="Edit Clan Profile" onClick={handleOpenClanProfileSetting} />
@@ -224,17 +224,19 @@ const UserProfileModalInner = ({
 						)}
 					</div>
 				</div>
-				<div className="dark:bg-bgProfileBody bg-bgLightPrimary pt-[60px] pb-4 px-4 rounded-b-md w-full flex-1">
+				<div className="bg-theme-contexify pt-[60px] pb-4 px-4 rounded-b-md w-full flex-1">
 					<div className="flex flex-col gap-3 h-full">
 						<div className="mt-4">
-							<h3 className="text-2xl font-semibold">
+							<h3 className="text-2xl font-semibold text-theme-primary">
 								{name || userById?.clan_nick || userById?.user?.display_name || userById?.user?.username || notify?.content?.username}
 							</h3>
-							<p className="text-sm font-normal">{usernameAva || userById?.user?.username || notify?.content?.username}</p>
+							<p className="text-sm font-normal text-theme-primary">
+								{usernameAva || userById?.user?.username || notify?.content?.username}
+							</p>
 						</div>
-						<div className="flex-1 dark:bg-bgSearchHover bg-bgLightSearchHover rounded-lg shadow-shadowInbox">
+						<div className="flex-1 bg-theme-setting-primary rounded-lg shadow-shadowInbox">
 							<ProfileTabs activeTab={activeTab} onActiveTabChange={handleActiveTabChange} />
-							<div className="p-4">
+							<div className="p-4 text-theme-primary	">
 								{activeTab === typeTab.ABOUT_ME && <AboutMe createTime={userById?.user?.create_time} />}
 								{activeTab === typeTab.ACTIVITY && <Activity />}
 								{activeTab === typeTab.MUTUAL_FRIENDS && <MutualFriends />}

@@ -695,7 +695,8 @@ export const style = (colors: Attributes) =>
 			paddingVertical: size.s_6
 		},
 		iconBell: {
-			paddingRight: size.s_14
+			paddingRight: size.s_14,
+			padding: 0
 		},
 		friendActions: {
 			flexDirection: 'row',
@@ -862,17 +863,17 @@ export const style = (colors: Attributes) =>
 			backgroundColor: baseColor.blurple + '1A',
 			borderLeftWidth: size.s_4,
 			borderColor: baseColor.blurple,
-			borderRadius: size.s_6,
+			borderRadius: size.s_6
 		},
 		ephemeralIndicator: {
 			flexDirection: 'row',
 			alignItems: 'center',
-			marginTop: size.s_4,
+			marginTop: size.s_4
 		},
 		ephemeralText: {
 			fontSize: size.s_12,
 			color: colors.textDisabled,
 			fontStyle: 'italic',
-			marginLeft: size.s_4,
-		},
+			marginLeft: size.s_4
+		}
 	});

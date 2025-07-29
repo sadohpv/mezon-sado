@@ -13,9 +13,9 @@ import {
 	useUserMetaById
 } from '@mezon/core';
 import { EStateFriend, selectAccountCustomStatus, selectAllAccount, selectCurrentUserId, selectFriendStatus } from '@mezon/store';
-import { ChannelMembersEntity, IMessageWithUser } from '@mezon/utils';
-import { ChannelStreamMode, safeJSONParse } from 'mezon-js';
-import { RefObject, memo, useEffect, useMemo, useRef, useState } from 'react';
+import { ChannelMembersEntity, IMessageWithUser, saveParseUserStatus } from '@mezon/utils';
+import { ChannelStreamMode } from 'mezon-js';
+import { RefObject, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { getColorAverageFromURL } from '../SettingProfile/AverageColor';
 import AvatarProfile from './AvatarProfile';
@@ -87,9 +87,10 @@ const ModalUserProfile = ({
 	const userStatus = useMemberStatus(userID || '');
 	const userMetaById = useUserMetaById(userID);
 	const modalRef = useRef<boolean>(false);
+	const onLoading = useRef<boolean>(false);
 	const statusOnline = useMemo(() => {
 		if (userProfile?.user?.metadata && userId === userID) {
-			const metadata = safeJSONParse(userProfile?.user?.metadata);
+			const metadata = saveParseUserStatus(userProfile?.user?.metadata);
 			return metadata?.user_status;
 		}
 		if (userMetaById) {
@@ -123,6 +124,7 @@ const ModalUserProfile = ({
 			const directChat = toDmGroupPageFromMainApp(response.channel_id, Number(response.type));
 			navigate(directChat);
 		}
+		onLoading.current = false;
 	};
 	const handleContent = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setContent(e.target.value);
@@ -190,6 +192,25 @@ const ModalUserProfile = ({
 		return message?.references?.[0].message_sender_username;
 	}, [userById, userID]);
 
+	const handleOnKeyPress = useCallback(
+		(e: React.KeyboardEvent<HTMLInputElement>) => {
+			if (e.key === 'Enter' && content && onLoading.current === false) {
+				if (userById) {
+					sendMessage(
+						userById?.user?.id || '',
+						userById?.user?.display_name || userById?.user?.username,
+						userById?.user?.username,
+						userById.user?.avatar_url
+					);
+					onLoading.current = true;
+					return;
+				}
+				sendMessage((userID === message?.sender_id ? message?.sender_id : message?.references?.[0].message_sender_id) || '');
+				onLoading.current = true;
+			}
+		},
+		[userById, content]
+	);
 	return (
 		<div tabIndex={-1} ref={profileRef} className={'outline-none ' + classWrapper} onClick={() => setOpenModal(initOpenModal)}>
 			<div
@@ -220,16 +241,16 @@ const ModalUserProfile = ({
 				statusOnline={statusOnline}
 			/>
 			<div className="px-[16px]">
-				<div className="dark:bg-bgPrimary bg-white w-full p-2 my-[16px] dark:text-white text-black rounded-[10px] flex flex-col text-justify">
+				<div className=" w-full border-theme-primary p-2 my-[16px] text-theme-primary shadow rounded-[10px] flex flex-col text-justify bg-item-theme">
 					<div>
-						<p className="font-semibold tracking-wider text-xl one-line my-0">
+						<p className="font-semibold tracking-wider text-xl one-line text-theme-primary-active my-0">
 							{isUserRemoved
 								? 'Unknown User'
 								: checkAnonymous
 									? 'Anonymous'
 									: userById?.clan_nick || userById?.user?.display_name || userById?.user?.username}
 						</p>
-						<p className="font-medium tracking-wide text-sm my-0">{isUserRemoved ? 'Unknown User' : usernameShow}</p>
+						<p className="text-lg font-semibold tracking-wide text-theme-primary my-0">{isUserRemoved ? 'Unknown User' : usernameShow}</p>
 					</div>
 
 					{checkAddFriend === EStateFriend.MY_PENDING && !showPopupLeft && <PendingFriend user={userById as ChannelMembersEntity} />}
@@ -249,37 +270,22 @@ const ModalUserProfile = ({
 						<div className="w-full items-center mt-2">
 							<input
 								type="text"
-								className={`w-full border dark:border-bgDisable rounded-[5px] dark:bg-bgTertiary bg-bgLightModeSecond p-[5px] `}
+								className={`w-full border-theme-primary text-theme-primary color-text-secondary rounded-[5px] bg-theme-contexify p-[5px] `}
 								placeholder={`Message @${placeholderUserName}`}
 								value={content}
-								onKeyPress={(e) => {
-									if (e.key === 'Enter' && content) {
-										if (userById) {
-											sendMessage(
-												userById?.user?.id || '',
-												userById?.user?.display_name || userById?.user?.username,
-												userById?.user?.username,
-												userById.user?.avatar_url
-											);
-											return;
-										}
-										sendMessage(
-											(userID === message?.sender_id ? message?.sender_id : message?.references?.[0].message_sender_id) || ''
-										);
-									}
-								}}
+								onKeyPress={handleOnKeyPress}
 								onChange={handleContent}
 							/>
 						</div>
 					) : null}
 					{showNote && (
 						<>
-							<div className="w-full border-b-[1px] dark:border-[#40444b] border-gray-200 p-2"></div>
+							<div className="w-full border-b-theme-primary"></div>
 							<NoteUserProfile />
 						</>
 					)}
 					{!isFooterProfile && checkUser && (
-						<button className="rounded dark:bg-slate-800 bg-bgLightModeButton py-2 hover:bg-opacity-50 mt-2" onClick={openSetting}>
+						<button className="rounded bg-outside-footer py-2 hover:bg-opacity-50 mt-2" onClick={openSetting}>
 							Edit Profile
 						</button>
 					)}

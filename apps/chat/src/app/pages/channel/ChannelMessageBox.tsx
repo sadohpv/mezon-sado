@@ -101,11 +101,7 @@ export function ChannelMessageBox({ channel, clanId, mode }: Readonly<ChannelMes
 
 	return (
 		<div className="mx-3 relative" ref={chatboxRef}>
-			{dataReferences.message_ref_id && (
-				<div className="relative z-1 pb-[4px]">
-					<ReplyMessageBox channelId={channelId ?? ''} dataReferences={dataReferences} className="pb-[15px]" />
-				</div>
-			)}
+			{dataReferences.message_ref_id && <ReplyMessageBox channelId={channelId ?? ''} dataReferences={dataReferences} />}
 			<MessageBox
 				listMentions={UserMentionList({
 					channelID: mode === ChannelStreamMode.STREAM_MODE_THREAD ? (channel.parent_id ?? '') : (channelId ?? ''),
@@ -119,7 +115,7 @@ export function ChannelMessageBox({ channel, clanId, mode }: Readonly<ChannelMes
 			/>
 			{anonymousMode && (
 				<div className="absolute -top-3 -right-3 rotate-45 anonymousAnimation">
-					<Icons.HatIcon defaultSize="w-7 h-7 dark:fill-white fill-black " />
+					<Icons.HatIcon defaultSize="w-7 h-7  " />
 				</div>
 			)}
 		</div>

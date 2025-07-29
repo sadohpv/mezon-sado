@@ -53,7 +53,7 @@ const PanelCategory: React.FC<IPanelCategoryProps> = ({
 	const [positionTop, setPositionTop] = useState(false);
 	const [canManageCategory] = usePermissionChecker([EPermission.manageClan]);
 	const dispatch = useAppDispatch();
-	const defaultCategoryNotificationSetting = useAppSelector(selectDefaultNotificationCategory);
+	const defaultCategoryNotificationSetting = useAppSelector((state) => selectDefaultNotificationCategory(state, category?.id as string));
 	const currentClan = useAppSelector(selectCurrentClan);
 	const [muteUntil, setMuteUntil] = useState('');
 
@@ -156,7 +156,7 @@ const PanelCategory: React.FC<IPanelCategoryProps> = ({
 			tabIndex={-1}
 			role={'button'}
 			style={{ left: coords.mouseX, bottom: positionTop ? '12px' : 'auto', top: positionTop ? 'auto' : coords.mouseY }}
-			className="outline-none fixed top-full dark:bg-bgProfileBody bg-white rounded-sm z-30 w-[200px] py-[10px] px-[10px] shadow-md"
+			className="outline-none fixed top-full rounded-lg z-30 w-[200px] py-[10px] px-[10px] shadow-md bg-theme-contexify"
 		>
 			<GroupPanels>
 				<ItemPanel
@@ -182,7 +182,7 @@ const PanelCategory: React.FC<IPanelCategoryProps> = ({
 						)}
 						label=""
 						placement="right-start"
-						className="dark:!bg-bgProfileBody bg-gray-100 border-none ml-[3px] py-[6px] px-[8px] w-[200px]"
+						className="bg-theme-contexify text-theme-primary border-theme-primary ml-[3px] py-[6px] px-[8px] w-[200px]"
 					>
 						<ItemPanel children="For 15 Minutes" onClick={() => handleScheduleMute(FOR_15_MINUTES)} />
 						<ItemPanel children="For 1 Hour" onClick={() => handleScheduleMute(FOR_1_HOUR)} />
@@ -205,7 +205,7 @@ const PanelCategory: React.FC<IPanelCategoryProps> = ({
 					)}
 					label=""
 					placement="right-start"
-					className="dark:!bg-bgProfileBody bg-gray-100 border-none ml-[3px] py-[6px] px-[8px] w-[200px]"
+					className=" bg-theme-contexify text-theme-primary border-theme-primary ml-[3px] py-[6px] px-[8px] w-[200px]"
 				>
 					<ItemPanel
 						children="Use Clan Default"

@@ -73,7 +73,7 @@ function MessageMenu({ messageInfo }: IServerMenuProps) {
 		);
 	}, [messageInfo?.channel_label, messageInfo?.usernames]);
 
-	const getNotificationChannelSelected = useSelector(selectNotifiSettingsEntitiesById(messageInfo?.channel_id));
+	const getNotificationChannelSelected = useAppSelector((state) => selectNotifiSettingsEntitiesById(state, messageInfo?.channel_id || ''));
 
 	const isDmUnmute = useMemo(() => {
 		return (
@@ -112,7 +112,7 @@ function MessageMenu({ messageInfo }: IServerMenuProps) {
 			},
 			isShow: isGroup,
 			title: lastOne ? t('delete.leaveGroup') : t('menu.leaveGroup'),
-			textStyle: { color: 'red' }
+			textStyle: { color: Colors.textRed }
 		}
 	];
 
@@ -200,9 +200,9 @@ function MessageMenu({ messageInfo }: IServerMenuProps) {
 				infoFriend?.state !== EStateFriend.OTHER_PENDING,
 			icon:
 				infoFriend?.state === EStateFriend.FRIEND ? (
-					<MezonIconCDN icon={IconCDN.removeFriend} color={themeValue.textStrong} />
+					<MezonIconCDN icon={IconCDN.removeFriend} color={themeValue.textStrong} customStyle={{ marginBottom: size.s_2 }} />
 				) : (
-					<MezonIconCDN icon={IconCDN.userPlusIcon} color={themeValue.textStrong} />
+					<MezonIconCDN icon={IconCDN.userPlusIcon} color={themeValue.textStrong} customStyle={{ marginBottom: size.s_2 }} />
 				)
 		},
 		{
@@ -252,14 +252,17 @@ function MessageMenu({ messageInfo }: IServerMenuProps) {
 		}
 	];
 
-	const muteOrUnMuteChannel = (active: ENotificationActive) => {
+	const muteOrUnMuteChannel = async (active: ENotificationActive) => {
 		const body = {
 			channel_id: messageInfo?.channel_id || '',
 			notification_type: getNotificationChannelSelected?.notification_setting_type || 0,
 			clan_id: currentClan?.clan_id || '',
 			active
 		};
-		dispatch(notificationSettingActions.setMuteNotificationSetting(body));
+		const response = await dispatch(notificationSettingActions.setMuteNotificationSetting(body));
+		if (response?.meta?.requestStatus === 'fulfilled') {
+			dispatch(notificationSettingActions.updateNotiState({ channelId: messageInfo?.channel_id || '', active }));
+		}
 	};
 
 	const handleEnableOrDisableE2EE = async () => {
@@ -355,7 +358,7 @@ function MessageMenu({ messageInfo }: IServerMenuProps) {
 							/>
 						) : (
 							<View style={styles.wrapperTextAvatar}>
-								<Text style={styles.textAvatar}>{userName?.charAt?.(0)}</Text>
+								<Text style={styles.textAvatar}>{userName?.charAt?.(0)?.toUpperCase()}</Text>
 							</View>
 						)}
 					</View>

@@ -3,11 +3,12 @@ import { LoadingStatus } from '@mezon/utils';
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
 import isElectron from 'is-electron';
 import { ChannelType } from 'mezon-js';
+import { clearApiCallTracker } from '../cache-metadata';
+import { listChannelsByUserActions } from '../channels/channelUser.slice';
 import { channelsActions } from '../channels/channels.slice';
 import { usersClanActions } from '../clanMembers/clan.members';
 import { clansActions } from '../clans/clans.slice';
 import { directActions } from '../direct/direct.slice';
-import { clearAllMemoizedFunctions } from '../memoize';
 import { createCachedSelector, messagesActions } from '../messages/messages.slice';
 import { RootState } from '../store';
 import { voiceActions } from '../voice/voice.slice';
@@ -23,7 +24,7 @@ export interface showSettingFooterProps {
 }
 
 export interface AppState {
-	themeApp: 'light' | 'dark' | 'system';
+	themeApp: 'light' | 'dark' | 'sunrise' | 'purple_haze' | 'redDark' | 'abyss_dark';
 	currentLanguage: 'en' | 'vi';
 	loadingStatus: LoadingStatus;
 	error?: string | null;
@@ -49,7 +50,8 @@ export interface AppState {
 
 export const initialAppState: AppState = {
 	loadingStatus: 'not loaded',
-	themeApp: 'dark',
+
+	themeApp: 'sunrise',
 	currentLanguage: 'en',
 	isShowMemberList: true,
 	isShowChatStream: false,
@@ -79,7 +81,7 @@ export const refreshApp = createAsyncThunk('app/refreshApp', async ({ id }: { id
 			throw Error('refresh app error: state does not init');
 		}
 
-		clearAllMemoizedFunctions();
+		clearApiCallTracker();
 
 		const isClanView = state?.clans?.currentClanId && state.clans.currentClanId !== '0';
 		const currentChannelId = state.channels?.byClans[state.clans?.currentClanId as string]?.currentChannelId;
@@ -110,6 +112,8 @@ export const refreshApp = createAsyncThunk('app/refreshApp', async ({ id }: { id
 
 		thunkAPI.dispatch(clansActions.joinClan({ clanId: '0' }));
 		thunkAPI.dispatch(clansActions.fetchClans({}));
+		thunkAPI.dispatch(listChannelsByUserActions.fetchListChannelsByUser({}));
+
 		if (isClanView && currentClanId) {
 			thunkAPI.dispatch(usersClanActions.fetchUsersClan({ clanId: currentClanId }));
 			thunkAPI.dispatch(channelsActions.fetchChannels({ clanId: currentClanId, noCache: true }));
@@ -244,7 +248,7 @@ export const getAppState = (rootState: { [APP_FEATURE_KEY]: AppState }): AppStat
 
 export const selectAllApp = createSelector(getAppState, (state: AppState) => state);
 
-export const selectTheme = createSelector(getAppState, (state: AppState) => state.themeApp || 'dark');
+export const selectTheme = createSelector(getAppState, (state: AppState) => state.themeApp);
 
 export const selectCurrentLanguage = createSelector(getAppState, (state: AppState) => state.currentLanguage || 'en');
 

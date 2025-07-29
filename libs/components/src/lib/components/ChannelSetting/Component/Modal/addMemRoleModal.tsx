@@ -9,7 +9,7 @@ import {
 	selectRolesByChannelId,
 	useAppDispatch
 } from '@mezon/store';
-import { Icons, InputField } from '@mezon/ui';
+import { ButtonLoading, Icons, InputField } from '@mezon/ui';
 import { ChannelStatusEnum, IChannel } from '@mezon/utils';
 import { ChannelType } from 'mezon-js';
 import { ApiUser } from 'mezon-js/api.gen';
@@ -182,10 +182,10 @@ export const AddMemRole: React.FC<AddMemRoleProps> = ({
 	useEscapeKeyClose(modalRef, onClose);
 
 	return (
-		<div ref={modalRef} tabIndex={-1} className="fixed  inset-0 flex items-center justify-center z-50 text-white">
+		<div ref={modalRef} tabIndex={-1} className="fixed  inset-0 flex items-center justify-center z-50 ">
 			<div className="fixed inset-0 bg-black opacity-80"></div>
-			<div className="relative z-10 dark:bg-bgDisable bg-bgLightMode dark:text-textDarkTheme text-textLightTheme p-6 rounded-[5px] w-[440px] text-[15px]">
-				<h2 className="text-[24px] font-semibold text-center">Add members or roles</h2>
+			<div className="relative z-10 p-6 bg-theme-setting-primary text-theme-primary rounded-[5px] w-[440px] text-[15px]">
+				<h2 className="text-[24px] font-semibold text-center text-theme-primary-active">Add members or roles</h2>
 				<div className="flex justify-center">
 					{isPrivate === ChannelStatusEnum.isPrivate &&
 						(channel.type === ChannelType.CHANNEL_TYPE_GMEET_VOICE || channel.type === ChannelType.CHANNEL_TYPE_MEZON_VOICE) && (
@@ -200,7 +200,7 @@ export const AddMemRole: React.FC<AddMemRoleProps> = ({
 						)}
 					{isPrivate === undefined && channel.type === ChannelType.CHANNEL_TYPE_STREAMING && <Icons.Stream defaultSize="w-5 5-5" />}
 					{isPrivate === undefined && channel.type === ChannelType.CHANNEL_TYPE_CHANNEL && <Icons.Hashtag defaultSize="w-5 h-5" />}
-					<p className="dark:text-[#AEAEAE] text-colorTextLightMode text-[16px]" style={{ wordBreak: 'break-word' }}>
+					<p className=" text-[16px]" style={{ wordBreak: 'break-word' }}>
 						{channel.channel_label}
 					</p>
 				</div>
@@ -208,7 +208,7 @@ export const AddMemRole: React.FC<AddMemRoleProps> = ({
 					<InputField
 						type="text"
 						placeholder="e.g. Moderators, @wumpus"
-						className="dark:bg-bgTertiary bg-bgLightTertiary pl-3 py-[6px] w-full border-0 outline-none rounded"
+						className="pl-3 py-[6px] w-full text-theme-message rounded-lg outline-none bg-input-secondary"
 						onChange={handleValueSearch}
 						maxLength={Number(process.env.NX_MAX_LENGTH_NAME_ALLOWED)}
 					/>
@@ -245,17 +245,15 @@ export const AddMemRole: React.FC<AddMemRoleProps> = ({
 					<button
 						color="gray"
 						onClick={onClose}
-						className="px-4 py-2 mr-5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 focus:outline-none focus:ring focus:border-blue-300"
+						className="px-4 py-2 mr-5 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 focus:outline-none focus:ring focus:border-blue-300"
 					>
 						Cancel
 					</button>
-					<button
-						color="blue"
+					<ButtonLoading
+						label="Done"
 						onClick={handleAddMember}
-						className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-500 focus:outline-none focus:ring focus:border-blue-300"
-					>
-						Done
-					</button>
+						className="px-4 py-2 rounded-lg btn-primary btn-primary-hover"
+					/>
 				</div>
 			</div>
 		</div>

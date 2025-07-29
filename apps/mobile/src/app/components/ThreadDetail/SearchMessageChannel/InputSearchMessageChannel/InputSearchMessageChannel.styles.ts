@@ -25,7 +25,10 @@ export const style = (colors: Attributes) =>
 		},
 		input: {
 			color: colors.text,
-			flex: 1
+			flex: 1,
+			textAlignVertical: 'center',
+			height: size.s_40,
+			paddingVertical: 0
 		},
 		listSearchIcon: {
 			backgroundColor: colors.primary,
@@ -38,5 +41,5 @@ export const style = (colors: Attributes) =>
 			fontWeight: '600',
 			color: colors.white
 		},
-		textBadgeHighLight: { color: colors.white, fontSize: size.label, fontWeight: '600', width: '100%' }
+		textBadgeHighLight: { color: colors.white, fontSize: size.s_12, fontWeight: '500', width: '100%' }
 	});

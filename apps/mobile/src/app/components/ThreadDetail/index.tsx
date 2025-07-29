@@ -34,16 +34,6 @@ export default function CreateThreadModal({ navigation, route }: MenuThreadScree
 	const { t } = useTranslation(['createThread']);
 	const { setValueThread } = useThreads();
 	const dispatch = useAppDispatch();
-	navigation.setOptions({
-		headerShown: true,
-		headerTitle: t('threads'),
-		headerTitleAlign: 'center',
-		headerStatusBarHeight: Platform.OS === 'android' ? 0 : undefined,
-		headerStyle: {
-			backgroundColor: themeValue.primary
-		},
-		headerRight: () => <ThreadAddButton onPress={handleNavigateCreateForm} />
-	});
 	const [searchText, setSearchText] = useState('');
 	const currentChannel = useSelector(selectCurrentChannel);
 	const isThread = checkIsThread(currentChannel as ChannelsEntity);
@@ -76,12 +66,12 @@ export default function CreateThreadModal({ navigation, route }: MenuThreadScree
 			};
 			const response = await dispatch(threadsActions.fetchThreads(body)).unwrap();
 
-			if (response?.length < LIMIT) {
+			if (response?.threads?.length < LIMIT) {
 				setIsNextDisabled(true);
 			} else {
 				setIsNextDisabled(false);
 			}
-			if (currentPage === 1 && response?.length < LIMIT) {
+			if (currentPage === 1 && response?.threads?.length < LIMIT) {
 				setIsPaginationVisible(false);
 			} else {
 				setIsPaginationVisible(true);
@@ -101,6 +91,19 @@ export default function CreateThreadModal({ navigation, route }: MenuThreadScree
 	useEffect(() => {
 		fetchThreads(page);
 	}, [fetchThreads, page]);
+
+	useEffect(() => {
+		navigation.setOptions({
+			headerShown: true,
+			headerTitle: t('threads'),
+			headerTitleAlign: 'center',
+			headerStatusBarHeight: Platform.OS === 'android' ? 0 : undefined,
+			headerStyle: {
+				backgroundColor: themeValue.primary
+			},
+			headerRight: () => <ThreadAddButton onPress={handleNavigateCreateForm} />
+		});
+	}, []);
 
 	const handleNavigateCreateForm = useCallback(() => {
 		dispatch(threadsActions.setOpenThreadMessageState(false));

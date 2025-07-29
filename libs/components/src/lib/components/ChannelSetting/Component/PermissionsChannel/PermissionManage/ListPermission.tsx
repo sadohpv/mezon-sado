@@ -1,6 +1,5 @@
-import { PermissionUserEntity, selectAllPermissionRoleChannel } from '@mezon/store';
+import { PermissionUserEntity, selectAllPermissionRoleChannel, useAppSelector } from '@mezon/store';
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
-import { useSelector } from 'react-redux';
 import ItemPermission from './ItemPermission';
 
 export type ListPermissionHandle = {
@@ -10,11 +9,12 @@ export type ListPermissionHandle = {
 type ItemListPermissionProps = {
 	onSelect: (id: string, option: number, active?: boolean) => void;
 	listPermission: PermissionUserEntity[];
+	channelId: string;
 };
 
 const ListPermission = forwardRef<ListPermissionHandle, ItemListPermissionProps>((props, ref) => {
 	const { onSelect, listPermission } = props;
-	const listPermissionRoleChannel = useSelector(selectAllPermissionRoleChannel);
+	const listPermissionRoleChannel = useAppSelector((state) => selectAllPermissionRoleChannel(state, props.channelId));
 	const itemRefs = useRef<{ [key: string]: { reset: () => void } }>({});
 
 	useImperativeHandle(ref, () => ({
@@ -28,8 +28,8 @@ const ListPermission = forwardRef<ListPermissionHandle, ItemListPermissionProps>
 	}, [listPermissionRoleChannel]);
 
 	return (
-		<div className="basis-2/3">
-			<h4 className="uppercase font-bold text-xs text-contentTertiary mb-2">General Channel Permissions</h4>
+		<div className="basis-2/3 text-theme-primary">
+			<h4 className="uppercase font-bold text-xs text-theme-primary-active mb-2">General Channel Permissions</h4>
 			<div className="space-y-2">
 				{listPermission.map((item, index) => {
 					const matchingRoleChannel = listPermissionRoleChannel?.permission_role_channel?.find(

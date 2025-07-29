@@ -1,11 +1,11 @@
 import { ReplyIcon } from '@mezon/mobile-components';
-import { Colors, Text, size, useTheme } from '@mezon/mobile-ui';
-import { messagesActions, useAppDispatch } from '@mezon/store-mobile';
+import { Colors, size, useTheme } from '@mezon/mobile-ui';
+import { ChannelMembersEntity, getStore, messagesActions, selectMemberClanByUserId2, useAppDispatch } from '@mezon/store-mobile';
 import { safeJSONParse } from 'mezon-js';
 import { ApiMessageRef } from 'mezon-js/api.gen';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import MezonAvatar from '../../../../../componentUI/MezonAvatar';
 import MezonIconCDN from '../../../../../componentUI/MezonIconCDN';
@@ -27,6 +27,15 @@ export const MessageReferences = ({ messageReferences, preventAction, channelId,
 	const styles = style(themeValue);
 	const dispatch = useAppDispatch();
 	const { t } = useTranslation('message');
+	const avatarSender = useMemo(() => {
+		if (messageReferences?.mesages_sender_avatar) {
+			return messageReferences?.mesages_sender_avatar;
+		}
+		const store = getStore();
+		const state = store.getState();
+		const messageSender = selectMemberClanByUserId2(state, messageReferences?.message_sender_id ?? '') as unknown as ChannelMembersEntity;
+		return messageSender?.clan_avatar || messageSender?.user?.avatar_url || '';
+	}, [messageReferences]);
 
 	const handleJumpToMessage = (messageId: string) => {
 		requestAnimationFrame(async () => {
@@ -53,10 +62,11 @@ export const MessageReferences = ({ messageReferences, preventAction, channelId,
 			</View>
 			<View style={styles.repliedMessageWrapper}>
 				<MezonAvatar
-					avatarUrl={messageReferences?.mesages_sender_avatar || ''}
+					avatarUrl={avatarSender}
 					username={messageReferences?.message_sender_username}
 					height={size.s_20}
 					width={size.s_20}
+					isMsgReply={true}
 				/>
 				<View style={styles.replyContentWrapper}>
 					<Text style={styles.replyDisplayName}>

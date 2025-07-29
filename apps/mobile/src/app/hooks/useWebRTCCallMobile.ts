@@ -1,8 +1,7 @@
 import { MediaStream, RTCIceCandidate, RTCPeerConnection, RTCSessionDescription, mediaDevices } from '@livekit/react-native-webrtc';
 import { useAuth, useChatSending } from '@mezon/core';
 import { sessionConstraints } from '@mezon/mobile-components';
-import { DMCallActions, selectDmGroupCurrent, useAppDispatch } from '@mezon/store';
-import { RootState, audioCallActions } from '@mezon/store-mobile';
+import { DMCallActions, RootState, audioCallActions, selectDmGroupCurrent, useAppDispatch } from '@mezon/store-mobile';
 import { useMezon } from '@mezon/transport';
 import { IMessageSendPayload, IMessageTypeCallLog, sleep } from '@mezon/utils';
 import { useNavigation } from '@react-navigation/native';
@@ -636,6 +635,38 @@ export function useWebRTCCallMobile({ dmUserId, channelId, userId, isVideoCall, 
 		}
 	};
 
+	const switchCamera = async () => {
+		try {
+			const videoTracks = callState.localStream?.getVideoTracks() || [];
+			const audioTracks = callState.localStream?.getAudioTracks() || [];
+			if (!videoTracks?.length) return;
+
+			const currentFacing = videoTracks?.[0]?.getSettings()?.facingMode;
+			const newStream = await mediaDevices.getUserMedia({
+				video: { facingMode: { exact: currentFacing === 'user' ? 'environment' : 'user' } }
+			});
+
+			const newVideoTrack = newStream?.getVideoTracks()?.[0];
+			if (newVideoTrack) {
+				const sender = peerConnection?.current?.getSenders()?.find((s) => s?.track?.kind === 'video');
+				await sender?.replaceTrack(newVideoTrack);
+
+				videoTracks?.[0]?.stop();
+				callState?.localStream?.removeTrack(videoTracks?.[0]);
+				callState?.localStream?.addTrack(newVideoTrack);
+
+				setCallState((prev) => ({
+					...prev,
+					localStream: new MediaStream([...audioTracks, newVideoTrack])
+				}));
+
+				return true;
+			}
+		} catch (error) {
+			console.error('Switch camera failed:', error);
+		}
+	};
+
 	return {
 		callState,
 		localMediaControl,
@@ -645,6 +676,7 @@ export function useWebRTCCallMobile({ dmUserId, channelId, userId, isVideoCall, 
 		toggleAudio,
 		toggleVideo,
 		toggleSpeaker,
+		switchCamera,
 		handleSignalingMessage
 	};
 }

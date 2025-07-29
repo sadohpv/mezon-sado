@@ -4,7 +4,6 @@ import {
 	categoriesActions,
 	selectClanView,
 	selectCurrentChannel,
-	selectTheme,
 	selectThreadById,
 	useAppDispatch,
 	useAppSelector
@@ -66,14 +65,13 @@ const ChannelHashtag = ({ channelHastagId, isJumMessageEnabled, isTokenClickAble
 
 	const existHashtagAndChannelView = channelHastagId && !isClanView;
 	const isValidChannel = (isTextChannel || isStreamingChannel || isThreadChannel || existHashtagAndChannelView || isAppChannel) && channel;
-	const theme = useSelector(selectTheme);
 
 	return channel ? (
 		isValidChannel ? (
 			<div
 				onClick={tokenClickAble}
 				style={{ textDecoration: 'none' }}
-				className={`font-medium rounded-sm  inline whitespace-nowrap !text-[#3297ff] dark:bg-[#3C4270] bg-[#D1E0FF] ${!isJumMessageEnabled ? ' hover:bg-[#5865F2] hover:!text-white cursor-pointer ' : `hover:none cursor-text`} `}
+				className={`font-medium rounded-sm  inline whitespace-nowrap cursor-pointer bg-mention color-mention${!isJumMessageEnabled ? ' hover-mention ' : `hover:none cursor-text`} `}
 			>
 				{channel.type === ChannelType.CHANNEL_TYPE_GMEET_VOICE ? (
 					<Icons.Speaker defaultSize={`inline mt-[-0.2rem] w-4 h-4`} defaultFill="#3297FF" />
@@ -82,7 +80,7 @@ const ChannelHashtag = ({ channelHastagId, isJumMessageEnabled, isTokenClickAble
 				) : channel.type === ChannelType.CHANNEL_TYPE_STREAMING ? (
 					<Icons.Stream defaultSize={`inline mt-[-0.2rem] w-4 h-4`} defaultFill="#3297FF" />
 				) : channel.type === ChannelType.CHANNEL_TYPE_APP ? (
-					<Icons.AppChannelIcon fill={theme} className={`inline mt-[-0.2rem] w-4 h-4`} />
+					<Icons.AppChannelIcon className={`inline mt-[-0.2rem] w-4 h-4`} />
 				) : channel.type === ChannelType.CHANNEL_TYPE_CHANNEL ? (
 					!channel.channel_private || channel.channel_private === 0 ? (
 						<Icons.Hashtag defaultSize={`inline-block -mt-[0.2rem] w-4 h-4`} />
@@ -109,7 +107,7 @@ function PrivateChannel({ onClick }: { onClick: () => void }) {
 	return (
 		<span
 			onClick={onClick}
-			className={`px-0.1 rounded-sm inline-flex w-fit whitespace-nowrap dark:!text-[#ffffff] dark:bg-[#3e3f3f] bg-[#F2F3F5] relative top-[3px] cursor-pointer`}
+			className={`px-0.1 rounded-sm inline-flex w-fit whitespace-nowrap color-mention bg-mention relative top-[3px] cursor-pointer`}
 		>
 			<Icons.LockedPrivate className={`mt-1 w-4 h-4`} />
 			<span>private-channel</span>

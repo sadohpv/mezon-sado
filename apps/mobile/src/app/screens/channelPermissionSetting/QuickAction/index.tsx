@@ -1,5 +1,5 @@
 import { ActionEmitEvent } from '@mezon/mobile-components';
-import { baseColor, size, Text, useTheme } from '@mezon/mobile-ui';
+import { baseColor, size, useTheme, verticalScale } from '@mezon/mobile-ui';
 import {
 	deleteQuickMenuAccess,
 	listQuickMenuAccess,
@@ -11,15 +11,12 @@ import {
 import { ApiQuickMenuAccess } from 'mezon-js/api.gen';
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DeviceEventEmitter, FlatList, Platform, TouchableOpacity, View } from 'react-native';
+import { DeviceEventEmitter, FlatList, Platform, Text, TouchableOpacity, View } from 'react-native';
 import MezonConfirm from '../../../componentUI/MezonConfirm';
 import MezonIconCDN from '../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../constants/icon_cdn';
-import { APP_SCREEN } from '../../../navigation/ScreenTypes';
 import ModalQuickMenu from './ModalQuickMenu';
 import { style } from './quickAction.style';
-
-type QuickActionScreen = typeof APP_SCREEN.MENU_CHANNEL.QUICK_ACTION;
 
 export function QuickAction({ navigation, route }) {
 	const { channelId } = route.params;
@@ -43,7 +40,14 @@ export function QuickAction({ navigation, route }) {
 			headerStatusBarHeight: Platform.OS === 'android' ? 0 : undefined,
 			headerTitle: () => (
 				<View>
-					<Text bold h3 color={themeValue?.white}>
+					<Text
+						style={{
+							fontSize: verticalScale(18),
+							marginLeft: 0,
+							marginRight: 0,
+							color: themeValue.white
+						}}
+					>
 						{t('quickAction.title')}
 					</Text>
 				</View>
@@ -121,6 +125,9 @@ export function QuickAction({ navigation, route }) {
 				renderItem={({ item }) => (
 					<QuickActionItem item={item} themeValue={themeValue} openModal={openModal} handleDelete={handlePressDeleteCategory} />
 				)}
+				initialNumToRender={1}
+				maxToRenderPerBatch={1}
+				windowSize={2}
 			/>
 
 			<TouchableOpacity style={styles.addButton} onPress={() => openModal(null)}>

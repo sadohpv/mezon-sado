@@ -1,5 +1,5 @@
 import { ActionEmitEvent, Icons } from '@mezon/mobile-components';
-import { size, useAnimatedState, useTheme } from '@mezon/mobile-ui';
+import { size, useTheme } from '@mezon/mobile-ui';
 import { selectChannelById, selectDmGroupCurrent, useAppSelector } from '@mezon/store-mobile';
 import { useMezon } from '@mezon/transport';
 import { getMobileUploadedAttachments } from '@mezon/utils';
@@ -24,15 +24,16 @@ import { style } from './styles';
 interface IRecordAudioMessageProps {
 	channelId: string;
 	mode: ChannelStreamMode;
+	topicId?: string;
 }
 
 const audioRecorderPlayer = new AudioRecorderPlayer();
 
-export const BaseRecordAudioMessage = memo(({ channelId, mode }: IRecordAudioMessageProps) => {
+export const BaseRecordAudioMessage = memo(({ channelId, mode, topicId = '' }: IRecordAudioMessageProps) => {
 	const { themeValue } = useTheme();
 	const styles = style(themeValue);
 	const { t } = useTranslation(['recordChatMessage']);
-	const [isDisplay, setIsDisplay] = useAnimatedState(false);
+	const [isDisplay, setIsDisplay] = useState<boolean>(false);
 	const recordingRef = useRef(null);
 	const recordingWaveRef = useRef(null);
 	const { sessionRef, clientRef, socketRef } = useMezon();
@@ -42,7 +43,7 @@ export const BaseRecordAudioMessage = memo(({ channelId, mode }: IRecordAudioMes
 	const [durationRecord, setDurationRecord] = useState(0);
 	const [isPreviewRecord, setIsPreviewRecord] = useState<boolean>(false);
 	const meterSoundRef = useRef(null);
-	const [isConfirmRecordModalVisible, setIsConfirmRecordModalVisible] = useAnimatedState(false);
+	const [isConfirmRecordModalVisible, setIsConfirmRecordModalVisible] = useState<boolean>(false);
 	const currentChannelDM = useMemo(
 		() => (mode === ChannelStreamMode.STREAM_MODE_CHANNEL || mode === ChannelStreamMode.STREAM_MODE_THREAD ? currentChannel : currentDmGroup),
 		[mode, currentChannel, currentDmGroup]
@@ -134,12 +135,12 @@ export const BaseRecordAudioMessage = memo(({ channelId, mode }: IRecordAudioMes
 			const attachments = await getAudioFileInfo(recordingUrl);
 			const uploadedFiles = await getMobileUploadedAttachments({
 				attachments,
-				channelId,
+				channelId: topicId || channelId,
 				clanId,
 				client,
 				session
 			});
-			await socket.writeChatMessage(clanId, channelId, mode, isPublic, { t: '' }, [], uploadedFiles, [], false, false, '');
+			await socket.writeChatMessage(clanId, channelId, mode, isPublic, { t: '' }, [], uploadedFiles, [], false, false, '', 0, topicId);
 			setIsDisplay(false);
 			DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_BOTTOM_SHEET, { isDismiss: true });
 		} catch (error) {
@@ -154,10 +155,12 @@ export const BaseRecordAudioMessage = memo(({ channelId, mode }: IRecordAudioMes
 		currentChannelDM?.clan_id,
 		currentChannelDM?.channel_id,
 		currentChannelDM?.channel_private,
+		topicId,
 		mode,
 		setIsDisplay,
 		recordUrl,
-		stopRecording
+		stopRecording,
+		topicId
 	]);
 
 	const normalizeFilePath = (path) => {

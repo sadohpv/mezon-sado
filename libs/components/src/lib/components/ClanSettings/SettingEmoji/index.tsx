@@ -1,8 +1,8 @@
-import { selectCurrentClanId, selectEmojiByClanId, settingClanStickerActions, useAppDispatch } from '@mezon/store';
-import { Modal } from '@mezon/ui';
+import { selectCurrentClanId, selectEmojiByClanId, settingClanStickerActions, useAppDispatch, useAppSelector } from '@mezon/store';
 import { ClanEmoji } from 'mezon-js';
 import { RefObject, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { ModalLayout } from '../../../components';
 import { ModalErrorTypeUpload, ModalOverData } from '../../ModalError';
 import ModalSticker, { EGraphicType } from '../SettingSticker/ModalEditSticker';
 import SettingEmojiList from './SettingEmojiList';
@@ -11,7 +11,7 @@ const SettingEmoji = ({ parentRef }: { parentRef: RefObject<HTMLDivElement> }) =
 	const currentClanId = useSelector(selectCurrentClanId);
 	const [openModal, setOpenModal] = useState(false);
 	const [openModalType, setOpenModalType] = useState(false);
-	const emojiList = useSelector(selectEmojiByClanId(currentClanId || ''));
+	const emojiList = useAppSelector((state) => selectEmojiByClanId(state, currentClanId || ''));
 	const [selectedEmoji, setSelectedEmoji] = useState<ClanEmoji | null>(null);
 	const [isOpenEditModal, setIsOpenEditModal] = useState<boolean>(false);
 	const dispatch = useAppDispatch();
@@ -38,8 +38,8 @@ const SettingEmoji = ({ parentRef }: { parentRef: RefObject<HTMLDivElement> }) =
 
 	return (
 		<>
-			<div className="flex flex-col gap-3 pb-[40px] dark:text-textSecondary text-textSecondary800 text-sm">
-				<div className={'dark:text-textSecondary flex flex-col gap-2 text-textSecondary800'}>
+			<div className="flex flex-col gap-3 pb-[40px] 0 text-sm">
+				<div className={'flex flex-col gap-2'}>
 					<p className={''}>
 						Add up to 250 custom emoji that anyone can use in this server. Animated GIF emoji may be used by members with Mezon Nitro
 					</p>
@@ -53,7 +53,7 @@ const SettingEmoji = ({ parentRef }: { parentRef: RefObject<HTMLDivElement> }) =
 				</div>
 				<div
 					onClick={handleCreateEmoji}
-					className="h-[38px] font-semibold rounded bg-buttonPrimary text-contentPrimary w-28 relative flex flex-row items-center justify-center hover:bg-contentBrand cursor-pointer"
+					className="h-[38px] font-semibold rounded-lg btn-primary btn-primary-hover w-28 relative flex flex-row items-center justify-center cursor-pointer"
 				>
 					Upload emoji
 				</div>
@@ -65,12 +65,9 @@ const SettingEmoji = ({ parentRef }: { parentRef: RefObject<HTMLDivElement> }) =
 			<ModalErrorTypeUpload openModal={openModalType} handleClose={() => setOpenModalType(false)} />
 
 			{isOpenEditModal && (
-				<Modal
-					showModal={isOpenEditModal}
-					onClose={handleCloseModal}
-					classNameBox={'max-w-[600px]'}
-					children={<ModalSticker graphic={selectedEmoji} handleCloseModal={handleCloseModal} type={EGraphicType.EMOJI} />}
-				/>
+				<ModalLayout onClose={handleCloseModal}>
+					<ModalSticker graphic={selectedEmoji} handleCloseModal={handleCloseModal} type={EGraphicType.EMOJI} />
+				</ModalLayout>
 			)}
 		</>
 	);

@@ -135,11 +135,7 @@ export const fetchDirectMessage = createAsyncThunk(
 	async ({ channelType = ChannelType.CHANNEL_TYPE_GROUP, noCache }: fetchDmGroupArgs, thunkAPI) => {
 		try {
 			const mezon = await ensureSession(getMezonCtx(thunkAPI));
-
-			if (noCache) {
-				fetchChannelsCached.delete(mezon, 500, 1, '', channelType);
-			}
-			const response = await fetchChannelsCached(mezon, 500, 1, '', channelType);
+			const response = await fetchChannelsCached(thunkAPI.getState as () => RootState, mezon, 500, 1, '', channelType, noCache);
 			if (!response.channeldesc) {
 				thunkAPI.dispatch(directActions.setAll([]));
 				return [];
@@ -155,7 +151,7 @@ export const fetchDirectMessage = createAsyncThunk(
 				thunkAPI.dispatch(directActions.setAllStatusDMUnread(listStatusUnreadDM));
 			}
 
-			if (Date.now() - response.time > 100) {
+			if (response.fromCache) {
 				return [];
 			}
 
@@ -277,7 +273,7 @@ export const joinDirectMessage = createAsyncThunk<void, JoinDirectMessagePayload
 					})
 				);
 
-				// TODO: update e2ee later
+				// TODO: update e2ee later gg
 				thunkAPI
 					.dispatch(
 						channelMembersActions.fetchChannelMembers({
@@ -288,8 +284,8 @@ export const joinDirectMessage = createAsyncThunk<void, JoinDirectMessagePayload
 						})
 					)
 					.then((data) => {
-						const members = data.payload as members[];
-						if (type === ChannelType.CHANNEL_TYPE_DM && members && members.length > 0) {
+						const members = (data.payload as any)?.channel_users as members[];
+						if (type === ChannelType.CHANNEL_TYPE_DM && members?.length > 0) {
 							const userIds = members.map((member) => member?.user_id as string);
 							thunkAPI.dispatch(hashtagDmActions.fetchHashtagDm({ userIds: userIds, directId: directMessageId }));
 						}

@@ -12,19 +12,22 @@ export const CreateChannelButton: React.FC<CreateChannelProps> = ({ checkInputEr
 	const isLoading = useSelector(selectLoadingStatus);
 	return (
 		<div
-			className="Frame394 absolute border-t border-solid dark:border-borderDefault self-stretch mb-0 pt-3 justify-end items-center gap-4 inline-flex bottom-5 right-5"
+			className="Frame394 absolute border-t-theme-primary  self-stretch mb-0 pt-3 justify-end items-center gap-4 inline-flex bottom-5 right-5"
 			style={{
 				width: 'calc(100% - 40px)'
 			}}
 		>
-			<button onClick={onClickCancel} className="Text dark:text-white text-black hover:underline text-xs leading-normal font-semibold">
+			<button
+				onClick={onClickCancel}
+				className="Text  px-4 py-2 rounded-lg hover:underline text-xs leading-normal font-semibold"
+			>
 				Cancel
 			</button>
 
 			<button
 				disabled={isLoading === 'loading'}
 				onClick={onClickCreate}
-				className={`Text disabled:cursor-not-allowed text-xs leading-normal relative h-10 w-30 justify-center px-3 py-3 flex flex-row items-center gap-1 font-semibold rounded bg-blue-600 ${!(checkInputError === false) ? 'dark:text-slate-400 text-colorTextLightMode bg-opacity-50' : 'hover:bg-blue-500 text-white'}`}
+				className={`Text disabled:cursor-not-allowed text-xs leading-normal relative h-10 w-30 justify-center px-3 py-3 flex flex-row items-center gap-1 font-semibold rounded-lg btn-primary ${!(checkInputError === false) ? 'text-zinc-300 hover:bg-opacity-50' : 'btn-primary-hover text-white'}`}
 			>
 				{isLoading === 'loading' ? (
 					<>

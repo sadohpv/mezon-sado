@@ -1,15 +1,21 @@
-import { TouchableWithoutFeedback } from '@gorhom/bottom-sheet';
 import { BottomSheetMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
 import { useChatSending, useGifsStickersEmoji } from '@mezon/core';
 import { debounce, isEmpty } from '@mezon/mobile-components';
 import { Colors, Fonts, baseColor, size, useTheme } from '@mezon/mobile-ui';
-import { MediaType, selectAnonymousMode, selectCurrentChannel, selectDmGroupCurrent } from '@mezon/store-mobile';
+import {
+	MediaType,
+	selectAnonymousMode,
+	selectCurrentChannel,
+	selectCurrentTopicId,
+	selectDmGroupCurrent,
+	selectIsShowCreateTopic
+} from '@mezon/store-mobile';
 import { IMessageSendPayload, checkIsThread } from '@mezon/utils';
 import { ChannelStreamMode } from 'mezon-js';
 import { ApiMessageAttachment, ApiMessageMention, ApiMessageRef } from 'mezon-js/api.gen';
 import React, { MutableRefObject, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Keyboard, Platform, Text, TextInput, View } from 'react-native';
+import { Platform, Text, TextInput, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { useSelector } from 'react-redux';
 import MezonIconCDN from '../../../../../componentUI/MezonIconCDN';
@@ -67,6 +73,8 @@ function EmojiPicker({ onDone, bottomSheetRef, directMessageId = '', messageActi
 	const [searchText, setSearchText] = useState<string>('');
 	const { t } = useTranslation('message');
 	const [stickerMode, setStickerMode] = useState<MediaType>(MediaType.STICKER);
+	const currentTopicId = useSelector(selectCurrentTopicId);
+	const isCreateTopic = useSelector(selectIsShowCreateTopic);
 
 	const dmMode = currentDirectMessage
 		? Number(currentDirectMessage?.user_id?.length === 1 ? ChannelStreamMode.STREAM_MODE_DM : ChannelStreamMode.STREAM_MODE_GROUP)
@@ -74,7 +82,8 @@ function EmojiPicker({ onDone, bottomSheetRef, directMessageId = '', messageActi
 
 	const { sendMessage } = useChatSending({
 		mode: dmMode ? dmMode : checkIsThread(currentChannel) ? ChannelStreamMode.STREAM_MODE_THREAD : ChannelStreamMode.STREAM_MODE_CHANNEL,
-		channelOrDirect: currentDirectMessage || currentChannel
+		channelOrDirect: currentDirectMessage || currentChannel,
+		fromTopic: isCreateTopic || !!currentTopicId
 	});
 
 	const handleSend = useCallback(
@@ -115,13 +124,10 @@ function EmojiPicker({ onDone, bottomSheetRef, directMessageId = '', messageActi
 		if (type === 'gif') {
 			handleSend({ t: '' }, [], [{ url: data }], isEmpty(messageRef) ? [] : [messageRef]);
 		} else if (type === 'sticker') {
-			const imageUrl = data?.url ? data?.url : `${process.env.NX_BASE_IMG_URL}/stickers/${data?.id}.webp`;
-			handleSend(
-				{ t: '' },
-				[],
-				[{ url: imageUrl, filetype: stickerMode === MediaType.STICKER ? 'image/gif' : 'audio/mpeg', filename: data?.id }],
-				isEmpty(messageRef) ? [] : [messageRef]
-			);
+			const imageUrl = data?.source ? data?.source : `${process.env.NX_BASE_IMG_URL}/stickers/${data?.id}.webp`;
+			const attachments = [{ url: imageUrl, filetype: stickerMode === MediaType.STICKER ? 'image/gif' : 'audio/mpeg', filename: data?.id }];
+
+			handleSend({ t: '' }, [], attachments, isEmpty(messageRef) ? [] : [messageRef]);
 		} else {
 			/* empty */
 		}
@@ -131,10 +137,6 @@ function EmojiPicker({ onDone, bottomSheetRef, directMessageId = '', messageActi
 
 	function handleInputSearchFocus() {
 		bottomSheetRef && bottomSheetRef.current && bottomSheetRef.current.expand();
-	}
-
-	function handleInputSearchBlur() {
-		Keyboard.dismiss();
 	}
 
 	const debouncedSetSearchText = useCallback(
@@ -173,12 +175,12 @@ function EmojiPicker({ onDone, bottomSheetRef, directMessageId = '', messageActi
 	}, [stickerMode]);
 
 	return (
-		<TouchableWithoutFeedback onPressIn={handleInputSearchBlur}>
-			<View style={styles.container}>
+		<View style={styles.container}>
+			<View>
 				<View style={styles.tabContainer}>
-					<TextTab title="Emoji" selected={mode === 'emoji'} onPress={() => setMode('emoji')} />
-					<TextTab title="GIFs" selected={mode === 'gif'} onPress={() => setMode('gif')} />
-					<TextTab title="Stickers" selected={mode === 'sticker'} onPress={() => setMode('sticker')} />
+					<TextTab title={t('tab.emoji')} selected={mode === 'emoji'} onPress={() => setMode('emoji')} />
+					<TextTab title={t('tab.gif')} selected={mode === 'gif'} onPress={() => setMode('gif')} />
+					<TextTab title={t('tab.sticker')} selected={mode === 'sticker'} onPress={() => setMode('sticker')} />
 				</View>
 
 				{mode !== 'emoji' && (
@@ -198,8 +200,8 @@ function EmojiPicker({ onDone, bottomSheetRef, directMessageId = '', messageActi
 						<View style={styles.textInputWrapper}>
 							<MezonIconCDN icon={IconCDN.magnifyingIcon} height={18} width={18} color={themeValue.text} />
 							<TextInput
-								placeholder={mode === 'sticker' ? t('findThePerfectSticker') : 'search'}
-								placeholderTextColor={themeValue.text}
+								placeholder={mode === 'sticker' ? t('findThePerfectSticker') : t('findThePerfectGif')}
+								placeholderTextColor={themeValue.textDisabled}
 								style={styles.textInput}
 								onFocus={handleInputSearchFocus}
 								onChangeText={debouncedSetSearchText}
@@ -223,21 +225,25 @@ function EmojiPicker({ onDone, bottomSheetRef, directMessageId = '', messageActi
 						)}
 					</View>
 				)}
-
-				{mode === 'emoji' ? (
-					<EmojiSelector
-						handleBottomSheetExpand={handleBottomSheetExpand}
-						handleBottomSheetCollapse={handleBottomSheetCollapse}
-						onSelected={onSelectEmoji}
-						searchText={searchText}
-					/>
-				) : mode === 'gif' ? (
-					<GifSelector onScroll={onScroll} onSelected={(url) => handleSelected('gif', url)} searchText={searchText} />
-				) : (
-					<StickerSelector onScroll={onScroll} onSelected={(sticker) => handleSelected('sticker', sticker)} mediaType={stickerMode} />
-				)}
 			</View>
-		</TouchableWithoutFeedback>
+			{mode === 'emoji' ? (
+				<EmojiSelector
+					handleBottomSheetExpand={handleBottomSheetExpand}
+					handleBottomSheetCollapse={handleBottomSheetCollapse}
+					onSelected={onSelectEmoji}
+					searchText={searchText}
+				/>
+			) : mode === 'gif' ? (
+				<GifSelector onScroll={onScroll} onSelected={(url) => handleSelected('gif', url)} searchText={searchText} />
+			) : (
+				<StickerSelector
+					onScroll={onScroll}
+					onSelected={(sticker) => handleSelected('sticker', sticker)}
+					mediaType={stickerMode}
+					searchText={searchText}
+				/>
+			)}
+		</View>
 	);
 }
 

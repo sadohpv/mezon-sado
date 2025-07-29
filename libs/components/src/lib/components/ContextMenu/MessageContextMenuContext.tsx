@@ -12,8 +12,10 @@ import {
 	selectCurrentTopicId,
 	selectMessageByMessageId,
 	selectThreadCurrentChannel,
+	UpdatePinMessage,
 	useAppDispatch
 } from '@mezon/store';
+import { isValidUrl } from '@mezon/transport';
 import { SHOW_POSITION } from '@mezon/utils';
 import { ChannelStreamMode } from 'mezon-js';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
@@ -49,6 +51,7 @@ type MessageContextMenuContextValue = {
 	onVisibilityChange: (status: boolean) => void;
 	openDeleteMessageModal: () => void;
 	openPinMessageModal: () => void;
+	selectedMessageId: string | null;
 };
 
 export type MessageContextMenuProps = {
@@ -81,7 +84,8 @@ export const MessageContextMenuContext = createContext<MessageContextMenuContext
 	},
 	openPinMessageModal: () => {
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
-	}
+	},
+	selectedMessageId: null
 });
 
 const getMessage = (appState: RootState, isTopic: boolean, messageId: string) => {
@@ -110,6 +114,7 @@ export const MessageContextMenuProvider = ({ children, channelId }: { children: 
 	const [imageSrc, setImageSrc] = useState<string>(SHOW_POSITION.NONE);
 	const [posShortProfile, setPosShortProfile] = useState<posShortProfileOpt>({});
 	const [isTopic, setIsTopic] = useState<boolean>(false);
+	const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
 
 	const [openDeleteMessageModal, closeDeleteMessageModal] = useModal(() => {
 		const store = getStore();
@@ -153,23 +158,32 @@ export const MessageContextMenuProvider = ({ children, channelId }: { children: 
 				message: message
 			})
 		);
-		dispatch(
-			pinMessageActions.joinPinMessage({
-				clanId: mode !== ChannelStreamMode.STREAM_MODE_CHANNEL && mode !== ChannelStreamMode.STREAM_MODE_THREAD ? '' : (currentClanId ?? ''),
-				channelId:
-					mode !== ChannelStreamMode.STREAM_MODE_CHANNEL && mode !== ChannelStreamMode.STREAM_MODE_THREAD
-						? currentDm?.id || ''
-						: (currentChannel?.channel_id ?? ''),
-				messageId: message?.id,
-				isPublic:
-					mode !== ChannelStreamMode.STREAM_MODE_CHANNEL && mode !== ChannelStreamMode.STREAM_MODE_THREAD
-						? false
-						: currentChannel
-							? !currentChannel.channel_private
-							: false,
-				mode: mode as number
-			})
-		);
+		const attachments = message.attachments?.filter((attach) => isValidUrl(attach.url || '')) || [];
+		const jsonAttachments = attachments.length > 0 ? JSON.stringify(attachments) : '';
+		const createTime = new Date(message.create_time).toISOString();
+		const pinBody: UpdatePinMessage = {
+			clanId: mode !== ChannelStreamMode.STREAM_MODE_CHANNEL && mode !== ChannelStreamMode.STREAM_MODE_THREAD ? '' : (currentClanId ?? ''),
+			channelId:
+				mode !== ChannelStreamMode.STREAM_MODE_CHANNEL && mode !== ChannelStreamMode.STREAM_MODE_THREAD
+					? currentDm?.id || ''
+					: (currentChannel?.channel_id ?? ''),
+			messageId: message?.id,
+			isPublic:
+				mode !== ChannelStreamMode.STREAM_MODE_CHANNEL && mode !== ChannelStreamMode.STREAM_MODE_THREAD
+					? false
+					: currentChannel
+						? !currentChannel.channel_private
+						: false,
+			mode: mode as number,
+			senderId: message.sender_id,
+			senderUsername: message.display_name || message.username || message.user?.name || message.user?.name || '',
+			attachment: jsonAttachments,
+			avatar: message.avatar || message.clan_avatar || '',
+			content: JSON.stringify(message.content),
+			createdTime: createTime
+		};
+
+		dispatch(pinMessageActions.joinPinMessage(pinBody));
 	}, []);
 
 	const { show } = useContextMenu({
@@ -205,6 +219,9 @@ export const MessageContextMenuProvider = ({ children, channelId }: { children: 
 
 	const onVisibilityChange = useCallback((status: boolean) => {
 		setIsMenuVisible(status);
+		if (!status) {
+			setSelectedMessageId(null);
+		}
 	}, []);
 	const setImageURL = useCallback((src: string) => {
 		setImageSrc(src);
@@ -236,6 +253,7 @@ export const MessageContextMenuProvider = ({ children, channelId }: { children: 
 			messageIdRef.current = messageId;
 			setElementTarget(event.target as HTMLElement);
 			setIsTopic(isTopic);
+			setSelectedMessageId(messageId);
 
 			const niceProps = {
 				messageId,
@@ -257,7 +275,8 @@ export const MessageContextMenuProvider = ({ children, channelId }: { children: 
 			setPosShortProfile,
 			onVisibilityChange,
 			openDeleteMessageModal,
-			openPinMessageModal
+			openPinMessageModal,
+			selectedMessageId
 		}),
 		[
 			showMessageContextMenu,
@@ -269,7 +288,8 @@ export const MessageContextMenuProvider = ({ children, channelId }: { children: 
 			setPosShortProfile,
 			onVisibilityChange,
 			openDeleteMessageModal,
-			openPinMessageModal
+			openPinMessageModal,
+			selectedMessageId
 		]
 	);
 

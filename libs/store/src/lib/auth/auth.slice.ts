@@ -2,8 +2,8 @@ import { captureSentryError } from '@mezon/logger';
 import { LoadingStatus } from '@mezon/utils';
 import { createAsyncThunk, createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Session } from 'mezon-js';
+import { clearApiCallTracker } from '../cache-metadata';
 import { ensureClientAsync, ensureSession, getMezonCtx, restoreLocalStorage } from '../helpers';
-import { clearAllMemoizedFunctions } from '../memoize';
 export const AUTH_FEATURE_KEY = 'auth';
 
 export interface AuthState {
@@ -100,7 +100,7 @@ export const refreshSession = createAsyncThunk('auth/refreshSession', async (_, 
 			is_remember: sessionState.is_remember ?? false
 		});
 	} catch (error: any) {
-		return thunkAPI.rejectWithValue('Redirect Login');
+		return thunkAPI.rejectWithValue(error);
 	}
 
 	if (!session) {
@@ -143,8 +143,8 @@ export const logOut = createAsyncThunk('auth/logOut', async ({ device_id, platfo
 	const sessionState = selectOthersSession(thunkAPI.getState() as unknown as { [AUTH_FEATURE_KEY]: AuthState });
 	await mezon?.logOutMezon(device_id, platform, !sessionState);
 	thunkAPI.dispatch(authActions.setLogout());
-	clearAllMemoizedFunctions();
-	const restoreKey = ['persist:apps', 'persist:categories', 'persist:clans'];
+	clearApiCallTracker();
+	const restoreKey = ['persist:apps', 'persist:categories', 'persist:clans', 'current-theme', 'hideNotificationContent', 'remember_channel'];
 	if (sessionState) {
 		restoreKey.push('mezon_session');
 	}

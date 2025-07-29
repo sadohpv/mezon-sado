@@ -1,4 +1,5 @@
 import { getSelectedRoleId } from '@mezon/store';
+import { ButtonLoading } from '@mezon/ui';
 import { useSelector } from 'react-redux';
 
 export type ModalSettingSave = {
@@ -14,8 +15,12 @@ export type SettingUserClanProfileSaveProps = {
 export const SettingUserClanProfileSave = (props: SettingUserClanProfileSaveProps) => {
 	const { PropsSave } = props;
 	const clickRole = useSelector(getSelectedRoleId);
+	const handleSaveChanges = async () => {
+		await PropsSave.handleUpdateUser();
+		PropsSave.handleSaveClose();
+	};
 	return PropsSave.flagOption || clickRole === 'New Role' ? (
-		<div className="flex flex-row gap-2 dark:bg-bgProfileBody bg-bgLightSecondary dark:text-white text-colorTextLightMode text-sm font-medium absolute max-w-[815px] w-full left-1/2 translate-x-[-50%] bottom-2 min-w-96 h-fit p-2.5 rounded transform z-10 shadow-sm dark:shadow-gray-400 shadow-gray-600">
+		<div className="flex flex-row gap-2 dark:bg-bgProfileBody bg-bgLightSecondary text-theme-primary text-sm font-medium absolute max-w-[815px] w-full left-1/2 translate-x-[-50%] bottom-2 min-w-96 h-fit p-2.5 rounded transform z-10 shadow-sm dark:shadow-gray-400 shadow-gray-600">
 			<div className="flex-1 flex items-center">
 				<p className="text-base">Careful - you have unsaved changes!</p>
 			</div>
@@ -28,15 +33,11 @@ export const SettingUserClanProfileSave = (props: SettingUserClanProfileSaveProp
 				>
 					Reset
 				</button>
-				<button
-					className="ml-auto bg-blue-600 rounded-[4px] px-4 py-1.5 text-nowrap text-white"
-					onClick={() => {
-						PropsSave.handleSaveClose();
-						PropsSave.handleUpdateUser();
-					}}
-				>
-					Save Changes
-				</button>
+				<ButtonLoading
+					className="ml-auto btn-primary btn-primary-hover  rounded-lg px-4 py-1.5 text-nowrap "
+					label="Save Changes"
+					onClick={handleSaveChanges}
+				/>
 			</div>
 		</div>
 	) : null;

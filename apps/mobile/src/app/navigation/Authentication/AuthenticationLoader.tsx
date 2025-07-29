@@ -26,10 +26,10 @@ import {
 	useAppSelector
 } from '@mezon/store-mobile';
 import { useMezon } from '@mezon/transport';
-import notifee from '@notifee/react-native';
-import messaging from '@react-native-firebase/messaging';
+import { getApp } from '@react-native-firebase/app';
+import { getMessaging, onMessage } from '@react-native-firebase/messaging';
 import { useNavigation } from '@react-navigation/native';
-import { WebrtcSignalingFwd, WebrtcSignalingType } from 'mezon-js';
+import { WebrtcSignalingFwd, WebrtcSignalingType, safeJSONParse } from 'mezon-js';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter, Linking, Platform, StatusBar } from 'react-native';
@@ -42,9 +42,10 @@ import LoadingModal from '../../components/LoadingModal/LoadingModal';
 import { useCheckUpdatedVersion } from '../../hooks/useCheckUpdatedVersion';
 import { Sharing } from '../../screens/settings/Sharing';
 import { clanAndChannelIdLinkRegex, clanDirectMessageLinkRegex } from '../../utils/helpers';
-import { checkNotificationPermission, isShowNotification, navigateToNotification } from '../../utils/pushNotificationHelpers';
+import { isShowNotification, navigateToNotification } from '../../utils/pushNotificationHelpers';
 import { APP_SCREEN } from '../ScreenTypes';
 
+const messaging = getMessaging(getApp());
 export const AuthenticationLoader = () => {
 	const navigation = useNavigation<any>();
 	const { userProfile } = useAuth();
@@ -86,22 +87,8 @@ export const AuthenticationLoader = () => {
 		};
 	}, []);
 
-	const deleteAllChannelGroupsNotifee = async () => {
-		try {
-			const channelGroups = await notifee.getChannelGroups(); // Fetch all channel groups
-			for (const group of channelGroups) {
-				await notifee.deleteChannelGroup(group.id); // Delete each channel group by its ID
-			}
-		} catch (error) {
-			console.error('Error deleting channel groups:', error);
-		}
-	};
-
 	const initLoader = async () => {
 		try {
-			if (Platform.OS === 'android') {
-				await deleteAllChannelGroupsNotifee();
-			}
 			await remove(STORAGE_CHANNEL_CURRENT_CACHE);
 			await remove(STORAGE_KEY_TEMPORARY_ATTACHMENT);
 		} catch (error) {
@@ -232,48 +219,53 @@ export const AuthenticationLoader = () => {
 	}, [dispatch, navigation, userProfile?.user?.id]);
 
 	useEffect(() => {
-		checkPermission();
-
-		const unsubscribe = messaging().onMessage((remoteMessage) => {
-			if (isShowNotification(currentChannelRef.current?.id, currentDmGroupIdRef.current, remoteMessage)) {
-				// Case: FCM start call
-				const title = remoteMessage?.notification?.title || remoteMessage?.data?.title;
-				const body = remoteMessage?.notification?.body || remoteMessage?.data?.body;
-				if (
-					title === 'Incoming call' ||
-					(body && ['video call', 'audio call', 'Untitled message'].some((text) => body?.includes?.(text))) ||
-					!body ||
-					!title ||
-					body?.includes?.('"Untitled message"')
-				) {
-					return;
-				}
-				Toast.show({
-					type: 'notification',
-					topOffset: Platform.OS === 'ios' ? undefined : StatusBar.currentHeight + 10,
-					props: {
-						title,
-						body
-					},
-					swipeable: true,
-					visibilityTime: 5000,
-					onPress: async () => {
-						Toast.hide();
-						const store = await getStoreAsync();
-						store.dispatch(directActions.setDmGroupCurrentId(''));
-						store.dispatch(appActions.setIsFromFCMMobile(true));
-						DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_BOTTOM_SHEET, { isDismiss: true });
-						DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true });
-						requestAnimationFrame(async () => {
-							await navigateToNotification(store, remoteMessage, navigation);
-						});
+		const unsubscribe = onMessage(messaging, (remoteMessage) => {
+			try {
+				if (isShowNotification(currentChannelRef.current?.id, currentDmGroupIdRef.current, remoteMessage)) {
+					// Case: FCM start call
+					const title = remoteMessage?.notification?.title || remoteMessage?.data?.title;
+					const body = remoteMessage?.notification?.body || remoteMessage?.data?.body;
+					if (
+						title === 'Incoming call' ||
+						(body && ['video call', 'audio call', 'Untitled message'].some((text) => body?.includes?.(text))) ||
+						!body ||
+						!title ||
+						body?.includes?.('"Untitled message"')
+					) {
+						return;
 					}
-				});
-			}
-			//Payload from FCM need messageType and sound
-			if (remoteMessage?.notification?.body === 'Buzz!!') {
-				playBuzzSound();
-				handleBuzz(remoteMessage);
+					Toast.show({
+						type: 'notification',
+						topOffset: Platform.OS === 'ios' ? undefined : StatusBar.currentHeight + 10,
+						props: {
+							title,
+							body
+						},
+						swipeable: true,
+						visibilityTime: 5000,
+						onPress: async () => {
+							Toast.hide();
+							const store = await getStoreAsync();
+							store.dispatch(directActions.setDmGroupCurrentId(''));
+							store.dispatch(appActions.setIsFromFCMMobile(true));
+							DeviceEventEmitter.emit(ActionEmitEvent.ON_PANEL_KEYBOARD_BOTTOM_SHEET, {
+								isShow: false
+							});
+							DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_BOTTOM_SHEET, { isDismiss: true });
+							DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true });
+							requestAnimationFrame(async () => {
+								await navigateToNotification(store, remoteMessage, navigation);
+							});
+						}
+					});
+				}
+				//Payload from FCM need messageType and sound
+				if (remoteMessage?.notification?.body === 'Buzz!!') {
+					playBuzzSound();
+					handleBuzz(remoteMessage);
+				}
+			} catch (e) {
+				console.error('log  => e', e);
 			}
 		});
 		// To get All Received Urls
@@ -284,10 +276,6 @@ export const AuthenticationLoader = () => {
 			unsubscribe();
 		};
 	}, []);
-
-	const checkPermission = async () => {
-		await checkNotificationPermission();
-	};
 
 	const playBuzzSound = () => {
 		Sound.setCategory('Playback');

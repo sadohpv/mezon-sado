@@ -1,8 +1,8 @@
 import { useTheme } from '@mezon/mobile-ui';
-import { selectAudioByClanId, selectCurrentClanId } from '@mezon/store-mobile';
+import { selectAudioByClanId, selectCurrentClanId, useAppSelector } from '@mezon/store-mobile';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Dimensions, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Dimensions, Platform, Pressable, Text, View } from 'react-native';
 import { useSelector } from 'react-redux';
 import { APP_SCREEN, MenuClanScreenProps } from '../../../navigation/ScreenTypes';
 import { SoundList } from './SoundList';
@@ -15,7 +15,7 @@ export function SoundBoardSetting({ navigation }: MenuClanScreenProps<ClanSettin
 	const styles = style(themeValue);
 	const currentClanId = useSelector(selectCurrentClanId) || '';
 	const { t } = useTranslation(['clanSoundSetting']);
-	const soundList = useSelector(selectAudioByClanId(currentClanId));
+	const soundList = useAppSelector((state) => selectAudioByClanId(state, currentClanId));
 
 	useEffect(() => {
 		navigation.setOptions({
@@ -27,17 +27,21 @@ export function SoundBoardSetting({ navigation }: MenuClanScreenProps<ClanSettin
 	const handleAddEmoji = async () => {
 		navigation.navigate(APP_SCREEN.MENU_CLAN.CREATE_SOUND);
 	};
-
-	return (
-		<View style={styles.container}>
-			<ScrollView contentContainerStyle={styles.scrollContainer}>
+	const ListHeaderComponent = () => {
+		return (
+			<View>
 				<Pressable style={styles.addEmojiButton} onPress={handleAddEmoji}>
 					<Text style={styles.buttonText}>{t('button.upload')}</Text>
 				</Pressable>
 				<Text style={styles.lightTitle}>{t('content.requirements')}</Text>
 				<Text style={styles.title}>{t('content.description')}</Text>
-				<SoundList soundList={soundList} />
-			</ScrollView>
+			</View>
+		);
+	};
+
+	return (
+		<View style={styles.container}>
+			<SoundList soundList={soundList} ListHeaderComponent={ListHeaderComponent} />
 		</View>
 	);
 }

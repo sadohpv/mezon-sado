@@ -1,11 +1,11 @@
 import { ActionEmitEvent } from '@mezon/mobile-components';
-import { Text, size, useTheme } from '@mezon/mobile-ui';
+import { size, useTheme, verticalScale } from '@mezon/mobile-ui';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DeviceEventEmitter, Pressable, View } from 'react-native';
+import { DeviceEventEmitter, Pressable, Text, View } from 'react-native';
 import MezonIconCDN from '../../../../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../../../constants/icon_cdn';
-import { resetCachedMessageActionNeedToResolve } from '../../../../../../utils/helpers';
+import { resetCachedChatbox, resetCachedMessageActionNeedToResolve } from '../../../../../../utils/helpers';
 import { EMessageActionType } from '../../../enums';
 import { IMessageActionNeedToResolve } from '../../../types';
 
@@ -23,6 +23,7 @@ export const ActionMessageSelected = memo(({ messageActionNeedToResolve, onClose
 			case EMessageActionType.EditMessage:
 				onClose();
 				resetCachedMessageActionNeedToResolve(messageActionNeedToResolve?.targetMessage?.channel_id);
+				resetCachedChatbox(messageActionNeedToResolve?.targetMessage?.channel_id);
 				DeviceEventEmitter.emit(ActionEmitEvent.CLEAR_TEXT_INPUT);
 				break;
 			case EMessageActionType.Reply:
@@ -49,7 +50,12 @@ export const ActionMessageSelected = memo(({ messageActionNeedToResolve, onClose
 					<Pressable onPress={() => handleCloseMessageAction(EMessageActionType.Reply)}>
 						<MezonIconCDN icon={IconCDN.circleXIcon} height={20} width={20} color={themeValue.text} />
 					</Pressable>
-					<Text color={themeValue.text} h6>
+					<Text
+						style={{
+							fontSize: verticalScale(10),
+							color: themeValue.text
+						}}
+					>
 						{t('chatBox.replyingTo')} {messageActionNeedToResolve?.replyTo}
 					</Text>
 				</View>
@@ -68,7 +74,12 @@ export const ActionMessageSelected = memo(({ messageActionNeedToResolve, onClose
 					<Pressable onPress={() => handleCloseMessageAction(EMessageActionType.EditMessage)}>
 						<MezonIconCDN icon={IconCDN.circleXIcon} height={20} width={20} color={themeValue.text} />
 					</Pressable>
-					<Text color={themeValue.text} h6>
+					<Text
+						style={{
+							fontSize: verticalScale(10),
+							color: themeValue.text
+						}}
+					>
 						{t('chatBox.editingMessage')}
 					</Text>
 				</View>

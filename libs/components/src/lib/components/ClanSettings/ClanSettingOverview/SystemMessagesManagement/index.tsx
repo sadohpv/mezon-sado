@@ -26,7 +26,7 @@ const SystemMessagesManagement = ({ updateSystem, setUpdateSystemMessageRequest,
 		}
 		switch (type) {
 			case ETypeUpdateSystemMessage.HIDE_AUDIT_LOG:
-				setUpdateSystemMessageRequest({ ...updateSystem, hide_audit_log: checked ? '1' : '0' });
+				setUpdateSystemMessageRequest({ ...updateSystem, hide_audit_log: checked ? '0' : '1' });
 				break;
 			case ETypeUpdateSystemMessage.SETUP_TIPS:
 				setUpdateSystemMessageRequest({ ...updateSystem, setup_tips: checked ? '1' : '0' });
@@ -45,28 +45,24 @@ const SystemMessagesManagement = ({ updateSystem, setUpdateSystemMessageRequest,
 		}
 	};
 	return (
-		<div
-			className={
-				'border-t dark:border-borderDivider border-borderDividerLight mt-10 pt-10 flex flex-col dark:text-textSecondary text-textSecondary800'
-			}
-		>
+		<div className={'border-t-theme-primary mt-10 pt-10 flex flex-col '}>
 			<h3 className="text-sm font-bold uppercase mb-2">System Messages Channel</h3>
 			<Dropdown
 				placement={'bottom-start'}
 				label={''}
 				renderTrigger={() => (
-					<div className="w-full h-10 rounded-md flex flex-row p-3 justify-between items-center uppercase text-sm dark:bg-bgInputDark bg-bgLightModeThird border dark:text-textPrimary text-textPrimaryLight">
-						<div className={'dark:text-textPrimary text-textPrimary400 flex flex-row items-center'}>
-							<Icons.Hashtag defaultSize="w-4 h-4 dark:text-channelTextLabel" />
+					<div className="w-full h-10 rounded-md flex flex-row p-3 justify-between items-center uppercase text-sm border border-theme-primary bg-theme-input ">
+						<div className={' flex flex-row items-center'}>
+							<Icons.Hashtag defaultSize="w-4 h-4 " />
 							<p>{selectedChannel?.channel_label}</p>
-							<p className={'uppercase dark:text-textThreadPrimary ml-5 font-semibold'}>{selectedChannel?.category_name}</p>
+							<p className={'uppercase ml-5 font-semibold'}>{selectedChannel?.category_name}</p>
 						</div>
 						<div>
 							<Icons.ArrowDownFill />
 						</div>
 					</div>
 				)}
-				className={'h-fit max-h-[200px] text-xs overflow-y-scroll customSmallScrollLightMode dark:bg-bgTertiary px-2 z-20'}
+				className={'h-fit max-h-[200px] text-xs overflow-y-scroll customSmallScrollLightMode bg-theme-input px-2 z-20'}
 			>
 				{channelsList
 					.filter(
@@ -79,7 +75,7 @@ const SystemMessagesManagement = ({ updateSystem, setUpdateSystemMessageRequest,
 						channel.channel_id !== selectedChannel?.channel_id ? (
 							<Dropdown.Item
 								key={channel.id}
-								className="flex flex-row items-center dark:text-textPrimary text-textPrimaryLight rounded-sm dark:hover:bg-bgModifierHover hover:bg-bgIconDark text-sm w-full py-2 px-4 text-left cursor-pointer"
+								className="flex flex-row items-center rounded-sm text-sm w-full py-2 px-4 text-left cursor-pointer"
 								onClick={() => handleToggleSetting(true, ETypeUpdateSystemMessage.CHANNEL, channel.id)}
 							>
 								{channel?.channel_private ? (
@@ -88,14 +84,12 @@ const SystemMessagesManagement = ({ updateSystem, setUpdateSystemMessageRequest,
 									<Icons.Hashtag defaultSize="w-4 h-4 dark:text-channelTextLabel" />
 								)}
 								<p>{channel.channel_label ?? ''}</p>
-								<p className="uppercase dark:text-textSecondary text-textSecondary800 ml-5 font-semibold">{channel.category_name}</p>
+								<p className="uppercase ml-5 font-semibold">{channel.category_name}</p>
 							</Dropdown.Item>
 						) : null
 					)}
 			</Dropdown>
-			<p className={'text-xs dark:text-textPrimary text-textPrimaryLight py-2'}>
-				This is the channel we send system event messages to. These can be turned off at any time
-			</p>
+			<p className={'text-sm py-2'}>This is the channel we send system event messages to. These can be turned off at any time</p>
 			<ToggleItem
 				label={'Send a random welcome message when someone joins this server.'}
 				value={updateSystem?.welcome_random === '1'}
@@ -118,7 +112,7 @@ const SystemMessagesManagement = ({ updateSystem, setUpdateSystemMessageRequest,
 			/>
 			<ToggleItem
 				label={'Send a log when an action is applied to the clan'}
-				value={updateSystem?.hide_audit_log === '1'}
+				value={updateSystem?.hide_audit_log !== '1'}
 				handleToggle={(e) => handleToggleSetting(e, ETypeUpdateSystemMessage.HIDE_AUDIT_LOG)}
 			/>
 		</div>
@@ -151,10 +145,12 @@ const ToggleItem: React.FC<ToggleItemProps> = ({ label, value, handleToggle }) =
 			<div className="relative flex flex-wrap items-center">
 				<input
 					className="peer relative h-4 w-8 cursor-pointer appearance-none rounded-lg
-               bg-slate-300 transition-colors after:absolute after:top-0 after:left-0 after:h-4 after:w-4 after:rounded-full
-                after:bg-slate-500 after:transition-all checked:bg-blue-200 checked:after:left-4 checked:after:bg-blue-500
-                 hover:bg-slate-400 after:hover:bg-slate-600 checked:hover:bg-blue-300 checked:after:hover:bg-blue-600
-                  focus:outline-none focus-visible:outline-none"
+						bg-slate-300 transition-colors after:absolute after:top-0 after:left-0 after:h-4 after:w-4 after:rounded-full
+						after:bg-slate-500 after:transition-all
+						checked:bg-[#5265EC] checked:after:left-4 checked:after:bg-white
+						hover:bg-slate-400 after:hover:bg-slate-600
+						checked:hover:bg-[#4654C0] checked:after:hover:bg-white
+						focus:outline-none focus-visible:outline-none"
 					type="checkbox"
 					checked={value}
 					onChange={(e) => handleToggle(e.target.checked)}

@@ -19,11 +19,12 @@ import com.mezon.mobile.VideoThumbnailPackage;
 import com.mezon.mobile.CustomAudioPackage;
 import com.mezon.mobile.KeepAwakePackage;
 import com.mezon.mobile.DeviceUtilsPackage;
-import com.mezon.mobile.BluetoothPackage;
 import com.mezon.mobile.NavigationBarPackage;
 import com.mezon.mobile.NotificationPreferencesPackage;
 import com.mezon.mobile.CallStatePackage;
+import com.mezon.mobile.AudioSessionPackage;
 import io.invertase.firebase.analytics.ReactNativeFirebaseAnalyticsPackage;
+import com.swmansion.rnscreens.RNScreensPackage;
 
 import com.facebook.react.soloader.OpenSourceMergedSoMapping
 
@@ -40,11 +41,12 @@ class MainApplication : Application(), ReactApplication {
               add(CustomAudioPackage())
               add(KeepAwakePackage())
               add(DeviceUtilsPackage())
-              add(BluetoothPackage())
               add(NavigationBarPackage())
               add(NotificationPreferencesPackage())
               add(ReactNativeFirebaseAnalyticsPackage())
+              add(AudioSessionPackage())
               add(CallStatePackage())
+              add(RNScreensPackage())
             }
 
         override fun getJSMainModuleName(): String = "src/main"

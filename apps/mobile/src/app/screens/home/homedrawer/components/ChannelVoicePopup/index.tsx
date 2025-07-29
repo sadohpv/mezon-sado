@@ -15,7 +15,7 @@ import {
 } from '@mezon/store-mobile';
 import { ParticipantMeetState, sleep } from '@mezon/utils';
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, DeviceEventEmitter, Keyboard, PanResponder } from 'react-native';
+import { Animated, BackHandler, DeviceEventEmitter, Keyboard, PanResponder } from 'react-native';
 import Toast from 'react-native-toast-message';
 import ChannelVoice from '../ChannelVoice';
 
@@ -27,8 +27,6 @@ const ChannelVoicePopup = ({ isFromNativeCall = false }) => {
 	const [isAnimationComplete, setIsAnimationComplete] = useState(true);
 	const [voicePlay, setVoicePlay] = useState(false);
 	const dispatch = useAppDispatch();
-	const [channelId, setChannelId] = useState<string>('');
-	const [clanId, setClanId] = useState('');
 	const [token, setToken] = useState<string>('');
 	const isPiPMode = useAppSelector((state) => selectIsPiPMode(state));
 	const [isGroupCall, setIsGroupCall] = useState(false);
@@ -87,7 +85,7 @@ const ChannelVoicePopup = ({ isFromNativeCall = false }) => {
 	};
 
 	const handleLeaveRoom = async (clanId: string, channelId: string) => {
-		if (clanId && channelId) {
+		if (channelId) {
 			await participantMeetState(ParticipantMeetState.LEAVE, clanId, channelId);
 			dispatch(voiceActions.resetVoiceSettings());
 		}
@@ -129,7 +127,7 @@ const ChannelVoicePopup = ({ isFromNativeCall = false }) => {
 		}
 	};
 
-	const handleResizeStreamRoom = () => {
+	const handleResizeStreamRoom = useCallback(() => {
 		if (isFullScreen.current) {
 			pan?.flattenOffset();
 			Animated.timing(pan, {
@@ -149,7 +147,7 @@ const ChannelVoicePopup = ({ isFromNativeCall = false }) => {
 				setIsAnimationComplete(false);
 			});
 		}
-	};
+	}, [pan]);
 
 	useEffect(() => {
 		if (isAnimationComplete || voicePlay) {
@@ -161,7 +159,7 @@ const ChannelVoicePopup = ({ isFromNativeCall = false }) => {
 		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_BOTTOM_SHEET, { isDismiss: true });
 		isFullScreen.current = false;
 		handleResizeStreamRoom();
-	}, []);
+	}, [handleResizeStreamRoom]);
 
 	useEffect(() => {
 		const eventOpenMezonMeet = DeviceEventEmitter.addListener(ActionEmitEvent.ON_OPEN_MEZON_MEET, async (data) => {
@@ -186,11 +184,13 @@ const ChannelVoicePopup = ({ isFromNativeCall = false }) => {
 					await sleep(1000);
 				}
 
-				setChannelId(data?.channelId);
-				setClanId(data?.clanId);
 				if (data?.isEndCall) {
 					await handleLeaveRoom(data?.clanId, data?.channelId);
+					setIsGroupCall(false);
 					setVoicePlay(false);
+					if (isFromNativeCall) {
+						BackHandler.exitApp();
+					}
 				} else {
 					if (data?.isGroupCall) {
 						setIsGroupCall(true);
@@ -206,32 +206,30 @@ const ChannelVoicePopup = ({ isFromNativeCall = false }) => {
 		return () => {
 			eventOpenMezonMeet.remove();
 		};
-	}, []);
+	}, [isFromNativeCall]);
 
-	if (!voicePlay) return null;
+	if (!voicePlay || !token) return null;
 	return (
 		<Animated.View
 			{...(!isAnimationComplete && !isPiPMode ? panResponder.panHandlers : {})}
 			style={[
 				pan?.getLayout(),
 				{
-					zIndex: 999,
+					zIndex: 99,
 					position: 'absolute',
 					width: isAnimationComplete ? '100%' : size.s_100 * 2,
 					height: isAnimationComplete ? '100%' : size.s_150
-				}
+				},
+				isPiPMode && { top: 0, left: 0, right: 0, bottom: 0 }
 			]}
 		>
 			<ChannelVoice
-				channelId={channelId}
-				clanId={clanId}
 				token={token}
 				serverUrl={serverUrl}
 				isAnimationComplete={isPiPMode ? true : isAnimationComplete}
 				onPressMinimizeRoom={handlePressMinimizeRoom}
 				isGroupCall={isGroupCall}
 				participantsCount={participantsCount}
-				isFromNativeCall={isFromNativeCall}
 			/>
 		</Animated.View>
 	);

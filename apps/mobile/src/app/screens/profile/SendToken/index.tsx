@@ -21,7 +21,8 @@ import { ChannelStreamMode, ChannelType, safeJSONParse } from 'mezon-js';
 import { ApiTokenSentEvent } from 'mezon-js/dist/api.gen';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Modal, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Keyboard, Modal, Platform, Pressable, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-toast-message';
 import ViewShot from 'react-native-view-shot';
@@ -197,7 +198,7 @@ export const SendTokenScreen = ({ navigation, route }: any) => {
 				});
 				setDisableButton(false);
 			} else {
-				if (!directMessageId) {
+				if (directMessageId) {
 					sendInviteMessage(
 						`${t('tokensSent')} ${formatMoney(Number(plainTokenCount || 1))}₫ | ${note?.replace?.(/\s+/g, ' ')?.trim() || ''}`,
 						directMessageId,
@@ -249,6 +250,7 @@ export const SendTokenScreen = ({ navigation, route }: any) => {
 	};
 
 	const handleOpenBottomSheet = () => {
+		Keyboard.dismiss();
 		BottomSheetRef?.current?.present();
 	};
 
@@ -270,7 +272,7 @@ export const SendTokenScreen = ({ navigation, route }: any) => {
 	const renderItem = ({ item }: { item: Receiver }) => {
 		return (
 			<Pressable key={`token_receiver_${item.id}`} style={styles.userItem} onPress={() => handleSelectUser(item)}>
-				<MezonAvatar avatarUrl={item?.avatar_url} username={item?.username} height={size.s_34} width={size.s_34} />
+				<MezonAvatar avatarUrl={item?.avatar_url} username={item?.username?.[0]} height={size.s_34} width={size.s_34} />
 				<Text style={styles.title}>{item.username}</Text>
 			</Pressable>
 		);
@@ -278,22 +280,25 @@ export const SendTokenScreen = ({ navigation, route }: any) => {
 
 	const handleSearchText = debounce((text) => {
 		setSearchText(text);
-	}, 500);
+	}, 300);
 
 	const handleInputChange = (text: string) => {
-		let sanitizedText = text.replace(/[^0-9]/g, '');
+		const sanitizedText = text.replace(/[^0-9]/g, '');
 
 		if (sanitizedText === '') {
 			setTokenCount('0');
 			setPlainTokenCount(0);
 			return;
 		}
-
-		sanitizedText = sanitizedText.replace(/^0+/, '');
-		const numericValue = parseInt(sanitizedText, 10) || 0;
+		const formatSanitizedText = sanitizedText.replace(/^0+/, '');
+		const numericValue = parseInt(formatSanitizedText, 10) || 0;
 
 		setPlainTokenCount(numericValue);
-		setTokenCount(numericValue.toLocaleString());
+		if (numericValue !== 0) {
+			setTokenCount(numericValue.toLocaleString());
+		} else {
+			setTokenCount(sanitizedText);
+		}
 	};
 
 	const handleShare = async () => {
@@ -366,88 +371,9 @@ export const SendTokenScreen = ({ navigation, route }: any) => {
 		[navigation]
 	);
 
-	return (
-		<View style={styles.container}>
-			<ScrollView style={styles.form}>
-				<Text style={styles.heading}>{t('sendToken')}</Text>
-				<LinearGradient
-					start={{ x: 1, y: 1 }}
-					end={{ x: 0, y: 1 }}
-					colors={[themeValue.secondaryLight, themeValue.colorAvatarDefault]}
-					style={styles.cardWallet}
-				>
-					<View style={styles.cardWalletWrapper}>
-						<View style={styles.cardWalletLine}>
-							<Text style={styles.cardTitle}>{t('debitAccount')}</Text>
-							<Text style={styles.cardTitle}>{userProfile?.user?.username || userProfile?.user?.display_name}</Text>
-						</View>
-						<View style={styles.cardWalletLine}>
-							<Text style={styles.cardTitle}>{t('balance')}</Text>
-							<Text style={styles.cardAmount}>{tokenInWallet ? formatNumber(Number(tokenInWallet), 'vi-VN', 'VND') : '0'}</Text>
-						</View>
-					</View>
-				</LinearGradient>
-				<View>
-					<Text style={styles.title}>{t('sendTokenTo')}</Text>
-					<TouchableOpacity
-						disabled={!!jsonObject?.receiver_id}
-						style={[
-							styles.textField,
-							{
-								height: size.s_40,
-								flexDirection: 'row',
-								alignItems: 'center',
-								justifyContent: 'space-between',
-								paddingRight: size.s_10
-							}
-						]}
-						onPress={handleOpenBottomSheet}
-					>
-						<Text style={styles.username}>
-							{/*eslint-disable-next-line @typescript-eslint/ban-ts-comment*/}
-							{/*@ts-expect-error*/}
-							{jsonObject?.receiver_id ? jsonObject?.receiver_name || 'KOMU' : selectedUser?.username || t('selectAccount')}
-						</Text>
-						{!jsonObject?.receiver_id && (
-							<MezonIconCDN icon={IconCDN.chevronDownSmallIcon} height={size.s_20} width={size.s_20} color={themeValue.text} />
-						)}
-					</TouchableOpacity>
-				</View>
-				<View>
-					<Text style={styles.title}>{t('token')}</Text>
-					<View style={styles.textField}>
-						<TextInput
-							autoFocus={!!jsonObject?.receiver_id}
-							editable={!jsonObject?.amount || canEdit}
-							style={styles.textInput}
-							value={tokenCount}
-							keyboardType="numeric"
-							placeholderTextColor="#535353"
-							onChangeText={handleInputChange}
-						/>
-					</View>
-				</View>
-				<View>
-					<Text style={styles.title}>{t('note')}</Text>
-					<View style={styles.textField}>
-						<TextInput
-							editable={!jsonObject?.note || canEdit}
-							style={[styles.textInput, { height: size.s_100, paddingVertical: size.s_10, paddingTop: size.s_10 }]}
-							placeholderTextColor="#535353"
-							autoCapitalize="none"
-							value={note}
-							numberOfLines={5}
-							multiline={true}
-							textAlignVertical="top"
-							onChangeText={(text) => setNote(text)}
-						/>
-					</View>
-				</View>
-			</ScrollView>
-			<Pressable style={styles.button} onPress={sendToken} disabled={disableButton}>
-				<Text style={styles.buttonTitle}>{t('sendToken')}</Text>
-			</Pressable>
-			<Modal visible={showConfirmModal} supportedOrientations={['portrait', 'landscape']}>
+	if (showConfirmModal) {
+		return (
+			<Modal visible={true} supportedOrientations={['portrait', 'landscape']}>
 				{fileShared && isShowModalShare ? (
 					<Sharing data={fileShared} onClose={onCloseFileShare} />
 				) : (
@@ -471,7 +397,7 @@ export const SendTokenScreen = ({ navigation, route }: any) => {
 									<Text style={[styles.value, { fontSize: size.s_20 }]}>
 										{/*eslint-disable-next-line @typescript-eslint/ban-ts-comment*/}
 										{/*@ts-expect-error*/}
-										{selectedUser?.username || jsonObject?.receiver_name || 'Unknown'}
+										{selectedUser?.username || jsonObject?.receiver_name || 'KOMU'}
 									</Text>
 								</View>
 
@@ -488,15 +414,20 @@ export const SendTokenScreen = ({ navigation, route }: any) => {
 							<View style={styles.action}>
 								<View style={styles.actionMore}>
 									<TouchableOpacity activeOpacity={1} style={styles.buttonActionMore} onPress={handleShare}>
-										<MezonIconCDN icon={IconCDN.shareIcon} width={size.s_24} height={size.s_24} />
+										<MezonIconCDN icon={IconCDN.shareIcon} width={size.s_24} height={size.s_24} color={themeValue.textStrong} />
 										<Text style={styles.textActionMore}>{t('share')}</Text>
 									</TouchableOpacity>
 									<TouchableOpacity activeOpacity={1} style={styles.buttonActionMore} onPress={handleSaveImage}>
-										<MezonIconCDN icon={IconCDN.downloadIcon} width={size.s_24} height={size.s_24} />
+										<MezonIconCDN
+											icon={IconCDN.downloadIcon}
+											width={size.s_24}
+											height={size.s_24}
+											color={themeValue.textStrong}
+										/>
 										<Text style={styles.textActionMore}>{t('saveImage')}</Text>
 									</TouchableOpacity>
 									<TouchableOpacity style={styles.buttonActionMore} onPress={handleSendNewToken}>
-										<Icons.ArrowLeftRightIcon />
+										<Icons.ArrowLeftRightIcon color={themeValue.textStrong} />
 										<Text style={styles.textActionMore}>{t('sendNewToken')}</Text>
 									</TouchableOpacity>
 								</View>
@@ -509,24 +440,120 @@ export const SendTokenScreen = ({ navigation, route }: any) => {
 					</ViewShot>
 				)}
 			</Modal>
-			<BottomSheetModal
-				ref={BottomSheetRef}
-				snapPoints={snapPoints}
-				backdropComponent={Backdrop}
-				backgroundStyle={{ backgroundColor: themeValue.primary }}
-			>
-				<View style={{ paddingHorizontal: size.s_20, paddingVertical: size.s_10, flex: 1, gap: size.s_10 }}>
-					<MezonInput
-						inputWrapperStyle={styles.searchText}
-						placeHolder={t('selectUser')}
-						onTextChange={handleSearchText}
-						prefixIcon={<MezonIconCDN icon={IconCDN.magnifyingIcon} color={themeValue.text} height={20} width={20} />}
-					/>
-					<View style={{ flex: 1, backgroundColor: themeValue.secondary, borderRadius: size.s_8 }}>
-						<BottomSheetFlatList data={filteredUsers} contentContainerStyle={{ flexGrow: 1 }} renderItem={renderItem} />
+		);
+	}
+	return (
+		<KeyboardAvoidingView
+			style={styles.container}
+			behavior="padding"
+			keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight + 5}
+		>
+			<View style={{ flex: 1 }}>
+				<KeyboardAwareScrollView bottomOffset={100} style={styles.form} keyboardShouldPersistTaps={'handled'}>
+					<Text style={styles.heading}>{t('sendToken')}</Text>
+					<LinearGradient
+						start={{ x: 1, y: 1 }}
+						end={{ x: 0, y: 1 }}
+						colors={[themeValue.secondaryLight, themeValue.colorAvatarDefault]}
+						style={styles.cardWallet}
+					>
+						<View style={styles.cardWalletWrapper}>
+							<View style={styles.cardWalletLine}>
+								<Text style={styles.cardTitle}>{t('debitAccount')}</Text>
+								<Text style={styles.cardTitle}>{userProfile?.user?.username || userProfile?.user?.display_name}</Text>
+							</View>
+							<View style={styles.cardWalletLine}>
+								<Text style={styles.cardTitle}>{t('balance')}</Text>
+								<Text style={styles.cardAmount}>{tokenInWallet ? formatNumber(Number(tokenInWallet), 'vi-VN', 'VND') : '0'}</Text>
+							</View>
+						</View>
+					</LinearGradient>
+					<View>
+						<Text style={styles.title}>{t('sendTokenTo')}</Text>
+						<TouchableOpacity
+							disabled={!!jsonObject?.receiver_id}
+							style={[
+								styles.textField,
+								{
+									height: size.s_40,
+									flexDirection: 'row',
+									alignItems: 'center',
+									justifyContent: 'space-between',
+									paddingRight: size.s_10
+								}
+							]}
+							onPress={handleOpenBottomSheet}
+						>
+							<Text style={styles.username}>
+								{/*eslint-disable-next-line @typescript-eslint/ban-ts-comment*/}
+								{/*@ts-expect-error*/}
+								{jsonObject?.receiver_id ? jsonObject?.receiver_name || 'KOMU' : selectedUser?.username || t('selectAccount')}
+							</Text>
+							{!jsonObject?.receiver_id && (
+								<MezonIconCDN icon={IconCDN.chevronDownSmallIcon} height={size.s_20} width={size.s_20} color={themeValue.text} />
+							)}
+						</TouchableOpacity>
 					</View>
+					<View>
+						<Text style={styles.title}>{t('token')}</Text>
+						<View style={styles.textField}>
+							<TextInput
+								autoFocus={!!jsonObject?.receiver_id}
+								editable={!jsonObject?.amount || canEdit}
+								style={styles.textInput}
+								value={tokenCount}
+								keyboardType="numeric"
+								placeholderTextColor="#535353"
+								onChangeText={handleInputChange}
+							/>
+						</View>
+					</View>
+					<View>
+						<Text style={styles.title}>{t('note')}</Text>
+						<View style={styles.textField}>
+							<TextInput
+								editable={!jsonObject?.note || canEdit}
+								style={[styles.textInput, { height: size.s_100, paddingVertical: size.s_10, paddingTop: size.s_10 }]}
+								placeholderTextColor="#535353"
+								autoCapitalize="none"
+								value={note}
+								numberOfLines={5}
+								multiline={true}
+								textAlignVertical="top"
+								onChangeText={(text) => setNote(text)}
+							/>
+						</View>
+					</View>
+				</KeyboardAwareScrollView>
+				<View style={styles.wrapperButton}>
+					<Pressable style={styles.button} onPress={sendToken} disabled={disableButton}>
+						<Text style={styles.buttonTitle}>{t('sendToken')}</Text>
+					</Pressable>
 				</View>
-			</BottomSheetModal>
-		</View>
+				<BottomSheetModal
+					ref={BottomSheetRef}
+					snapPoints={snapPoints}
+					backdropComponent={Backdrop}
+					backgroundStyle={{ backgroundColor: themeValue.primary }}
+				>
+					<View style={{ paddingHorizontal: size.s_20, paddingVertical: size.s_10, flex: 1, gap: size.s_10 }}>
+						<MezonInput
+							inputWrapperStyle={styles.searchText}
+							placeHolder={t('selectUser')}
+							onTextChange={handleSearchText}
+							prefixIcon={<MezonIconCDN icon={IconCDN.magnifyingIcon} color={themeValue.text} height={20} width={20} />}
+						/>
+						<View style={{ flex: 1, backgroundColor: themeValue.secondary, borderRadius: size.s_8 }}>
+							<BottomSheetFlatList
+								keyboardShouldPersistTaps={'handled'}
+								data={filteredUsers}
+								contentContainerStyle={{ flexGrow: 1 }}
+								renderItem={renderItem}
+							/>
+						</View>
+					</View>
+				</BottomSheetModal>
+			</View>
+		</KeyboardAvoidingView>
 	);
 };

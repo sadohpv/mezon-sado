@@ -10,7 +10,6 @@ import { ActionEmitEvent, STORAGE_SESSION_KEY, save } from '@mezon/mobile-compon
 import { ThemeModeBase, ThemeProvider, useTheme } from '@mezon/mobile-ui';
 import { Session } from 'mezon-js';
 import { DeviceEventEmitter, NativeModules, Platform, StatusBar } from 'react-native';
-import BootSplash from 'react-native-bootsplash';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
@@ -119,20 +118,13 @@ const NavigationMain = memo(
 		};
 
 		return (
-			<NavigationContainer
-				theme={theme}
-				onReady={async () => {
-					await BootSplash.hide({ fade: true });
-				}}
-				linking={linking}
-			>
+			<NavigationContainer theme={theme} linking={linking}>
 				<StatusBar
 					animated
 					translucent
 					backgroundColor={themeValue.primary}
 					barStyle={themeBasic === ThemeModeBase.DARK ? 'light-content' : 'dark-content'}
 				/>
-				<RootListener />
 				<SafeAreaProvider>
 					<SafeAreaView
 						edges={Platform.OS === 'android' ? (isThreeButtonNav ? ['top', 'bottom'] : ['top']) : []}
@@ -141,6 +133,7 @@ const NavigationMain = memo(
 						<RootStack {...props} />
 					</SafeAreaView>
 				</SafeAreaProvider>
+				<RootListener />
 			</NavigationContainer>
 		);
 	},

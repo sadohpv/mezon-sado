@@ -29,9 +29,9 @@ export const OnlineStatus: React.FC<IconProps> = ({ defaultSize = 'w-[11px] h-[1
 	);
 };
 
-export const OfflineStatus: React.FC<IconProps> = ({ defaultSize = 'w-[11px] h-[10px]' }) => {
+export const OfflineStatus: React.FC<IconProps> = ({ className = 'w-[11px] h-[10px]' }) => {
 	return (
-		<svg viewBox="-0.5 -0.5 13 13" fill="none" xmlns="http://www.w3.org/2000/svg" className={defaultSize}>
+		<svg viewBox="-0.5 -0.5 13 13" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className={className}>
 			<rect x="1.5" y="1.5" width="9" height="9" rx="4.5" stroke="#AEAEAE" strokeWidth="3" />
 		</svg>
 	);
@@ -164,14 +164,14 @@ export function UploadImage(props: React.HTMLAttributes<SVGElement>) {
 	);
 }
 
-export function AddIcon({ fill, ...props }: ClassIconProps) {
+export function AddIcon({ fill = 'currentColor', ...props }: ClassIconProps) {
 	return (
 		<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
 			<path
 				fillRule="evenodd"
 				clipRule="evenodd"
+				fill={fill}
 				d="M27.3332 14C27.3332 21.3638 21.3636 27.3333 13.9998 27.3333C6.63604 27.3333 0.666504 21.3638 0.666504 14C0.666504 6.63621 6.63604 0.666672 13.9998 0.666672C21.3636 0.666672 27.3332 6.63621 27.3332 14ZM13.9999 7.00001C14.9203 7.00001 15.6665 7.7462 15.6665 8.66667V12.3333H19.3332C20.2537 12.3333 20.9999 13.0795 20.9999 14C20.9999 14.9205 20.2537 15.6667 19.3332 15.6667H15.6665V19.3333C15.6665 20.2538 14.9203 21 13.9999 21C13.0794 21 12.3332 20.2538 12.3332 19.3333V15.6667H8.66657C7.7461 15.6667 6.9999 14.9205 6.9999 14C6.9999 13.0795 7.7461 12.3333 8.66657 12.3333H12.3332V8.66667C12.3332 7.7462 13.0794 7.00001 13.9999 7.00001Z"
-				fill={fill ? fill : '#155EEF'}
 			/>
 		</svg>
 	);
@@ -180,7 +180,7 @@ export function AddIcon({ fill, ...props }: ClassIconProps) {
 export function Check(props: React.HTMLAttributes<SVGElement>) {
 	return (
 		<svg aria-hidden="false" aria-label="Check" viewBox="0 0 16 15.2" {...props}>
-			<path d="M7.4 11.17L4 8.62l1-1.36 2 1.53L10.64 4 12 5z" stroke='currentColor' />
+			<path d="M7.4 11.17L4 8.62l1-1.36 2 1.53L10.64 4 12 5z" stroke="currentColor" />
 		</svg>
 	);
 }
@@ -211,7 +211,7 @@ export function Chevron(props: React.HTMLAttributes<SVGElement>) {
 
 export function SettingProfile(props: React.HTMLAttributes<SVGElement>) {
 	return (
-		<svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" {...props}>
+		<svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" {...props}>
 			<path
 				fill="currentColor"
 				fillRule="evenodd"
@@ -222,6 +222,22 @@ export function SettingProfile(props: React.HTMLAttributes<SVGElement>) {
 	);
 }
 
+export function ChannelBrowser(props: React.HTMLAttributes<SVGElement>) {
+	return (
+		<svg role="img" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" {...props}>
+			<path
+				fillRule="evenodd"
+				d="M18.5 23c.88 0 1.7-.25 2.4-.69l1.4 1.4a1 1 0 0 0 1.4-1.42l-1.39-1.4A4.5 4.5 0 1 0 18.5 23Zm0-2a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"
+				clipRule="evenodd"
+				fill="currentColor"
+			></path>
+			<path
+				d="M3 3a1 1 0 0 0 0 2h18a1 1 0 1 0 0-2H3ZM2 8a1 1 0 0 1 1-1h18a1 1 0 1 1 0 2H3a1 1 0 0 1-1-1ZM3 11a1 1 0 1 0 0 2h11a1 1 0 1 0 0-2H3ZM2 16a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2H3a1 1 0 0 1-1-1ZM3 19a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2H3Z"
+				fill="currentColor"
+			></path>
+		</svg>
+	);
+}
 export function HeadPhoneICon(props: React.HTMLAttributes<SVGElement>) {
 	return (
 		<svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
@@ -236,6 +252,14 @@ export function HeadPhoneICon(props: React.HTMLAttributes<SVGElement>) {
 					<rect width="16.6667" height="16.6667" fill="white" transform="translate(1.66663 2.16663)" />
 				</clipPath>
 			</defs>
+		</svg>
+	);
+}
+
+export function DotIcon(props: React.HTMLAttributes<SVGElement>) {
+	return (
+		<svg role="img" width="24" height="24" viewBox="0 0 4 4" {...props}>
+			<circle cx="2" cy="2" r="2" fill="currentColor"></circle>
 		</svg>
 	);
 }
@@ -298,7 +322,7 @@ export function AddPerson(props: React.HTMLAttributes<SVGElement>) {
 			xmlns="http://www.w3.org/2000/svg"
 			width="24"
 			height="24"
-			className="dark:text-[#CBD5E0] text-colorTextLightMode"
+			className=""
 			fill="none"
 			viewBox="0 0 24 24"
 			{...props}
@@ -331,11 +355,11 @@ export function PendingFriend(props: React.HTMLAttributes<SVGElement>) {
 	return (
 		<svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" {...props}>
 			<path
-				fill="#caccce"
+				fill="currentColor"
 				d="M16 6a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM2 20.53A9.53 9.53 0 0 1 11.53 11h.94c1.28 0 2.5.25 3.61.7.41.18.36.77-.05.96a7 7 0 0 0-3.65 8.6c.11.36-.13.74-.5.74H6.15a.5.5 0 0 1-.5-.55l.27-2.6c.02-.26-.27-.37-.41-.16-.48.74-1.03 1.8-1.32 2.9a.53.53 0 0 1-.5.41h-.22C2.66 22 2 21.34 2 20.53Z"
 			></path>
 			<path
-				fill="#caccce"
+				fill="currentColor"
 				fillRule="evenodd"
 				d="M19 24a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm1-7a1 1 0 1 0-2 0v2c0 .27.1.52.3.7l1 1a1 1 0 0 0 1.4-1.4l-.7-.71V17Z"
 				clipRule="evenodd"
@@ -1092,16 +1116,9 @@ interface IconProps {
 	className?: string;
 }
 
-export const ThreadIcon: React.FC<IconProps> = ({ isWhite, defaultSize = 'w-5 h-5' }) => {
+export const ThreadIcon: React.FC<IconProps> = ({ defaultSize = 'w-5 h-5' }) => {
 	return (
-		<svg
-			x="0"
-			y="0"
-			role="img"
-			xmlns="http://www.w3.org/2000/svg"
-			className={`hover:text-black dark:hover:text-white ${defaultSize} ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode'}`}
-			viewBox="0 0 24 24"
-		>
+		<svg x="0" y="0" role="img" xmlns="http://www.w3.org/2000/svg" className={` ${defaultSize} `} viewBox="0 0 24 24">
 			<path
 				d="M12 2.81a1 1 0 0 1 0-1.41l.36-.36a1 1 0 0 1 1.41 0l9.2 9.2a1 1 0 0 1 0 1.4l-.7.7a1 1 0 0 1-1.3.13l-9.54-6.72a1 1 0 0 1-.08-1.58l1-1L12 2.8ZM12 21.2a1 1 0 0 1 0 1.41l-.35.35a1 1 0 0 1-1.41 0l-9.2-9.19a1 1 0 0 1 0-1.41l.7-.7a1 1 0 0 1 1.3-.12l9.54 6.72a1 1 0 0 1 .07 1.58l-1 1 .35.36ZM15.66 16.8a1 1 0 0 1-1.38.28l-8.49-5.66A1 1 0 1 1 6.9 9.76l8.49 5.65a1 1 0 0 1 .27 1.39ZM17.1 14.25a1 1 0 1 0 1.11-1.66L9.73 6.93a1 1 0 0 0-1.11 1.66l8.49 5.66Z"
 				fill="currentColor"
@@ -1110,17 +1127,9 @@ export const ThreadIcon: React.FC<IconProps> = ({ isWhite, defaultSize = 'w-5 h-
 	);
 };
 
-export const CanvasIcon: React.FC<IconProps> = ({ isWhite, defaultSize = 'w-5 h-5' }) => {
+export const CanvasIcon: React.FC<IconProps> = ({ defaultSize = 'w-5 h-5' }) => {
 	return (
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			x="0px"
-			y="0px"
-			width="24"
-			height="24"
-			viewBox="0 0 24 24"
-			className={`hover:text-black dark:hover:text-white ${defaultSize} ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode'}`}
-		>
+		<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="24" height="24" viewBox="0 0 24 24" className={` ${defaultSize}`}>
 			<path
 				d="M19,3H5C3.895,3,3,3.895,3,5v14c0,1.105,0.895,2,2,2h10l6-6V5C21,3.895,20.105,3,19,3z M8,7h8c0.552,0,1,0.448,1,1v0 c0,0.552-0.448,1-1,1H8C7.448,9,7,8.552,7,8v0C7,7.448,7.448,7,8,7z M11,13H8c-0.552,0-1-0.448-1-1v0c0-0.552,0.448-1,1-1h3 c0.552,0,1,0.448,1,1v0C12,12.552,11.552,13,11,13z M14,19.5V14h5.5L14,19.5z"
 				fill="currentColor"
@@ -1129,35 +1138,30 @@ export const CanvasIcon: React.FC<IconProps> = ({ isWhite, defaultSize = 'w-5 h-
 	);
 };
 
-export const TopicIcon: React.FC<IconProps> = ({ isWhite, defaultSize = 'w-5 h-5' }) => {
+export const TopicIcon: React.FC<IconProps> = ({ defaultSize = 'w-5 h-5' }) => {
 	return (
 		<svg
 			width="24"
 			height="24"
-			fill="none"
-			x="0px"
-			y="0px"
+			fill="currentColor"
+			stroke="currentColor"
 			xmlns="http://www.w3.org/2000/svg"
 			viewBox="0 0 24 24"
-			className={`hover:text-black dark:hover:text-white ${defaultSize} ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode'}`}
+			className={`${defaultSize}`}
 		>
-			<g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-			<g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
 			<g id="SVGRepo_iconCarrier">
-				{' '}
 				<path
-					fillRule="evenodd"
-					clipRule="evenodd"
 					d="M5.5 12C5.49988 14.613 6.95512 17.0085 9.2741 18.2127C11.5931 19.4169 14.3897 19.2292 16.527 17.726L19.5 18V12C19.5 8.13401 16.366 5 12.5 5C8.63401 5 5.5 8.13401 5.5 12Z"
-					stroke="currentColor"
 					strokeWidth="1.5"
 					strokeLinecap="round"
 					strokeLinejoin="round"
-				></path>{' '}
+					fill="none"
+				/>
 				<path
 					d="M9.5 13.25C9.08579 13.25 8.75 13.5858 8.75 14C8.75 14.4142 9.08579 14.75 9.5 14.75V13.25ZM13.5 14.75C13.9142 14.75 14.25 14.4142 14.25 14C14.25 13.5858 13.9142 13.25 13.5 13.25V14.75ZM9.5 10.25C9.08579 10.25 8.75 10.5858 8.75 11C8.75 11.4142 9.08579 11.75 9.5 11.75V10.25ZM15.5 11.75C15.9142 11.75 16.25 11.4142 16.25 11C16.25 10.5858 15.9142 10.25 15.5 10.25V11.75ZM9.5 14.75H13.5V13.25H9.5V14.75ZM9.5 11.75H15.5V10.25H9.5V11.75Z"
+					strokeWidth="1.5"
 					fill="currentColor"
-				></path>{' '}
+				/>
 			</g>
 		</svg>
 	);
@@ -1169,20 +1173,19 @@ export function TopicIcon2(props: React.HTMLAttributes<SVGElement>) {
 			<g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
 			<g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
 			<g id="SVGRepo_iconCarrier">
-				{' '}
 				<path
 					d="M8 9.5H15M8 13.5H13M15.6953 19.2318L19.1027 20.3676C19.8845 20.6282 20.6282 19.8844 20.3676 19.1027L19.2318 15.6953M15.3 19.1C15.3 19.1 14.0847 20 11.5 20C6.80558 20 3 16.1944 3 11.5C3 6.80558 6.80558 3 11.5 3C16.1944 3 20 6.80558 20 11.5C20 14 19.1 15.3 19.1 15.3"
 					stroke="currentColor"
 					strokeWidth="1.5"
 					strokeLinecap="round"
 					strokeLinejoin="round"
-				></path>{' '}
+				></path>
 			</g>
 		</svg>
 	);
 }
 
-export const MuteBell: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = '', isWhite = false }) => {
+export const MuteBell: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
 	return (
 		<svg
 			x="0"
@@ -1192,8 +1195,8 @@ export const MuteBell: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', default
 			xmlns="http://www.w3.org/2000/svg"
 			width="24"
 			height="24"
-			className={`dark:hover:text-white hover:text-black ${defaultSize === '' ? (isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode') : defaultSize}`}
 			viewBox="0 0 24 24"
+			className={defaultSize}
 		>
 			<path
 				fill="currentColor"
@@ -1205,15 +1208,7 @@ export const MuteBell: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', default
 
 export const UnMuteBell: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5', isWhite = false }) => {
 	return (
-		<svg
-			x="0"
-			y="0"
-			aria-hidden="true"
-			role="img"
-			xmlns="http://www.w3.org/2000/svg"
-			className={`dark:hover:text-white hover:text-black ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode'} ${defaultSize}`}
-			viewBox="0 0 24 24"
-		>
+		<svg x="0" y="0" aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" className={` ${defaultSize}`} viewBox="0 0 24 24">
 			<path
 				fill="currentColor"
 				d="M9.7 2.89c.18-.07.32-.24.37-.43a2 2 0 0 1 3.86 0c.05.2.19.36.38.43A7 7 0 0 1 19 9.5v2.09c0 .12.05.24.13.33l1.1 1.22a3 3 0 0 1 .77 2.01v.28c0 .67-.34 1.29-.95 1.56-1.31.6-4 1.51-8.05 1.51-4.05 0-6.74-.91-8.05-1.5-.61-.28-.95-.9-.95-1.57v-.28a3 3 0 0 1 .77-2l1.1-1.23a.5.5 0 0 0 .13-.33V9.5a7 7 0 0 1 4.7-6.61ZM9.18 19.84A.16.16 0 0 0 9 20a3 3 0 1 0 6 0c0-.1-.09-.17-.18-.16a24.86 24.86 0 0 1-5.64 0Z"
@@ -1222,7 +1217,7 @@ export const UnMuteBell: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defau
 	);
 };
 
-export const PinRight: React.FC<IconProps> = ({ isWhite, defaultSize = 'w-6 h-6' }) => {
+export const PinRight: React.FC<IconProps> = ({ defaultSize = 'w-6 h-6' }) => {
 	return (
 		<svg
 			x="0"
@@ -1232,7 +1227,7 @@ export const PinRight: React.FC<IconProps> = ({ isWhite, defaultSize = 'w-6 h-6'
 			xmlns="http://www.w3.org/2000/svg"
 			width="24"
 			height="24"
-			className={`dark:hover:text-white hover:text-black ${defaultSize} ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode'}`}
+			className={`${defaultSize}`}
 			viewBox="0 0 24 24"
 		>
 			<path
@@ -1243,7 +1238,7 @@ export const PinRight: React.FC<IconProps> = ({ isWhite, defaultSize = 'w-6 h-6'
 	);
 };
 
-export const TalkPTT: React.FC<IconProps> = ({ isWhite }) => {
+export const TalkPTT: React.FC<IconProps> = () => {
 	return (
 		<svg
 			x="0"
@@ -1253,7 +1248,7 @@ export const TalkPTT: React.FC<IconProps> = ({ isWhite }) => {
 			xmlns="http://www.w3.org/2000/svg"
 			width="32"
 			height="32"
-			className={`dark:hover:text-white hover:text-black ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode'}`}
+			className="text-theme-primary text-theme-primary-hover"
 			viewBox="0 -4 24 24"
 		>
 			<path
@@ -1274,7 +1269,7 @@ export const MutePTT: React.FC<IconProps> = ({ isWhite }) => {
 			xmlns="http://www.w3.org/2000/svg"
 			width="32"
 			height="32"
-			className={`dark:hover:text-white hover:text-black ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode'}`}
+			className={`dark:hover:text-white hover:text-black ${isWhite ? 'dark:text-white text-black' : 'text-theme-primary'}`}
 			viewBox="0 -4 24 24"
 		>
 			<path d="M12 1C13.6452 1 15.0585 1.99333 15.6728 3.41298L7.99997 11.0858V5C7.99997 2.79086 9.79083 1 12 1Z" fill="currentColor" />
@@ -1331,7 +1326,7 @@ export function LeaveSFU(props: React.HTMLAttributes<SVGElement>) {
 	);
 }
 
-export const MemberList: React.FC<IconProps> = ({ defaultSize = 'w-6 h-6', defaultFill = '', isWhite = false }) => {
+export const MemberList: React.FC<IconProps> = ({ defaultSize = 'w-6 h-6', defaultFill = '' }) => {
 	return (
 		<svg
 			x="0"
@@ -1341,7 +1336,7 @@ export const MemberList: React.FC<IconProps> = ({ defaultSize = 'w-6 h-6', defau
 			xmlns="http://www.w3.org/2000/svg"
 			width="24"
 			height="24"
-			className={`${defaultFill ? defaultFill : `dark:hover:text-white hover:text-black ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode'}`} ${defaultSize}`}
+			className={`${defaultSize}`}
 			viewBox="0 0 24 24"
 		>
 			<path
@@ -1354,12 +1349,7 @@ export const MemberList: React.FC<IconProps> = ({ defaultSize = 'w-6 h-6', defau
 
 export const ThreeDot: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5', className }) => {
 	return (
-		<svg
-			viewBox="0 0 20 20"
-			fill="none"
-			xmlns="http://www.w3.org/2000/svg"
-			className={` dark:text-[#B5BAC1] text-colorTextLightMode ${className}  ${defaultSize}`}
-		>
+		<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className={`  ${className}  ${defaultSize}`}>
 			<g id="Live area">
 				<g id="Vector">
 					<path
@@ -1380,21 +1370,17 @@ export const ThreeDot: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', default
 	);
 };
 
-export const Inbox: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5', isWhite = false, className = '' }) => {
-	const classProps = className
-		? className
-		: `dark:hover:text-white hover:text-black ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode'}`;
-
+export const Inbox: React.FC<IconProps & { className?: string }> = ({ defaultSize = 'size-5', className = '' }) => {
 	return (
 		<svg
 			x="0"
 			y="0"
+			className={`${defaultSize} ${className}`}
 			aria-hidden="true"
 			role="img"
 			xmlns="http://www.w3.org/2000/svg"
 			width="24"
 			height="24"
-			className={`${classProps} ${defaultFill ? defaultFill : ''}`}
 			viewBox="0 0 24 24"
 		>
 			<path
@@ -1402,7 +1388,7 @@ export const Inbox: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSiz
 				fillRule="evenodd"
 				d="M5 2a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V5a3 3 0 0 0-3-3H5ZM4 5.5C4 4.67 4.67 4 5.5 4h13c.83 0 1.5.67 1.5 1.5v6c0 .83-.67 1.5-1.5 1.5h-2.65c-.5 0-.85.5-.85 1a3 3 0 1 1-6 0c0-.5-.35-1-.85-1H5.5A1.5 1.5 0 0 1 4 11.5v-6Z"
 				clipRule="evenodd"
-			></path>
+			/>
 		</svg>
 	);
 };
@@ -1423,7 +1409,7 @@ export const Help: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize
 			xmlns="http://www.w3.org/2000/svg"
 			width="24"
 			height="24"
-			className={`dark:hover:text-white hover:text-black ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode'} ${defaultSize}`}
+			className={`dark:hover:text-white hover:text-black ${isWhite ? 'dark:text-white text-black' : 'text-theme-primary'} ${defaultSize}`}
 			viewBox="0 0 24 24"
 		>
 			<circle cx="12" cy="12" r="10" fill="transparent"></circle>
@@ -1456,7 +1442,7 @@ export const Emoji: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSiz
 	);
 };
 
-export function Speaker({ defaultFill, defaultSize = 'w-5 h-5' }: IconProps) {
+export function Speaker({ defaultFill, defaultSize = 'w-5 h-5', className }: IconProps) {
 	return (
 		<svg
 			width="18"
@@ -1464,7 +1450,7 @@ export function Speaker({ defaultFill, defaultSize = 'w-5 h-5' }: IconProps) {
 			viewBox="0 0 18 17"
 			fill="none"
 			xmlns="http://www.w3.org/2000/svg"
-			className={`${defaultSize} ${defaultFill ? defaultFill : 'dark:text-channelTextLabel text-colorTextLightMode'}`}
+			className={`${defaultSize} ${defaultFill ? defaultFill : ''} ${className}`}
 		>
 			<g id="Live area" clipPath="url(#clip0_2155_1604)">
 				<g id="Vector">
@@ -1499,7 +1485,7 @@ export function Search(props: React.HTMLAttributes<SVGElement>) {
 			xmlns="http://www.w3.org/2000/svg"
 			width="24"
 			height="24"
-			className="dark:text-[#949BA4] text-black"
+			className="text-theme-primary"
 			viewBox="0 0 24 24"
 			{...props}
 		>
@@ -1581,7 +1567,7 @@ export function AddCircle(props: React.HTMLAttributes<SVGElement>) {
 	);
 }
 
-export const Gif: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', isWhite = false }) => {
+export const Gif: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', isWhite = false, className = '' }) => {
 	return (
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
@@ -1590,7 +1576,7 @@ export const Gif: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', isWhite = fa
 			width="24"
 			height="24"
 			preserveAspectRatio="xMidYMid meet"
-			className={`dark:hover:text-white hover:text-black ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#AEAEAE] text-colorTextLightMode'}`}
+			className={`text-theme-primary text-theme-primary-hover ${className}`}
 			style={{ width: '100%', height: '100%', transform: 'translate3d(0px, 0px, 0px)', contentVisibility: 'visible' }}
 		>
 			<defs>
@@ -1687,7 +1673,7 @@ export const Gif: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', isWhite = fa
 	);
 };
 
-export const Sticker: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', isWhite = false }) => {
+export const Sticker: React.FC<IconProps> = ({ className = '', defaultFill = '#AEAEAE' }) => {
 	return (
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
@@ -1696,7 +1682,7 @@ export const Sticker: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', isWhite 
 			width="24"
 			height="24"
 			preserveAspectRatio="xMidYMid meet"
-			className={`dark:hover:text-white hover:text-black ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#AEAEAE] text-colorTextLightMode'}`}
+			className={`text-theme-primary text-theme-primary-hover ${className} `}
 			style={{ width: '100%', height: '100%', transform: 'translate3d(0px, 0px, 0px)', contentVisibility: 'visible' }}
 		>
 			<defs>
@@ -1868,10 +1854,10 @@ export const Sticker: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', isWhite 
 	);
 };
 
-export const Smile: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
+export const Smile: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5', className = '' }) => {
 	return (
 		<svg
-			className={`dark:hover:text-white hover:text-black ${defaultSize} ${'dark:text-[#B5BAC1] text-colorTextLightMode'}`}
+			className={`${defaultSize} text-theme-primary text-theme-primary-hover ${className}`}
 			aria-hidden="true"
 			role="img"
 			xmlns="http://www.w3.org/2000/svg"
@@ -1889,10 +1875,7 @@ export const Smile: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSiz
 	);
 };
 
-export const ArrowDown: React.FC<IconProps> = ({
-	defaultSize = 'w-4 h-4 dark:text-channelTextLabel text-colorTextLightMode dark:hover:text-white hover:text-black min-w-4',
-	size = ''
-}) => {
+export const ArrowDown: React.FC<IconProps> = ({ defaultSize = 'w-5 h-5 min-w-4', size = '' }) => {
 	return (
 		<svg viewBox="0 0 20 17" fill="none" xmlns="http://www.w3.org/2000/svg" className={`${defaultSize} ${size}`}>
 			<g id="Live area">
@@ -1983,7 +1966,7 @@ export function EyeOpen(props: React.HTMLAttributes<SVGElement>) {
 	);
 }
 
-export const ArrowRight: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-4 h-4 min-w-4' }) => {
+export const ArrowRight: React.FC<IconProps> = ({ defaultSize = 'w-5 h-5 min-w-4' }) => {
 	return (
 		<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className={defaultSize}>
 			<g id="Live area">
@@ -1992,7 +1975,7 @@ export const ArrowRight: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defau
 					fillRule="evenodd"
 					clipRule="evenodd"
 					d="M5.91083 3.41075C6.23626 3.08531 6.7639 3.08531 7.08934 3.41075L12.0893 8.41075C12.4148 8.73619 12.4148 9.26382 12.0893 9.58926L7.08934 14.5893C6.7639 14.9147 6.23626 14.9147 5.91083 14.5893C5.58539 14.2638 5.58539 13.7362 5.91083 13.4107L10.3216 9L5.91083 4.58926C5.58539 4.26382 5.58539 3.73619 5.91083 3.41075Z"
-					fill={defaultFill}
+					fill="currentColor"
 				/>
 			</g>
 		</svg>
@@ -2041,7 +2024,7 @@ export const Read: React.FC<IconProps> = () => {
 
 export const Sent: React.FC<IconProps> = () => {
 	return (
-		<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 dark:text-[#CBD5E0] text-colorTextLightMode">
+		<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 ">
 			<g id="Live area">
 				<path
 					id="Vector"
@@ -2057,26 +2040,15 @@ export const Sent: React.FC<IconProps> = () => {
 
 export function Plus(props: React.HTMLAttributes<SVGElement>) {
 	return (
-		<svg
-			x="0"
-			y="0"
-			aria-hidden="true"
-			role="img"
-			xmlns="http://www.w3.org/2000/svg"
-			width="24"
-			height="24"
-			fill="none"
-			viewBox="0 0 24 24"
-			{...props}
-		>
-			<path fill="currentColor" d="M13 6a1 1 0 1 0-2 0v5H6a1 1 0 1 0 0 2h5v5a1 1 0 1 0 2 0v-5h5a1 1 0 1 0 0-2h-5V6Z"></path>
+		<svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
+			<path fill="currentColor" d="M13 5a1 1 0 1 0-2 0v6H5a1 1 0 1 0 0 2h6v6a1 1 0 1 0 2 0v-6h6a1 1 0 1 0 0-2h-6V5Z"></path>
 		</svg>
 	);
 }
 
-export const Close: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
+export const Close: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-4 h-4' }) => {
 	return (
-		<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className={`dark:text-white text-colorTextLightMode ${defaultSize}`}>
+		<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className={`  ${defaultSize}`}>
 			<g id="Live area">
 				<path
 					fill="currentColor"
@@ -2205,46 +2177,31 @@ export const Private: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultS
 export const SpeakerLocked: React.FC<IconProps> = ({ defaultFill, defaultSize = 'w-5 h-5' }) => {
 	return (
 		<svg
-			width="20"
-			height="20"
-			viewBox="0 0 20 20"
-			fill="none"
+			className={`${defaultSize} ${defaultFill ? defaultFill : ''}`}
+			aria-hidden="true"
+			role="img"
 			xmlns="http://www.w3.org/2000/svg"
-			className={`${defaultSize} ${defaultFill ? defaultFill : 'dark:text-channelTextLabel text-colorTextLightMode'}`}
+			width="24"
+			height="24"
+			fill="none"
+			viewBox="0 0 24 24"
 		>
 			<path
-				d="M11.5512 1.57323C11.9214 1.75834 12.1065 2.12856 12.1065 2.40622V19.0659C12.1065 19.4361 11.9214 19.7138 11.5512 19.8989C11.2735 20.084 10.8107 19.9915 10.5331 19.8064L4.88727 15.3638H1.92554C1.37022 15.3638 1 14.9936 1 14.4382V7.03392C1 6.47859 1.37022 6.10838 1.92554 6.10838H4.97982L10.6256 1.66579C10.9033 1.48068 11.2735 1.48068 11.5512 1.57323Z"
 				fill="currentColor"
-			/>
+				d="M12 3a1 1 0 0 0-1-1h-.06a1 1 0 0 0-.74.32L5.92 7H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h2.92l4.28 4.68a1 1 0 0 0 .74.32H11a1 1 0 0 0 1-1V3ZM15.1 20.75c-.58.14-1.1-.33-1.1-.92v-.03c0-.5.37-.92.85-1.05a7 7 0 0 0 0-13.5A1.11 1.11 0 0 1 14 4.2v-.03c0-.6.52-1.06 1.1-.92a9 9 0 0 1 0 17.5Z"
+			></path>
 			<path
-				d="M16.7342 17.5851L16.4565 17.8627C16.0863 18.2329 15.531 18.2329 15.1608 17.8627C14.7905 17.4925 14.7905 16.9372 15.1608 16.567L15.531 16.2893C17.4746 14.2531 17.9374 11.2914 16.8267 8.885H18.8629C19.7885 11.8467 19.1406 15.2712 16.7342 17.5851Z"
 				fill="currentColor"
-			/>
-			<path
-				d="M14.7905 14.9936L14.6054 15.1787C14.2352 15.5489 13.6799 15.5489 13.3097 15.1787C12.9395 14.8084 12.9395 14.2531 13.3097 13.8829L13.4948 13.6978C14.6054 12.5872 14.6054 10.8286 13.4948 9.81054L13.3097 9.62543C13.032 9.34777 13.032 8.97755 13.032 8.69989C13.032 8.79244 13.2171 8.885 13.3097 8.885H15.1608C16.5491 10.7361 16.4565 13.3276 14.7905 14.9936Z"
-				fill="currentColor"
-			/>
-			<path
-				fillRule="evenodd"
-				clipRule="evenodd"
-				d="M15.0682 2.036V1.66579C15.0682 0.740249 15.8086 -0.000183105 16.7342 -0.000183105C17.6597 -0.000183105 18.4001 0.740249 18.4001 1.66579V2.036H18.7704C19.1406 2.036 19.4182 2.31367 19.4182 2.68388V6.01582C19.4182 6.38604 19.1406 6.6637 18.7704 6.6637H14.698C14.3278 6.6637 14.0501 6.38604 14.0501 6.01582V2.68388C14.0501 2.31367 14.3278 2.036 14.698 2.036H15.0682ZM15.7161 1.66579C15.7161 1.11046 16.1789 0.647695 16.7342 0.647695C17.2895 0.647695 17.7523 1.11046 17.7523 1.66579V2.036H15.7161V1.66579ZM16.7342 3.60942C17.0118 3.60942 17.1969 3.79453 17.1969 4.07219V4.72007C17.1969 4.99773 17.0118 5.18284 16.7342 5.18284C16.4565 5.18284 16.2714 4.99773 16.2714 4.72007V4.07219C16.2714 3.79453 16.4565 3.60942 16.7342 3.60942Z"
-				fill="currentColor"
-			/>
+				d="M15.16 16.51c-.57.28-1.16-.2-1.16-.83v-.14c0-.43.28-.8.63-1.02a3 3 0 0 0 0-5.04c-.35-.23-.63-.6-.63-1.02v-.14c0-.63.59-1.1 1.16-.83a5 5 0 0 1 0 9.02Z"
+			></path>
 		</svg>
 	);
 };
 
-export const HashtagLocked: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
+export const HashtagLocked: React.FC<IconProps> = ({ defaultSize = 'w-5 h-5' }) => {
 	return (
-		<svg
-			width="20"
-			height="20"
-			viewBox="0 0 20 20"
-			fill="none"
-			xmlns="http://www.w3.org/2000/svg"
-			className={`block dark:text-[#AEAEAE] text-colorTextLightMode ${defaultSize}`}
-		>
-			<g className="transform translate-y-[2px] translate-x-[-1.5px]">
+		<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className={`block  ${defaultSize}`}>
+			<g>
 				<path
 					d="M17.4393 9.4715L17.6833 8.6585H11.7483C11.5857 8.6585 11.4231 8.49589 11.4231 8.33329V7.76419H9.14667L10.2036 3.86175H8.41496L7.35805 7.76419H3.37431L2.8865 9.4715H6.87024L6.05724 12.3983H2.1548L1.66699 14.1056H5.65073L4.51252 18.3333H6.30114L7.43935 14.1056H10.5288L9.39057 18.3333H11.1792L12.3174 14.1056H16.3011L16.7889 12.3983H12.8052L13.6182 9.4715H17.4393ZM10.9353 12.3983H7.84585L8.65886 9.4715H11.7483L10.9353 12.3983Z"
 					fill="currentColor"
@@ -2279,20 +2236,14 @@ export function HashtagWarning(props: React.HTMLAttributes<SVGElement>) {
 	);
 }
 
-export const Hashtag: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
+export const Hashtag: React.FC<IconProps> = ({ defaultSize = 'w-5 h-5', className = '' }) => {
 	return (
-		<svg
-			width="20"
-			height="20"
-			viewBox="0 0 20 20"
-			fill="none"
-			xmlns="http://www.w3.org/2000/svg"
-			className={` block dark:text-[#AEAEAE] text-colorTextLightMode ${defaultSize}`}
-		>
-			<g className="transform translate-y-[4.5px] translate-x-[-0.7px]">
+		<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className={`block ${defaultSize} ${className}`}>
+			<g className="translate-x-[1px] translate-y-[2px]">
 				<path
 					d="M3.56915 15.415L4.73001 11.0721H0.666992L1.13341 9.31012H5.20679L6.00489 6.28358H1.94187L2.41865 4.53192H6.48167L7.55961 0.5H9.38382L8.29552 4.53192H11.4568L12.5347 0.5H14.3589L13.2706 4.53192H17.3337L16.8672 6.28358H12.8042L11.9854 9.31012H16.0484L15.582 11.0721H11.519L10.3581 15.415H8.54427L9.69477 11.0721H6.54386L5.383 15.415H3.56915ZM7.02064 9.31012H10.1716L10.98 6.28358H7.8291L7.02064 9.31012Z"
 					fill="currentColor"
+					strokeWidth="1.2"
 				/>
 			</g>
 		</svg>
@@ -2309,7 +2260,7 @@ export const Location: React.FC<IconProps> = ({ defaultFill }) => {
 			height="20"
 			fill="none"
 			viewBox="0 0 24 24"
-			className={`w-5 h-5 dark:text-[#AEAEAE] text-colorTextLightMode ${defaultFill}`}
+			className={`w-5 h-5  ${defaultFill}`}
 		>
 			<path
 				fill="currentColor"
@@ -2335,7 +2286,7 @@ export const Reply: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSiz
 			fill="none"
 			xmlns="http://www.w3.org/2000/svg"
 			onClick={handleClick}
-			className={`hover:text-black dark:hover:text-white ${defaultSize} ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode'}`}
+			className={` ${defaultSize}`}
 		>
 			<path
 				fillRule="evenodd"
@@ -2355,7 +2306,7 @@ export const CircleClose: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defa
 			viewBox="0 0 24 24"
 			fill="none"
 			xmlns="http://www.w3.org/2000/svg"
-			className="dark:hover:text-white hover:text-black dark:text-[#AEAEAE] text-colorTextLightMode"
+			className="dark:hover:text-white hover:text-black "
 		>
 			<g clipPath="url(#clip0_403_4302)">
 				<path
@@ -2402,7 +2353,7 @@ export const ViewRole: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', default
 
 	return (
 		<svg
-			className={isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode'}
+			className={isWhite ? 'dark:text-white text-black' : 'text-theme-primary'}
 			role="img"
 			xmlns="http://www.w3.org/2000/svg"
 			onClick={handleClick}
@@ -2446,11 +2397,11 @@ export const SyncIcon: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', default
 	);
 };
 
-export const LockIcon: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
+export const LockIcon: React.FC<IconProps> = ({ defaultSize = 'w-5 h-5' }) => {
 	return (
 		<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" className={`${defaultSize}`}>
 			<path
-				fill={defaultFill}
+				fill="currentColor"
 				fillRule="evenodd"
 				d="M6 9h1V6a5 5 0 0 1 10 0v3h1a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-8a3 3 0 0 1 3-3Zm9-3v3H9V6a3 3 0 1 1 6 0Zm-1 8a2 2 0 0 1-1 1.73V18a1 1 0 1 1-2 0v-2.27A2 2 0 1 1 14 14Z"
 			></path>
@@ -2521,6 +2472,7 @@ export const EscIcon: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultS
 			<circle cx="12" cy="12" r="10" fill="transparent"></circle>
 			<path
 				fill={defaultFill}
+				stroke="currentColor"
 				fillRule="evenodd"
 				d="M12 23a11 11 0 1 0 0-22 11 11 0 0 0 0 22Zm4.7-15.7a1 1 0 0 0-1.4 0L12 10.58l-3.3-3.3a1 1 0 0 0-1.4 1.42L10.58 12l-3.3 3.3a1 1 0 1 0 1.42 1.4L12 13.42l3.3 3.3a1 1 0 0 0 1.4-1.42L13.42 12l3.3-3.3a1 1 0 0 0 0-1.4Z"
 			></path>
@@ -2528,11 +2480,19 @@ export const EscIcon: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultS
 	);
 };
 
-export const CopyIcon: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
+export const CopyIcon: React.FC<IconProps> = ({ className = 'w-4 h-4' }) => {
 	return (
-		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
-			<path d="M5.5 3.5A1.5 1.5 0 0 1 7 2h2.879a1.5 1.5 0 0 1 1.06.44l2.122 2.12a1.5 1.5 0 0 1 .439 1.061V9.5A1.5 1.5 0 0 1 12 11V8.621a3 3 0 0 0-.879-2.121L9 4.379A3 3 0 0 0 6.879 3.5H5.5Z" />
-			<path d="M4 5a1.5 1.5 0 0 0-1.5 1.5v6A1.5 1.5 0 0 0 4 14h5a1.5 1.5 0 0 0 1.5-1.5V8.621a1.5 1.5 0 0 0-.44-1.06L7.94 5.439A1.5 1.5 0 0 0 6.878 5H4Z" />
+		<svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+			<path
+				d="M6 11C6 8.17157 6 6.75736 6.87868 5.87868C7.75736 5 9.17157 5 12 5H15C17.8284 5 19.2426 5 20.1213 5.87868C21 6.75736 21 8.17157 21 11V16C21 18.8284 21 20.2426 20.1213 21.1213C19.2426 22 17.8284 22 15 22H12C9.17157 22 7.75736 22 6.87868 21.1213C6 20.2426 6 18.8284 6 16V11Z"
+				stroke="currentColor"
+				strokeWidth="1.5"
+			/>
+			<path
+				d="M6 19C4.34315 19 3 17.6569 3 16V10C3 6.22876 3 4.34315 4.17157 3.17157C5.34315 2 7.22876 2 11 2H15C16.6569 2 18 3.34315 18 5"
+				stroke="currentColor"
+				strokeWidth="1.5"
+			/>
 		</svg>
 	);
 };
@@ -2592,16 +2552,7 @@ export const AddMemberCall: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', de
 
 export function TrashIcon(props: React.HTMLAttributes<SVGElement>) {
 	return (
-		<svg
-			aria-hidden="true"
-			xmlns="http://www.w3.org/2000/svg"
-			width="24"
-			height="24"
-			fill="none"
-			viewBox="0 0 24 24"
-			className="dark:text-[#AEAEAE] text-colorTextLightMode"
-			{...props}
-		>
+		<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" className="" {...props}>
 			<path
 				fill="currentColor"
 				d="M14.25 1c.41 0 .75.34.75.75V3h5.25c.41 0 .75.34.75.75v.5c0 .41-.34.75-.75.75H3.75A.75.75 0 0 1 3 4.25v-.5c0-.41.34-.75.75-.75H9V1.75c0-.41.34-.75.75-.75h4.5Z"
@@ -2632,15 +2583,7 @@ export const Locked: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSi
 
 export const Download: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
 	return (
-		<svg
-			aria-hidden="true"
-			xmlns="http://www.w3.org/2000/svg"
-			width="24"
-			height="24"
-			fill="none"
-			viewBox="0 0 24 24"
-			className="dark:text-[#AEAEAE] text-colorTextLightMode"
-		>
+		<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" className="">
 			<path
 				fill="currentColor"
 				d="M12 2a1 1 0 0 1 1 1v10.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V3a1 1 0 0 1 1-1ZM3 20a1 1 0 1 0 0 2h18a1 1 0 1 0 0-2H3Z"
@@ -2650,15 +2593,24 @@ export const Download: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', default
 	);
 };
 
-export const OpenMenu: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
+export const OpenMenu: React.FC<IconProps> = ({ defaultFill = 'currentColor', defaultSize = 'w-5 h-5' }) => {
 	return (
-		<svg xmlns="http://www.w3.org/2000/svg" fill={defaultFill} viewBox="0 0 297 297" className={defaultSize}>
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 297 297" className={defaultSize}>
 			<g>
 				<g>
 					<g>
-						<path d="M280.214,39.211H16.786C7.531,39.211,0,46.742,0,55.997v24.335c0,9.256,7.531,16.787,16.786,16.787h263.428     c9.255,0,16.786-7.531,16.786-16.787V55.997C297,46.742,289.469,39.211,280.214,39.211z" />
-						<path d="M280.214,119.546H16.786C7.531,119.546,0,127.077,0,136.332v24.336c0,9.255,7.531,16.786,16.786,16.786h263.428     c9.255,0,16.786-7.531,16.786-16.786v-24.336C297,127.077,289.469,119.546,280.214,119.546z" />
-						<path d="M280.214,199.881H16.786C7.531,199.881,0,207.411,0,216.668v24.335c0,9.255,7.531,16.786,16.786,16.786h263.428     c9.255,0,16.786-7.531,16.786-16.786v-24.335C297,207.411,289.469,199.881,280.214,199.881z" />
+						<path
+							fill="currentColor"
+							d="M280.214,39.211H16.786C7.531,39.211,0,46.742,0,55.997v24.335c0,9.256,7.531,16.787,16.786,16.787h263.428     c9.255,0,16.786-7.531,16.786-16.787V55.997C297,46.742,289.469,39.211,280.214,39.211z"
+						/>
+						<path
+							fill="currentColor"
+							d="M280.214,119.546H16.786C7.531,119.546,0,127.077,0,136.332v24.336c0,9.255,7.531,16.786,16.786,16.786h263.428     c9.255,0,16.786-7.531,16.786-16.786v-24.336C297,127.077,289.469,119.546,280.214,119.546z"
+						/>
+						<path
+							fill="currentColor"
+							d="M280.214,199.881H16.786C7.531,199.881,0,207.411,0,216.668v24.335c0,9.255,7.531,16.786,16.786,16.786h263.428     c9.255,0,16.786-7.531,16.786-16.786v-24.335C297,207.411,289.469,199.881,280.214,199.881z"
+						/>
 					</g>
 				</g>
 			</g>
@@ -2692,13 +2644,13 @@ export const BackToCategoriesGif: React.FC<IconProps> = ({ defaultFill = '#AEAEA
 	);
 };
 
-export const SmilingFace: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
+export const SmilingFace: React.FC<IconProps> = ({ defaultFill = 'currentColor', defaultSize = 'w-5 h-5' }) => {
 	return (
 		<svg width="18" height="18" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 			<g clipPath="url(#clip0_2372_24105)">
 				<path
 					d="M12.5 2C7.00797 2 2.5 6.50742 2.5 12C2.5 17.4926 7.00797 22 12.5 22C17.992 22 22.5 17.4926 22.5 12C22.5 6.50742 17.992 2 12.5 2ZM8.98438 6.72656C9.95367 6.72656 10.7422 7.51508 10.7422 8.48438C10.7422 8.80824 10.4801 9.07031 10.1562 9.07031C9.83238 9.07031 9.57031 8.80824 9.57031 8.48438C9.57031 8.16109 9.30711 7.89844 8.98438 7.89844C8.66164 7.89844 8.39844 8.16109 8.39844 8.48438C8.39844 8.80824 8.13637 9.07031 7.8125 9.07031C7.48863 9.07031 7.22656 8.80824 7.22656 8.48438C7.22656 7.51508 8.01508 6.72656 8.98438 6.72656ZM12.5 17.2734C9.59207 17.2734 7.22656 14.9079 7.22656 12C7.22656 11.6761 7.48863 11.4141 7.8125 11.4141C8.13637 11.4141 8.39844 11.6761 8.39844 12C8.39844 14.2614 10.2386 16.1016 12.5 16.1016C14.7614 16.1016 16.6016 14.2614 16.6016 12C16.6016 11.6761 16.8636 11.4141 17.1875 11.4141C17.5114 11.4141 17.7734 11.6761 17.7734 12C17.7734 14.9079 15.4079 17.2734 12.5 17.2734ZM17.1875 9.07031C16.8636 9.07031 16.6016 8.80824 16.6016 8.48438C16.6016 8.16109 16.3384 7.89844 16.0156 7.89844C15.6929 7.89844 15.4297 8.16109 15.4297 8.48438C15.4297 8.80824 15.1676 9.07031 14.8438 9.07031C14.5199 9.07031 14.2578 8.80824 14.2578 8.48438C14.2578 7.51508 15.0463 6.72656 16.0156 6.72656C16.9849 6.72656 17.7734 7.51508 17.7734 8.48438C17.7734 8.80824 17.5114 9.07031 17.1875 9.07031Z"
-					fill="#B5BAC1"
+					stroke={defaultFill}
 				/>
 			</g>
 			<defs>
@@ -2784,7 +2736,7 @@ export function CreateCategoryIcon(props: React.HTMLAttributes<SVGElement>) {
 			height="18"
 			fill="none"
 			viewBox="0 0 24 24"
-			className="dark:text-[#AEAEAE] text-colorTextLightMode group-hover:text-white"
+			className="text-theme-primary-hover"
 		>
 			<path
 				fill="currentColor"
@@ -2874,7 +2826,7 @@ export function ArrowDownFill(props: React.HTMLAttributes<SVGElement>) {
 			width="16"
 			height="16"
 			fill="currentColor"
-			className="bi bi-caret-down-fill"
+			className="bi bi-caret-down-fill text-theme-primary"
 			viewBox="0 0 16 16"
 			{...props}
 		>
@@ -2887,7 +2839,7 @@ export function FiltersIcon(props: React.HTMLAttributes<SVGElement>) {
 	return (
 		<svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" {...props}>
 			<path
-				fill="#B5BAC1"
+				fill="currentColor"
 				d="M22 5a1 1 0 0 1-1 1h-8.2a2.5 2.5 0 1 1 0-2H21a1 1 0 0 1 1 1ZM6 5c0 .34.04.67.11 1H3a1 1 0 0 1 0-2h3.11A4.5 4.5 0 0 0 6 5ZM22 19a1 1 0 0 1-1 1h-8.2a2.5 2.5 0 1 1 0-2H21a1 1 0 0 1 1 1ZM6 19c0 .34.04.67.11 1H3a1 1 0 1 1 0-2h3.11A4.5 4.5 0 0 0 6 19ZM21 13a1 1 0 1 0 0-2h-3.2a2.5 2.5 0 1 0 0 2H21ZM11.11 13a4.5 4.5 0 0 1 0-2H3a1 1 0 1 0 0 2h8.11Z"
 			></path>
 		</svg>
@@ -2898,12 +2850,12 @@ export function ImageUploadIcon(props: React.HTMLAttributes<SVGElement>) {
 	return (
 		<svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" {...props}>
 			<path
-				fill="#B5BAC1"
+				fill="currentColor"
 				fillRule="evenodd"
 				d="M2 5a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v8.67c0 .12-.34.17-.39.06A2.87 2.87 0 0 0 19 12a3 3 0 0 0-2.7 1.7c-.1.18-.36.22-.48.06l-.47-.63a2 2 0 0 0-3.2 0L9.93 16.1l-.5-.64a1.5 1.5 0 0 0-2.35 0l-1.86 2.32A.75.75 0 0 0 5.81 19h5.69c.28 0 .5.23.54.5.17.95.81 1.68 1.69 2.11.11.06.06.39-.06.39H5a3 3 0 0 1-3-3V5Zm8.2.98c.23-.91-.88-1.55-1.55-.9a.93.93 0 0 1-1.3 0c-.67-.65-1.78-.01-1.55.9a.93.93 0 0 1-.65 1.12c-.9.26-.9 1.54 0 1.8.48.14.77.63.65 1.12-.23.91.88 1.55 1.55.9a.93.93 0 0 1 1.3 0c.67.65 1.78.01 1.55-.9a.93.93 0 0 1 .65-1.12c.9-.26.9-1.54 0-1.8a.93.93 0 0 1-.65-1.12Z"
 				clipRule="evenodd"
 			></path>
-			<path fill="#B5BAC1" d="M19 14a1 1 0 0 1 1 1v3h3a1 1 0 0 1 0 2h-3v3a1 1 0 0 1-2 0v-3h-3a1 1 0 1 1 0-2h3v-3a1 1 0 0 1 1-1Z"></path>
+			<path fill="currentColor" d="M19 14a1 1 0 0 1 1 1v3h3a1 1 0 0 1 0 2h-3v3a1 1 0 0 1-2 0v-3h-3a1 1 0 1 1 0-2h3v-3a1 1 0 0 1 1-1Z"></path>
 		</svg>
 	);
 }
@@ -2942,7 +2894,7 @@ export function AvatarUser(props: React.HTMLAttributes<SVGElement>) {
 	);
 }
 
-export function IconEvents({ defaultSize = 'w-5 h-5 dark:text-channelTextLabel text-colorTextLightMode' }) {
+export function IconEvents({ defaultSize = 'w-5 h-5 ' }) {
 	return (
 		<svg
 			aria-hidden="true"
@@ -3040,7 +2992,7 @@ export function IconClockChannel() {
 	);
 }
 
-export function IconPhoneDM({ ...props }) {
+export function IconPhoneDM({ defaultSize = 'w-5 h-5 ' }) {
 	return (
 		<svg
 			x="0"
@@ -3052,7 +3004,7 @@ export function IconPhoneDM({ ...props }) {
 			height="24"
 			fill="none"
 			viewBox="0 0 24 24"
-			{...props}
+			className={defaultSize}
 		>
 			<path
 				fill="currentColor"
@@ -3063,7 +3015,7 @@ export function IconPhoneDM({ ...props }) {
 	);
 }
 
-export function IconMeetDM({ isShowMeetDM = false, isShowLine = false, ...props }) {
+export function IconMeetDM({ isShowMeetDM = false, defaultSize = 'w-5 h-5', isShowLine = false, ...props }) {
 	return (
 		<svg
 			x="0"
@@ -3075,6 +3027,7 @@ export function IconMeetDM({ isShowMeetDM = false, isShowLine = false, ...props 
 			height="24"
 			fill="none"
 			viewBox="0 0 24 24"
+			className={defaultSize}
 			{...props}
 		>
 			<path
@@ -3110,10 +3063,10 @@ export function IconMeetDM({ isShowMeetDM = false, isShowLine = false, ...props 
 	);
 }
 
-export function IconAddFriendDM({ isWhite }: { isWhite?: boolean }) {
+export function IconAddFriendDM({ defaultSize = 'w-5 h-5' }) {
 	return (
 		<svg
-			className={`dark:hover:text-white hover:text-black ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode'}`}
+			className={defaultSize}
 			x="0"
 			y="0"
 			aria-hidden="true"
@@ -3133,10 +3086,10 @@ export function IconAddFriendDM({ isWhite }: { isWhite?: boolean }) {
 	);
 }
 
-export function IconUserProfileDM({ isWhite }: { isWhite?: boolean }) {
+export function IconUserProfileDM({ defaultSize = 'w-5 h-5 ' }) {
 	return (
 		<svg
-			className={`dark:hover:text-white hover:text-black ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode'}`}
+			className={defaultSize}
 			x="0"
 			y="0"
 			aria-hidden="true"
@@ -3160,7 +3113,7 @@ export function IconUserProfileDM({ isWhite }: { isWhite?: boolean }) {
 
 export function IconReplyMessDeleted() {
 	return (
-		<svg width="8" height="8" viewBox="0 0 8 8" className="dark:text-zinc-400 text-colorTextLightMode ml-[2px] mt-1">
+		<svg width="8" height="8" viewBox="0 0 8 8" className=" ml-[2px] mt-1">
 			<path
 				d="M0.809739 3.59646L5.12565 0.468433C5.17446 0.431163 5.23323 0.408043 5.2951 0.401763C5.35698 0.395482 5.41943 0.406298 5.4752 0.432954C5.53096 0.45961 5.57776 0.50101 5.61013 0.552343C5.64251 0.603676 5.65914 0.662833 5.6581 0.722939V2.3707C10.3624 2.3707 11.2539 5.52482 11.3991 7.21174C11.4028 7.27916 11.3848 7.34603 11.3474 7.40312C11.3101 7.46021 11.2554 7.50471 11.1908 7.53049C11.1262 7.55626 11.0549 7.56204 10.9868 7.54703C10.9187 7.53201 10.857 7.49695 10.8104 7.44666C8.72224 5.08977 5.6581 5.63359 5.6581 5.63359V7.28135C5.65831 7.34051 5.64141 7.39856 5.60931 7.44894C5.5772 7.49932 5.53117 7.54004 5.4764 7.5665C5.42163 7.59296 5.3603 7.60411 5.29932 7.59869C5.23834 7.59328 5.18014 7.57151 5.13128 7.53585L0.809739 4.40892C0.744492 4.3616 0.691538 4.30026 0.655067 4.22975C0.618596 4.15925 0.599609 4.08151 0.599609 4.00269C0.599609 3.92386 0.618596 3.84612 0.655067 3.77562C0.691538 3.70511 0.744492 3.64377 0.809739 3.59646Z"
 				fill="currentColor"
@@ -3233,12 +3186,12 @@ export function WebhooksIcon(props: React.HTMLAttributes<SVGElement>) {
 			<path
 				fill="currentColor"
 				d="m7.7 16.95 3.68-6.76a1 1 0 0 0-.5-1.4A3 3 0 1 1 15 6a1 1 0 1 0 2 0 5 5 0 1 0-7.85 4.1L5.95 16a2 2 0 1 0 1.78 3h8.54a2 2 0 1 0 0-2H7.73l-.02-.05Z"
-				className=""
+				className="text-theme-primary"
 			></path>
 			<path
 				fill="currentColor"
 				d="M13.8 6.86A2 2 0 1 0 12.16 8l4.53 6.58a1 1 0 0 0 .82.43h.5a3 3 0 1 1-1.98 5.25 1 1 0 0 0-.66-.25h-.01a1 1 0 0 0-.66 1.75A4.98 4.98 0 0 0 23 18a5 5 0 0 0-4.97-5L13.8 6.86ZM5.97 13.88a1 1 0 0 1-.72 1.21 3 3 0 1 0 2.73 5.16 1 1 0 1 1 1.33 1.5A4.98 4.98 0 0 1 1 18a5 5 0 0 1 3.75-4.84 1 1 0 0 1 1.22.72Z"
-				className=""
+				className="text-theme-primary"
 			></path>
 		</svg>
 	);
@@ -3280,18 +3233,7 @@ export function OwnerIcon(props: React.HTMLAttributes<SVGElement>) {
 
 export function ThreadIconLocker(props: React.HTMLAttributes<SVGElement>) {
 	return (
-		<svg
-			x="0"
-			y="0"
-			aria-hidden="true"
-			role="img"
-			xmlns="http://www.w3.org/2000/svg"
-			width="24"
-			height="24"
-			fill="none"
-			viewBox="0 0 24 24"
-			{...props}
-		>
+		<svg x="0" y="0" aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}>
 			<path
 				d="M12 2.81a1 1 0 0 1 0-1.41l.36-.36a1 1 0 0 1 1.41 0l9.2 9.2a1 1 0 0 1 0 1.4l-.7.7a1 1 0 0 1-1.3.13l-9.54-6.72a1 1 0 0 1-.08-1.58l1-1L12 2.8ZM12 21.2a1 1 0 0 1 0 1.41l-.35.35a1 1 0 0 1-1.41 0l-9.2-9.19a1 1 0 0 1 0-1.41l.7-.7a1 1 0 0 1 1.3-.12l9.54 6.72A1 1 0 0 1 13 19v.15a1 1 0 0 1-.35.69l-1 1 .35.36ZM14.66 16.32c.1-.39.26-.75.45-1.09l-8.2-5.47a1 1 0 1 0-1.12 1.66l8.13 5.42a3 3 0 0 1 .74-.52ZM16.43 13.8c.62-.43 1.36-.7 2.15-.78a1 1 0 0 0-.37-.43L9.73 6.93a1 1 0 0 0-1.11 1.66l7.81 5.21Z"
 				fill="currentColor"
@@ -3500,7 +3442,7 @@ export function SelectFileIcon(props: React.HTMLAttributes<SVGElement>) {
 				<path d="m0 0h18v18h-18z" />
 				<path
 					d="m13.5 8.25v4.5c0 .8284271-.6715729 1.5-1.5 1.5h-10.5c-.82842712 0-1.5-.6715729-1.5-1.5v-10.5c0-.82842712.67157288-1.5 1.5-1.5h7.5-3v1.5h-4.5v10.5h10.5v-4.5zm-5.28-.5325 2.655 3.5325h-8.25l2.0625-2.6475 1.47 1.77zm3.78-5.4675h2.25v1.5h-2.25v2.25h-1.5v-2.25h-2.25v-1.5h2.25v-2.25h1.5z"
-					fill="#4f545c"
+					fill="currentColor"
 					transform="translate(2.25 1.5)"
 				/>
 			</g>
@@ -4467,7 +4409,7 @@ export function MacIcon(props: React.HTMLAttributes<SVGElement>) {
 	);
 }
 
-export const DollarIcon: React.FC<IconProps> = ({ isWhite, defaultSize = 'w-5 h-5' }) => {
+export const DollarIcon: React.FC<IconProps> = ({ defaultSize = 'w-5 h-5', defaultFill }) => {
 	return (
 		<svg
 			height="800px"
@@ -4479,7 +4421,7 @@ export const DollarIcon: React.FC<IconProps> = ({ isWhite, defaultSize = 'w-5 h-
 			viewBox="0 0 64 64"
 			enableBackground="new 0 0 64 64"
 			xmlSpace="preserve"
-			className={`hover:text-black dark:hover:text-white ${defaultSize} ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode'}`}
+			className={` ${defaultSize} ${defaultFill ? defaultFill : ''}`}
 		>
 			<g id="US-coin">
 				<path
@@ -4521,7 +4463,7 @@ export function Stream({ defaultFill, defaultSize = 'w-5 h-5' }: IconProps) {
 			viewBox="0 0 24 24"
 			fill="none"
 			xmlns="http://www.w3.org/2000/svg"
-			className={`${defaultSize} ${defaultFill ? defaultFill : 'dark:text-channelTextLabel text-colorTextLightMode'}`}
+			className={`${defaultSize} ${defaultFill ? defaultFill : ''}`}
 		>
 			<path
 				fillRule="evenodd"
@@ -4619,28 +4561,26 @@ export function MarkAllAsRead(props: React.HTMLAttributes<SVGElement>) {
 	);
 }
 
-export function HatIcon({ defaultFill, defaultSize = 'w-5 h-5' }: IconProps) {
+export function HatIcon({ defaultFill = 'fill-current text-theme-primary', defaultSize = 'w-5 h-5' }: IconProps) {
 	return (
 		<svg
 			version="1.1"
 			id="_x32_"
 			xmlns="http://www.w3.org/2000/svg"
 			xmlnsXlink="http://www.w3.org/1999/xlink"
-			className={`${defaultSize}`}
+			className={`${defaultSize} ${defaultFill}`}
 			viewBox="0 0 512 512"
 			xmlSpace="preserve"
+			fill="currentColor"
 		>
-			<g>
-				<path
-					className="st0"
-					d="M511.883,298.395c-2.781-27.281-54.391-46.141-129.406-51.844c-7.172-42.047-15.469-90.563-17.891-103.75
-		c-5.563-30.203-45.344-47.094-74.891-25.313c-15.5,11.422-29.359,12.234-36.703,12.234s-15.5,1.625-36.703-12.234
-		c-30.719-20.094-69.328-4.891-74.875,25.313c-2.969,16.109-14.688,84.844-22.391,130.203
-		C45.211,293.817-2.711,323.114,0.117,350.723c4.25,41.625,122.266,63.671,263.578,49.218
-		C405.039,385.488,516.148,340.036,511.883,298.395z M132.289,308.348l8.156-42.406c0,0,145.188,22.828,226.75-19.578l8.156,35.891
-		C375.352,282.254,287.258,337.708,132.289,308.348z"
-				/>
-			</g>
+			<path
+				d="M511.883,298.395c-2.781-27.281-54.391-46.141-129.406-51.844c-7.172-42.047-15.469-90.563-17.891-103.75
+				c-5.563-30.203-45.344-47.094-74.891-25.313c-15.5,11.422-29.359,12.234-36.703,12.234s-15.5,1.625-36.703-12.234
+				c-30.719-20.094-69.328-4.891-74.875,25.313c-2.969,16.109-14.688,84.844-22.391,130.203
+				C45.211,293.817-2.711,323.114,0.117,350.723c4.25,41.625,122.266,63.671,263.578,49.218
+				C405.039,385.488,516.148,340.036,511.883,298.395z M132.289,308.348l8.156-42.406c0,0,145.188,22.828,226.75-19.578l8.156,35.891
+				C375.352,282.254,287.258,337.708,132.289,308.348z"
+			/>
 		</svg>
 	);
 }
@@ -4708,7 +4648,7 @@ export function AppChannelIcon({ fill, ...props }: ClassIconProps) {
 	return (
 		<svg
 			className="icon icon-tabler icon-tabler-apps"
-			fill={fill === 'dark' ? '#AEAEAE' : '#535353'}
+			fill="currentColor"
 			height="24"
 			viewBox="0 0 24 24"
 			width="24"
@@ -4729,7 +4669,7 @@ export function PrivateAppChannelIcon({ fill, ...props }: ClassIconProps) {
 	return (
 		<svg
 			className="icon icon-tabler icon-tabler-apps"
-			fill={fill === 'dark' ? '#AEAEAE' : '#535353'}
+			fill="currentColor"
 			height="24"
 			viewBox="0 0 24 24"
 			width="24"
@@ -5592,7 +5532,7 @@ export function Chat({ defaultFill, defaultSize = 'w-5 h-5' }: IconProps) {
 			xmlns="http://www.w3.org/2000/svg"
 			width="24"
 			height="24"
-			fill="none"
+			fill="currentColor"
 			viewBox="0 0 24 24"
 			className={` ${defaultSize} ${defaultFill ? defaultFill : 'dark:hover:text-white hover:text-black dark:text-channelTextLabel text-colorTextLightMode'}`}
 		>
@@ -5992,14 +5932,7 @@ export function Microsoft(props: React.HTMLAttributes<SVGElement>) {
 
 export const LoLGame: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
 	return (
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			width="30"
-			height="32"
-			viewBox="0 0 30 32"
-			fill="none"
-			className={` block dark:text-[#AEAEAE] text-colorTextLightMode ${defaultSize}`}
-		>
+		<svg xmlns="http://www.w3.org/2000/svg" width="30" height="32" viewBox="0 0 30 32" fill="none" className={` block  ${defaultSize}`}>
 			<g>
 				<path
 					d="M1.80644 9.75049C0.655032 11.8373 0 14.2271 0 16.7683C0 19.3095 0.655032 21.7015 1.80644 23.7883V9.75049Z"
@@ -6026,7 +5959,7 @@ export const Spotify: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultS
 			enableBackground="new 0 0 40 40"
 			viewBox="0 0 40 40"
 			id="spotify"
-			className={` block dark:text-[#AEAEAE] text-colorTextLightMode ${defaultSize}`}
+			className={` block  ${defaultSize}`}
 		>
 			<switch>
 				<g>
@@ -6042,12 +5975,7 @@ export const Spotify: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultS
 
 export const VisualStudioCode: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
 	return (
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			viewBox="0 0 24 24"
-			id="visual-studio-code"
-			className={` block dark:text-[#AEAEAE] text-colorTextLightMode ${defaultSize}`}
-		>
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" id="visual-studio-code" className={` block  ${defaultSize}`}>
 			<path
 				fill="#1677C7"
 				d="m2.419 13.939 3.434-2.589L12 17l3-1.456V4.456L12 3 5.853 8.65 2.418 6.062 1 6.889 4.385 10 1 13.111l1.419.828zM12 6.717v6.566L7.644 10 12 6.717z"
@@ -6102,7 +6030,7 @@ export function WindowZoom(props: React.HTMLAttributes<SVGElement>) {
 		</svg>
 	);
 }
-export const GuideIcon: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
+export const GuideIcon: React.FC<IconProps> = ({ defaultSize = 'w-5 h-5', className }) => {
 	return (
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
@@ -6111,39 +6039,51 @@ export const GuideIcon: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaul
 			strokeMiterlimit="2"
 			clipRule="evenodd"
 			viewBox="0 0 32 32"
-			fill={defaultFill}
-			id="direction-board"
-			className={`${defaultSize}`}
+			fill="currentColor"
+			className={`${defaultSize} ${className ?? ''}`}
 		>
 			<g transform="translate(-52 -156)">
 				<path
+					fill="currentColor"
 					d="M72.125,117.091C72.125,116.657 71.769,116.241 71.136,115.934C70.504,115.627 69.645,115.455 68.75,115.455C68.26,115.455 67.74,115.455 67.25,115.455C66.355,115.455 65.496,115.627 64.864,115.934C64.231,116.241 63.875,116.657 63.875,117.091C63.875,120.012 63.875,127.988 63.875,130.909C63.875,131.343 64.231,131.759 64.864,132.066C65.496,132.373 66.355,132.545 67.25,132.545C67.74,132.545 68.26,132.545 68.75,132.545C69.645,132.545 70.504,132.373 71.136,132.066C71.769,131.759 72.125,131.343 72.125,130.909C72.125,127.988 72.125,120.012 72.125,117.091Z"
 					transform="matrix(0 .66667 -1.375 0 238.5 139.667)"
-				></path>
-				<path d="M67.25,157L67.25,183C67.25,183.414 67.586,183.75 68,183.75C68.414,183.75 68.75,183.414 68.75,183L68.75,157C68.75,156.586 68.414,156.25 68,156.25C67.586,156.25 67.25,156.586 67.25,157Z"></path>
+				/>
 				<path
+					fill="currentColor"
+					d="M67.25,157L67.25,183C67.25,183.414 67.586,183.75 68,183.75C68.414,183.75 68.75,183.414 68.75,183L68.75,157C68.75,156.586 68.414,156.25 68,156.25C67.586,156.25 67.25,156.586 67.25,157Z"
+				/>
+				<path
+					fill="currentColor"
 					d="M81.386,162.036C81.612,161.923 81.75,161.72 81.75,161.5C81.75,161.28 81.612,161.077 81.386,160.964L76.386,158.464C76.269,158.406 76.136,158.375 76,158.375L68,158.375C67.586,158.375 67.25,158.655 67.25,159L67.25,164C67.25,164.345 67.586,164.625 68,164.625L76,164.625C76.136,164.625 76.269,164.594 76.386,164.536L81.386,162.036Z"
 					transform="matrix(1 0 0 1.2 0 -30.8)"
-				></path>
+				/>
 				<path
+					fill="currentColor"
 					d="M81.386,160.964C81.612,161.077 81.75,161.28 81.75,161.5C81.75,161.72 81.612,161.923 81.386,162.036L76.386,164.536C76.269,164.594 76.136,164.625 76,164.625L68,164.625C67.586,164.625 67.25,164.345 67.25,164L67.25,159C67.25,158.655 67.586,158.375 68,158.375L76,158.375C76.136,158.375 76.269,158.406 76.386,158.464L81.386,160.964Z"
 					transform="matrix(-1 0 0 1.2 136 -20.8)"
-				></path>
+				/>
 			</g>
 		</svg>
 	);
 };
 
-export const RuleIcon: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
+export const RuleIcon: React.FC<IconProps> = ({ defaultSize = 'w-5 h-5', className }) => {
 	return (
-		<svg role="img" xmlns="http://www.w3.org/2000/svg" className={`${defaultSize}`} width="22" height="20" fill="none" viewBox="0 0 24 24">
-			{' '}
+		<svg
+			role="img"
+			xmlns="http://www.w3.org/2000/svg"
+			className={`${defaultSize} ${className ?? ''}`}
+			width="22"
+			height="20"
+			fill="none"
+			viewBox="0 0 24 24"
+		>
 			<path
-				fill={defaultFill}
+				fill="currentColor"
 				fillRule="evenodd"
 				d="M15 2a3 3 0 0 1 3 3v12H5.5a1.5 1.5 0 0 0 0 3h14a.5.5 0 0 0 .5-.5V5h1a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H5a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3h10Zm-.3 5.7a1 1 0 0 0-1.4-1.4L9 10.58l-2.3-2.3a1 1 0 0 0-1.4 1.42l3 3a1 1 0 0 0 1.4 0l5-5Z"
 				clipRule="evenodd"
-			></path>
+			/>
 		</svg>
 	);
 };
@@ -6158,7 +6098,7 @@ export const CheckMarkFilter: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', 
 			height="20"
 			fill="none"
 			viewBox="0 0 24 24"
-			className={`${defaultFill ? defaultFill : `dark:hover:text-white hover:text-black ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode'}`} ${defaultSize}`}
+			className={`${defaultFill ? defaultFill : `dark:hover:text-white hover:text-black ${isWhite ? 'dark:text-white text-black' : 'text-theme-primary'}`} ${defaultSize}`}
 		>
 			<circle cx="12" cy="12" r="10" fill="transparent"></circle>
 			<path
@@ -6304,7 +6244,7 @@ export function LoadingSpinner({ className }: { className?: string }) {
 
 export function StopCall(props: React.HTMLAttributes<SVGElement>) {
 	return (
-		<svg width="28px" height="28px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="none" {...props}>
+		<svg width="28px" height="28px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor" {...props}>
 			<g id="SVGRepo_bgCarrier" strokeWidth="0" />
 
 			<g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round" />
@@ -6313,7 +6253,7 @@ export function StopCall(props: React.HTMLAttributes<SVGElement>) {
 				{' '}
 				<path
 					d="m 14.234375 11.714844 c -0.382813 0.382812 -1 0.382812 -1.386719 0 l -1.039062 -1.039063 l -1.039063 -1.042969 c -0.386719 -0.382812 -0.386719 -1 0 -1.386718 l 0.492188 -0.492188 c -2.035157 -1.109375 -4.5 -1.109375 -6.535157 0 l 0.492188 0.492188 c 0.386719 0.386718 0.386719 1.003906 0 1.386718 l -1.039062 1.042969 l -1.039063 1.039063 c -0.386719 0.382812 -1.003906 0.382812 -1.386719 0 l -1.042968 -1.039063 c -0.957032 -0.957031 -0.957032 -2.511719 0 -3.46875 l 0.347656 -0.347656 c 3.816406 -3.816406 10.054687 -3.816406 13.871094 0 l 0.347656 0.347656 c 0.957031 0.957031 0.957031 2.511719 0 3.46875 z m 0 0"
-					fill="#ff0000"
+					fill="currentColor"
 				/>{' '}
 			</g>
 		</svg>
@@ -6555,13 +6495,7 @@ export function InfoIcon(props: React.HTMLAttributes<SVGElement>) {
 
 export const OutGoingCall: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
 	return (
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			viewBox="0 0 24 24"
-			id="call"
-			fill="none"
-			className={` block dark:text-[#AEAEAE] text-colorTextLightMode ${defaultSize}`}
-		>
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" id="call" fill="none" className={` block  ${defaultSize}`}>
 			<path
 				d="M19.44,13c-.22,0-.45-.07-.67-.12a9.44,9.44,0,0,1-1.31-.39,2,2,0,0,0-2.48,1l-.22.45a12.18,12.18,0,0,1-2.66-2,12.18,12.18,0,0,1-2-2.66L10.52,9a2,2,0,0,0,1-2.48,10.33,10.33,0,0,1-.39-1.31c-.05-.22-.09-.45-.12-.68a3,3,0,0,0-3-2.49h-3a3,3,0,0,0-3,3.41A19,19,0,0,0,18.53,21.91l.38,0a3,3,0,0,0,2-.76,3,3,0,0,0,1-2.25v-3A3,3,0,0,0,19.44,13Zm.5,6a1,1,0,0,1-.34.75,1.06,1.06,0,0,1-.82.25A17,17,0,0,1,4.07,5.22a1.09,1.09,0,0,1,.25-.82,1,1,0,0,1,.75-.34h3a1,1,0,0,1,1,.79q.06.41.15.81a11.12,11.12,0,0,0,.46,1.55l-1.4.65a1,1,0,0,0-.49,1.33,14.49,14.49,0,0,0,7,7,1,1,0,0,0,.76,0,1,1,0,0,0,.57-.52l.62-1.4a13.69,13.69,0,0,0,1.58.46q.4.09.81.15a1,1,0,0,1,.79,1ZM21.86,2.68a1,1,0,0,0-.54-.54,1,1,0,0,0-.38-.08h-4a1,1,0,1,0,0,2h1.58l-3.29,3.3a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l3.3-3.29V7.06a1,1,0,0,0,2,0v-4A1,1,0,0,0,21.86,2.68Z"
 				fill="currentColor"
@@ -6572,13 +6506,7 @@ export const OutGoingCall: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', def
 
 export const IncomingCall: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
 	return (
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			viewBox="0 0 24 24"
-			id="call"
-			fill="none"
-			className={` block dark:text-[#AEAEAE] text-colorTextLightMode ${defaultSize}`}
-		>
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" id="call" fill="none" className={` block  ${defaultSize}`}>
 			<path
 				d="M15.55,9a1.07,1.07,0,0,0,.39.07h4a1,1,0,0,0,0-2H18.35l3.29-3.29a1,1,0,1,0-1.41-1.41L16.94,5.65V4.06a1,1,0,1,0-2,0v4a1.07,1.07,0,0,0,.07.39A1,1,0,0,0,15.55,9Zm3.89,4c-.22,0-.45-.07-.67-.12a9.44,9.44,0,0,1-1.31-.39,2,2,0,0,0-2.48,1l-.22.45a12.18,12.18,0,0,1-2.66-2,12.18,12.18,0,0,1-2-2.66L10.52,9a2,2,0,0,0,1-2.48,10.33,10.33,0,0,1-.39-1.31c-.05-.22-.09-.45-.12-.68a3,3,0,0,0-3-2.49h-3a3,3,0,0,0-3,3.41A19,19,0,0,0,18.53,21.91l.38,0a3,3,0,0,0,2-.76,3,3,0,0,0,1-2.25v-3A3,3,0,0,0,19.44,13Zm.5,6a1,1,0,0,1-.34.75,1.06,1.06,0,0,1-.82.25A17,17,0,0,1,4.07,5.22a1.09,1.09,0,0,1,.25-.82,1,1,0,0,1,.75-.34h3a1,1,0,0,1,1,.79q.06.41.15.81a11.12,11.12,0,0,0,.46,1.55l-1.4.65a1,1,0,0,0-.49,1.33,14.49,14.49,0,0,0,7,7,1,1,0,0,0,.76,0,1,1,0,0,0,.57-.52l.62-1.4a13.69,13.69,0,0,0,1.58.46q.4.09.81.15a1,1,0,0,1,.79,1Z"
 				fill="currentColor"
@@ -6589,12 +6517,7 @@ export const IncomingCall: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', def
 
 export const MissedCall: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
 	return (
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			viewBox="0 0 24 24"
-			id="call"
-			className={` block dark:text-[#AEAEAE] text-colorTextLightMode ${defaultSize}`}
-		>
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" id="call" className={` block  ${defaultSize}`}>
 			<path
 				d="M6,7.49a1,1,0,0,0,1-1V5.9L9.88,8.78a3,3,0,0,0,4.24,0l4.59-4.59a1,1,0,0,0,0-1.41,1,1,0,0,0-1.42,0L12.71,7.36a1,1,0,0,1-1.42,0L8.41,4.49H9a1,1,0,0,0,0-2H6a1,1,0,0,0-.92.61A1.09,1.09,0,0,0,5,3.49v3A1,1,0,0,0,6,7.49Zm15.94,7.36a16.27,16.27,0,0,0-19.88,0,2.69,2.69,0,0,0-1,2,2.66,2.66,0,0,0,.78,2.07L3.6,20.72A2.68,2.68,0,0,0,7.06,21l.47-.32a8.13,8.13,0,0,1,1-.55,1.85,1.85,0,0,0,1-2.3l-.09-.24a10.49,10.49,0,0,1,5.22,0l-.09.24a1.85,1.85,0,0,0,1,2.3,8.13,8.13,0,0,1,1,.55l.47.32a2.58,2.58,0,0,0,1.54.5,2.72,2.72,0,0,0,1.92-.79l1.81-1.82A2.66,2.66,0,0,0,23,16.83,2.69,2.69,0,0,0,21.94,14.85ZM20.8,17.49,19,19.3a.68.68,0,0,1-.86.1c-.19-.14-.38-.27-.59-.4a11.65,11.65,0,0,0-1.09-.61l.4-1.09a1,1,0,0,0-.6-1.28,12.42,12.42,0,0,0-8.5,0,1,1,0,0,0-.6,1.28l.4,1.1a9.8,9.8,0,0,0-1.1.6l-.58.4A.66.66,0,0,1,5,19.3L3.2,17.49A.67.67,0,0,1,3,17a.76.76,0,0,1,.28-.53,14.29,14.29,0,0,1,17.44,0A.76.76,0,0,1,21,17,.67.67,0,0,1,20.8,17.49Z"
 				fill="currentColor"
@@ -6605,13 +6528,7 @@ export const MissedCall: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defau
 
 export const CancelCall: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', defaultSize = 'w-5 h-5' }) => {
 	return (
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			viewBox="0 0 24 24"
-			id="call-cancel"
-			fill="none"
-			className={` block dark:text-[#AEAEAE] text-colorTextLightMode ${defaultSize}`}
-		>
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" id="call-cancel" fill="none" className={` block  ${defaultSize}`}>
 			<path
 				d="M19.85,5.56l1.79-1.79a1,1,0,1,0-1.41-1.41L18.44,4.15l-1.8-1.79a1,1,0,0,0-1.41,1.41L17,5.56l-1.79,1.8a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0L18.44,7l1.79,1.79a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM19.44,13c-.22,0-.45-.07-.67-.12a9.44,9.44,0,0,1-1.31-.39,2,2,0,0,0-2.48,1l-.22.45a12.18,12.18,0,0,1-2.66-2,12.18,12.18,0,0,1-2-2.66L10.52,9a2,2,0,0,0,1-2.48,10.33,10.33,0,0,1-.39-1.31c-.05-.22-.09-.45-.12-.68a3,3,0,0,0-3-2.49h-3a3,3,0,0,0-3,3.41A19,19,0,0,0,18.53,21.91l.38,0a3,3,0,0,0,2-.76,3,3,0,0,0,1-2.25v-3A3,3,0,0,0,19.44,13Zm.5,6a1,1,0,0,1-.34.75,1.06,1.06,0,0,1-.82.25A17,17,0,0,1,4.07,5.22a1.09,1.09,0,0,1,.25-.82,1,1,0,0,1,.75-.34h3a1,1,0,0,1,1,.79q.06.41.15.81a11.12,11.12,0,0,0,.46,1.55l-1.4.65a1,1,0,0,0-.49,1.33,14.49,14.49,0,0,0,7,7,1,1,0,0,0,.76,0,1,1,0,0,0,.57-.52l.62-1.4a13.69,13.69,0,0,0,1.58.46q.4.09.81.15a1,1,0,0,1,.79,1Z"
 				fill="currentColor"
@@ -6735,23 +6652,20 @@ export function CalendarIcon(props: React.HTMLAttributes<SVGElement>) {
 export const FileIcon: React.FC<IconProps> = ({ isWhite, defaultSize = 'w-5 h-5' }) => {
 	return (
 		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			width="100"
-			height="100"
-			viewBox="0 0 100 100"
-			id="attachment"
-			className={`hover:text-black dark:hover:text-white ${defaultSize} ${isWhite ? 'dark:text-white text-black' : 'dark:text-[#B5BAC1] text-colorTextLightMode'}`}
+			className={defaultSize}
+			data-testid="geist-icon"
+			height="16"
+			strokeLinejoin="round"
+			style={{ color: 'currentColor' }}
+			viewBox="0 0 16 16"
+			width="16"
 		>
-			<g id="_x37_7_Essential_Icons">
-				<path
-					id="Attachment"
-					fill="currentColor"
-					d="M18.8 85.1c-7.8-7.8-7.8-20.5 0-28.3L63.1 13c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8L38.6 76.7c-3.1 3.1-8.2 3.1-11.3 0-3.1-3.1-3.1-8.2 0-11.3l22.3-21.8c.8-.8 2.1-.8 2.8 0 .8.8.8 2.1 0 2.8L30.2 68.2c-1.5 1.5-1.5 4.1 0 5.6 1.6 1.6 4.1 1.6 5.7 0L80.2 30c3.9-3.9 3.9-10.2 0-14.1-3.9-3.9-10.2-3.9-14.1 0L21.7 59.7c-6.2 6.2-6.2 16.4 0 22.6 6.3 6.2 16.4 6.2 22.6 0l38.3-37.8c.8-.8 2.1-.8 2.8 0 .8.8.8 2.1 0 2.8L47.1 85.2c-7.8 7.7-20.4 7.8-28.3-.1z"
-				></path>
-			</g>
-			<g id="Info">
-				<path id="BORDER" fill="#00F" d="M664-510v1684h-1784V-510H664m8-8h-1800v1700H672V-518z"></path>
-			</g>
+			<path
+				fillRule="evenodd"
+				clipRule="evenodd"
+				d="M10.8591 1.70735C10.3257 1.70735 9.81417 1.91925 9.437 2.29643L3.19455 8.53886C2.56246 9.17095 2.20735 10.0282 2.20735 10.9222C2.20735 11.8161 2.56246 12.6734 3.19455 13.3055C3.82665 13.9376 4.68395 14.2927 5.57786 14.2927C6.47178 14.2927 7.32908 13.9376 7.96117 13.3055L14.2036 7.06304L14.7038 6.56287L15.7041 7.56321L15.204 8.06337L8.96151 14.3058C8.06411 15.2032 6.84698 15.7074 5.57786 15.7074C4.30875 15.7074 3.09162 15.2032 2.19422 14.3058C1.29682 13.4084 0.792664 12.1913 0.792664 10.9222C0.792664 9.65305 1.29682 8.43592 2.19422 7.53852L8.43666 1.29609C9.07914 0.653606 9.95054 0.292664 10.8591 0.292664C11.7678 0.292664 12.6392 0.653606 13.2816 1.29609C13.9241 1.93857 14.2851 2.80997 14.2851 3.71857C14.2851 4.62718 13.9241 5.49858 13.2816 6.14106L13.2814 6.14133L7.0324 12.3835C7.03231 12.3836 7.03222 12.3837 7.03213 12.3838C6.64459 12.7712 6.11905 12.9888 5.57107 12.9888C5.02297 12.9888 4.49731 12.7711 4.10974 12.3835C3.72217 11.9959 3.50444 11.4703 3.50444 10.9222C3.50444 10.3741 3.72217 9.8484 4.10974 9.46084L4.11004 9.46054L9.877 3.70039L10.3775 3.20051L11.3772 4.20144L10.8767 4.70131L5.11008 10.4612C5.11005 10.4612 5.11003 10.4612 5.11 10.4613C4.98779 10.5835 4.91913 10.7493 4.91913 10.9222C4.91913 11.0951 4.98782 11.2609 5.11008 11.3832C5.23234 11.5054 5.39817 11.5741 5.57107 11.5741C5.74398 11.5741 5.9098 11.5054 6.03206 11.3832L6.03233 11.3829L12.2813 5.14072C12.2814 5.14063 12.2815 5.14054 12.2816 5.14045C12.6586 4.7633 12.8704 4.25185 12.8704 3.71857C12.8704 3.18516 12.6585 2.6736 12.2813 2.29643C11.9041 1.91925 11.3926 1.70735 10.8591 1.70735Z"
+				fill="currentColor"
+			></path>
 		</svg>
 	);
 };
@@ -7122,7 +7036,7 @@ export function VoiceArowDownIcon(props: React.HTMLAttributes<SVGElement>) {
 
 export function VoiceGridIcon(props: React.HTMLAttributes<SVGElement>) {
 	return (
-		<svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" {...props}>
+		<svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" {...props}>
 			<path
 				fill="currentColor"
 				d="M15 11a2 2 0 0 1-2-2V4c0-1.1.9-2 2-2h5a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-5ZM2 20c0 1.1.9 2 2 2h5a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v5ZM13 20c0 1.1.9 2 2 2h5a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2h-5a2 2 0 0 0-2 2v5ZM2 9c0 1.1.9 2 2 2h5a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v5Z"
@@ -7133,7 +7047,7 @@ export function VoiceGridIcon(props: React.HTMLAttributes<SVGElement>) {
 
 export function VoiceFocusIcon(props: React.HTMLAttributes<SVGElement>) {
 	return (
-		<svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" {...props}>
+		<svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" {...props}>
 			<path
 				fill="currentColor"
 				d="M2 4c0-1.1.9-2 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4ZM2 15c0-1.1.9-2 2-2h5a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5ZM15 13a2 2 0 0 0-2 2v5c0 1.1.9 2 2 2h5a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2h-5Z"

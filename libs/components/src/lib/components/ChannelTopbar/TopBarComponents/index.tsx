@@ -9,7 +9,6 @@ import {
 	selectIdCanvas,
 	selectIsShowCanvas,
 	selectStatusMenu,
-	selectTheme,
 	selectTitle,
 	useAppDispatch,
 	useAppSelector
@@ -38,7 +37,6 @@ export const ChannelLabel = ({ channel }: { channel: IChannel | null | undefined
 
 	const isPrivate = channelParent?.id ? channelParent?.channel_private : channel?.channel_private;
 	const isActive = currentChannel?.channel_id === channel?.channel_id && !channelParent;
-	const theme = useSelector(selectTheme);
 	const currentClanId = useSelector(selectCurrentClanId);
 	const currentCanvasId = useSelector(selectIdCanvas);
 	const canvasById = useSelector((state) => selectCanvasEntityById(state, currentChannel?.channel_id, currentCanvasId));
@@ -98,8 +96,8 @@ export const ChannelLabel = ({ channel }: { channel: IChannel | null | undefined
 				{isPrivate === undefined && isChannelVoice && <Icons.Speaker defaultSize="w-6 h-6" defaultFill="text-contentTertiary" />}
 				{isPrivate === undefined && isChannelStream && <Icons.Stream defaultSize="w-6 h-6" defaultFill="text-contentTertiary" />}
 				{!isAgeRestrictedChannel && isPrivate !== 1 && isChannelText && <Icons.Hashtag defaultSize="w-6 h-6" />}
-				{!isPrivate && isAppChannel && <Icons.AppChannelIcon className={'w-6 h-6'} fill={theme} />}
-				{isPrivate && isAppChannel ? <Icons.PrivateAppChannelIcon className={'w-6 h-6'} fill={theme} /> : null}
+				{!isPrivate && isAppChannel && <Icons.AppChannelIcon className={'w-6 h-6'} />}
+				{isPrivate && isAppChannel ? <Icons.PrivateAppChannelIcon className={'w-6 h-6'} /> : null}
 			</div>
 
 			<ChannelLabelContent
@@ -118,7 +116,7 @@ export const ChannelLabel = ({ channel }: { channel: IChannel | null | undefined
 						<Icons.ArrowRight />
 						<Icons.CanvasIcon defaultSize="w-6 h-6 min-w-6" />
 						<p
-							className={`mt-[2px] text-base font-semibold cursor-default one-line ${currentChannel?.channel_id === channel?.channel_id ? 'dark:text-white text-colorTextLightMode' : 'dark:colorTextLightMode text-colorTextLightMode'}`}
+							className={`mt-[2px] text-base font-semibold cursor-default one-line ${currentChannel?.channel_id === channel?.channel_id ? 'text-theme-primary' : 'dark:colorTextLightMode text-colorTextLightMode'}`}
 						>
 							{title ? title : 'Untitled'}
 						</p>
@@ -174,7 +172,7 @@ const ChannelLabelContent: React.FC<ChannelLabelContentProps> = ({
 	return (
 		<>
 			<p
-				className={`mr-2 text-base font-semibold mt-[2px] max-w-[200px] overflow-x-hidden text-ellipsis one-line ${closeMenu && !statusMenu ? 'ml-[56px]' : 'ml-7 '} ${isActive ? 'dark:text-white text-colorTextLightMode cursor-default' : 'dark:text-textSecondary text-colorTextLightMode cursor-pointer'} ${isChannelVoice && 'text-white'}`}
+				className={`mr-2 text-base font-semibold mt-[2px] max-w-[200px] overflow-x-hidden text-ellipsis one-line ${closeMenu && !statusMenu ? 'ml-[56px]' : 'ml-7 '} ${isActive ? 'text-theme-primary cursor-default' : 'dark:text-textSecondary text-colorTextLightMode cursor-pointer'} ${isChannelVoice && 'text-white'}`}
 				onClick={handleRedirect}
 			>
 				{channelParent?.channel_label ? channelParent?.channel_label : channel?.channel_label}
@@ -183,12 +181,12 @@ const ChannelLabelContent: React.FC<ChannelLabelContentProps> = ({
 				<div className="flex flex-row items-center gap-2">
 					<Icons.ArrowRight />
 					{channelParent?.channel_label && channel.channel_private === ChannelStatusEnum.isPrivate ? (
-						<Icons.ThreadIconLocker className="dark:text-[#B5BAC1] text-colorTextLightMode min-w-6" />
+						<Icons.ThreadIconLocker className="text-theme-primary min-w-6" />
 					) : (
 						<Icons.ThreadIcon defaultSize="w-6 h-6 min-w-6" />
 					)}
 					<p
-						className={`mt-[2px] text-base font-semibold cursor-default one-line ${currentChannel?.channel_id === channel?.channel_id ? 'dark:text-white text-colorTextLightMode' : 'dark:colorTextLightMode text-colorTextLightMode'}`}
+						className={`mt-[2px] text-base font-semibold cursor-default one-line ${currentChannel?.channel_id === channel?.channel_id ? 'text-theme-primary' : 'dark:colorTextLightMode text-colorTextLightMode'}`}
 					>
 						{channel.channel_label}
 					</p>

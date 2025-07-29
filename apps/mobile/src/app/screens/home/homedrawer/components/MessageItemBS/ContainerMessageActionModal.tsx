@@ -2,11 +2,12 @@
 /* eslint-disable no-console */
 import { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useChannelMembers, useChatSending, useDirect, usePermissionChecker, useSendInviteMessage } from '@mezon/core';
-import { ActionEmitEvent, CheckIcon, STORAGE_MY_USER_ID, formatContentEditMessage, load } from '@mezon/mobile-components';
+import { ActionEmitEvent, CheckIcon, CloseIcon, STORAGE_MY_USER_ID, formatContentEditMessage, load } from '@mezon/mobile-components';
 import { Colors, baseColor, size, useTheme } from '@mezon/mobile-ui';
 import {
 	MessagesEntity,
 	appActions,
+	channelMetaActions,
 	clansActions,
 	directActions,
 	getStore,
@@ -16,6 +17,7 @@ import {
 	selectCurrentChannel,
 	selectCurrentChannelId,
 	selectCurrentClanId,
+	selectCurrentTopicId,
 	selectDmGroupCurrent,
 	selectDmGroupCurrentId,
 	selectMessageEntitiesByChannelId,
@@ -77,6 +79,7 @@ export const ContainerMessageActionModal = React.memo((props: IReplyBottomSheet)
 	const currentDmId = useSelector(selectDmGroupCurrentId);
 	const currentChannel = useSelector(selectCurrentChannel);
 	const currentDmGroup = useSelector(selectDmGroupCurrent(currentDmId ?? ''));
+	const currentTopicId = useSelector(selectCurrentTopicId);
 	const navigation = useNavigation<any>();
 	const { createDirectMessageWithUser } = useDirect();
 	const { sendInviteMessage } = useSendInviteMessage();
@@ -102,19 +105,19 @@ export const ContainerMessageActionModal = React.memo((props: IReplyBottomSheet)
 
 			dispatch(
 				messagesActions.remove({
-					channelId: currentDmId ? currentDmId : currentChannelId,
+					channelId: currentDmId ? currentDmId : currentTopicId || currentChannelId,
 					messageId
 				})
 			);
 			await socket.removeChatMessage(
 				currentDmId ? '0' : currentClanId || '',
-				currentDmId ? currentDmId : currentChannelId,
+				currentDmId ? currentDmId : currentTopicId || currentChannelId,
 				mode,
 				isPublic,
 				messageId
 			);
 		},
-		[currentChannel, currentChannelId, currentDmId, dispatch, mode, socketRef]
+		[currentChannel, currentChannelId, currentDmId, currentTopicId, dispatch, mode, socketRef, store]
 	);
 
 	const onConfirmAction = useCallback(
@@ -147,8 +150,8 @@ export const ContainerMessageActionModal = React.memo((props: IReplyBottomSheet)
 			mode === ChannelStreamMode.STREAM_MODE_CHANNEL || mode === ChannelStreamMode.STREAM_MODE_THREAD ? currentChannel : currentDmGroup
 	});
 
-	const [isCanManageThread, isCanManageChannel, canSendMessage] = usePermissionChecker(
-		[EOverriddenPermission.manageThread, EPermission.manageChannel, EOverriddenPermission.sendMessage],
+	const [isClanOwner, isCanManageThread, isCanManageChannel, canSendMessage] = usePermissionChecker(
+		[EPermission.clanOwner, EOverriddenPermission.manageThread, EPermission.manageChannel, EOverriddenPermission.sendMessage],
 		currentChannelId ?? ''
 	);
 	const [isAllowDelMessage] = usePermissionChecker([EOverriddenPermission.deleteMessage], message?.channel_id ?? '');
@@ -195,7 +198,7 @@ export const ContainerMessageActionModal = React.memo((props: IReplyBottomSheet)
 					});
 					return;
 				}
-				handleReact(mode ?? ChannelStreamMode.STREAM_MODE_CHANNEL, message.id, EMOJI_GIVE_COFFEE.emoji_id, EMOJI_GIVE_COFFEE.emoji, userId);
+				handleReact(mode ?? ChannelStreamMode.STREAM_MODE_CHANNEL, message.id, EMOJI_GIVE_COFFEE.emoji_id, EMOJI_GIVE_COFFEE.emoji);
 				const response = await createDirectMessageWithUser(message?.sender_id, message?.user?.name, message?.user?.username, message?.avatar);
 				if (response?.channel_id) {
 					sendInviteMessage(
@@ -212,8 +215,7 @@ export const ContainerMessageActionModal = React.memo((props: IReplyBottomSheet)
 			console.error('Failed to give cofffee message', error);
 		}
 	};
-
-	const listPinMessages = useSelector(selectPinMessageByChannelId(message?.channel_id));
+	const listPinMessages = useAppSelector((state) => selectPinMessageByChannelId(state, message?.channel_id as string));
 	const isDM = useMemo(() => {
 		return [ChannelStreamMode.STREAM_MODE_DM, ChannelStreamMode.STREAM_MODE_GROUP].includes(mode);
 	}, [mode]);
@@ -302,15 +304,15 @@ export const ContainerMessageActionModal = React.memo((props: IReplyBottomSheet)
 	};
 
 	const downloadAndSaveMedia = async (media) => {
-		const url = media.url;
+		const url = media?.url;
 		const filetype = media?.filetype;
 
-		const type = filetype.split('/');
+		const type = filetype?.split?.('/');
 		try {
-			const filePath = await downloadImage(url, type[1]);
+			const filePath = await downloadImage(url, type?.[1]);
 
 			if (filePath) {
-				await saveImageToCameraRoll('file://' + filePath, type[0]);
+				await saveImageToCameraRoll('file://' + filePath, type?.[0], true);
 			}
 		} catch (error) {
 			console.error(`Error downloading or saving media from URL: ${url}`, error);
@@ -318,14 +320,19 @@ export const ContainerMessageActionModal = React.memo((props: IReplyBottomSheet)
 	};
 
 	const handleActionSaveImage = async () => {
-		const media = message?.attachments;
-		dispatch(appActions.setLoadingMainMobile(true));
-		if (media && media.length > 0) {
-			const promises = media?.map(downloadAndSaveMedia);
-			await Promise.all(promises);
+		try {
+			const media = message?.attachments?.length > 0 ? message?.attachments : message?.content?.embed?.map((item) => item?.image);
+			dispatch(appActions.setLoadingMainMobile(true));
+			if (media && media.length > 0) {
+				const promises = media?.map(downloadAndSaveMedia);
+				await Promise.all(promises);
+			}
+		} catch (error) {
+			console.error('Error saving image:', error);
+		} finally {
+			dispatch(appActions.setLoadingMainMobile(false));
+			onClose();
 		}
-		dispatch(appActions.setLoadingMainMobile(false));
-		onClose();
 	};
 
 	const handleActionReportMessage = () => {
@@ -373,6 +380,45 @@ export const ContainerMessageActionModal = React.memo((props: IReplyBottomSheet)
 			onClose();
 		} catch (error) {
 			console.error('Error marking message:', error);
+		}
+	};
+
+	const handleMarkUnread = async () => {
+		try {
+			await dispatch(
+				messagesActions.updateLastSeenMessage({
+					clanId: message?.clan_id || '',
+					channelId: message?.channel_id,
+					messageId: message?.id,
+					mode: message?.mode || 0,
+					badge_count: 0,
+					message_time: message.create_time_seconds
+				})
+			);
+			dispatch(
+				channelMetaActions.setChannelLastSeenTimestamp({
+					channelId: message?.channel_id as string,
+					timestamp: message.create_time_seconds || Date.now()
+				})
+			);
+			Toast.show({
+				type: 'success',
+				props: {
+					text2: t('toast.markMessage'),
+					leadingIcon: <CheckIcon color={Colors.green} />
+				}
+			});
+		} catch (error) {
+			Toast.show({
+				type: 'error',
+				props: {
+					text2: t('toast.markMessageUnreadFailed'),
+					leadingIcon: <CloseIcon color={Colors.red} />
+				}
+			});
+			console.error('Error marking message as unread:', error);
+		} finally {
+			onClose();
 		}
 	};
 
@@ -426,6 +472,9 @@ export const ContainerMessageActionModal = React.memo((props: IReplyBottomSheet)
 			case EMessageActionType.ResendMessage:
 				handleResendMessage();
 				break;
+			case EMessageActionType.MarkUnRead:
+				handleMarkUnread();
+				break;
 			case EMessageActionType.TopicDiscussion:
 				handleActionTopicDiscussion();
 				break;
@@ -468,6 +517,8 @@ export const ContainerMessageActionModal = React.memo((props: IReplyBottomSheet)
 				return <MezonIconCDN icon={IconCDN.giftIcon} width={size.s_18} height={size.s_18} color={themeValue.text} />;
 			case EMessageActionType.ResendMessage:
 				return <MezonIconCDN icon={IconCDN.markUnreadIcon} width={size.s_20} height={size.s_20} color={themeValue.text} />;
+			case EMessageActionType.MarkUnRead:
+				return <MezonIconCDN icon={IconCDN.markUnreadIcon} width={size.s_20} height={size.s_20} color={themeValue.text} />;
 			case EMessageActionType.TopicDiscussion:
 				return <MezonIconCDN icon={IconCDN.discussionIcon} width={size.s_20} height={size.s_20} color={themeValue.text} />;
 			case EMessageActionType.MarkMessage:
@@ -480,8 +531,9 @@ export const ContainerMessageActionModal = React.memo((props: IReplyBottomSheet)
 	const messageActionList = useMemo(() => {
 		const isMyMessage = userId === message?.user?.id;
 		const isMessageError = message?.isError;
+		const isHidePinMessage = !!currentTopicId;
 		const isUnPinMessage = listPinMessages.some((pinMessage) => pinMessage?.message_id === message?.id);
-		const isHideCreateThread = isDM || !isCanManageThread || !isCanManageChannel || currentChannel?.parent_id !== '0';
+		const isHideCreateThread = isDM || ((!isCanManageThread || !isCanManageChannel) && !isClanOwner) || currentChannel?.parent_id !== '0';
 		const isHideThread = currentChannel?.parent_id !== '0';
 		const isHideDeleteMessage = !((isAllowDelMessage && !isDM) || isMyMessage);
 		const isHideTopicDiscussion =
@@ -504,6 +556,7 @@ export const ContainerMessageActionModal = React.memo((props: IReplyBottomSheet)
 		};
 
 		const listOfActionShouldHide = [
+			isHidePinMessage && EMessageActionType.PinMessage,
 			isUnPinMessage ? EMessageActionType.PinMessage : EMessageActionType.UnPinMessage,
 			(!isShowForwardAll() || isHideThread) && EMessageActionType.ForwardAllMessages,
 			isHideCreateThread && EMessageActionType.CreateThread,
@@ -524,8 +577,9 @@ export const ContainerMessageActionModal = React.memo((props: IReplyBottomSheet)
 			);
 		}
 		const mediaList =
-			message?.attachments?.length > 0 &&
-			message.attachments?.every((att) => att?.filetype?.includes('image') || att?.filetype?.includes('video'))
+			(message?.attachments?.length > 0 &&
+				message.attachments?.every((att) => att?.filetype?.includes('image') || att?.filetype?.includes('video'))) ||
+			message?.content?.embed?.some((embed) => embed?.image)
 				? []
 				: [EMessageActionType.SaveImage, EMessageActionType.CopyMediaLink];
 
@@ -551,6 +605,7 @@ export const ContainerMessageActionModal = React.memo((props: IReplyBottomSheet)
 		isCanManageThread,
 		isCanManageChannel,
 		currentChannel?.parent_id,
+		isClanOwner,
 		isAllowDelMessage,
 		canSendMessage,
 		currentChannelId,
@@ -558,18 +613,18 @@ export const ContainerMessageActionModal = React.memo((props: IReplyBottomSheet)
 		isAnonymous,
 		messagePosition,
 		convertedAllMessagesEntities,
-		t
+		t,
+		currentTopicId
 	]);
 
 	const handleReact = useCallback(
-		async (mode, messageId, emoji_id: string, emoji: string, senderId) => {
+		async (mode, messageId, emoji_id: string, emoji: string) => {
 			if (currentChannel?.parent_id !== '0' && currentChannel?.active === ThreadStatus.activePublic) {
 				await dispatch(
 					threadsActions.updateActiveCodeThread({ channelId: currentChannel?.channel_id ?? '', activeCode: ThreadStatus.joined })
 				);
 				joinningToThread(currentChannel, [userId ?? '']);
 			}
-
 			DeviceEventEmitter.emit(ActionEmitEvent.ON_REACTION_MESSAGE_ITEM, {
 				id: emoji_id,
 				mode: mode ?? ChannelStreamMode.STREAM_MODE_CHANNEL,
@@ -578,28 +633,21 @@ export const ContainerMessageActionModal = React.memo((props: IReplyBottomSheet)
 				channelId: message?.channel_id ?? '',
 				emojiId: emoji_id ?? '',
 				emoji: emoji?.trim() ?? '',
-				senderId: senderId ?? '',
+				senderId: message?.sender_id ?? '',
 				countToRemove: 1,
 				actionDelete: false,
-				topicId: message.topic_id || ''
+				topicId: currentTopicId || ''
 			} as IReactionMessageProps);
 
 			onClose();
 		},
-		[currentChannel, dispatch, joinningToThread, message?.channel_id, message?.clan_id, message?.topic_id, onClose, userId]
+		[currentChannel, currentTopicId, dispatch, joinningToThread, message?.channel_id, message?.clan_id, message?.sender_id, onClose, userId]
 	);
 
 	const renderMessageItemActions = () => {
 		return (
 			<View style={styles.messageActionsWrapper}>
-				<RecentEmojiMessageAction
-					messageId={message.id}
-					mode={mode}
-					type={type}
-					userId={userId}
-					handleReact={handleReact}
-					setIsShowEmojiPicker={setIsShowEmojiPicker}
-				/>
+				<RecentEmojiMessageAction messageId={message.id} mode={mode} handleReact={handleReact} setIsShowEmojiPicker={setIsShowEmojiPicker} />
 				<View style={styles.messageActionGroup}>
 					{messageActionList.frequent.map((action) => {
 						return (
@@ -641,9 +689,9 @@ export const ContainerMessageActionModal = React.memo((props: IReplyBottomSheet)
 				await socketRef.current.writeVoiceReaction([emoji_id], channelId);
 				return;
 			}
-			await handleReact(mode ?? ChannelStreamMode.STREAM_MODE_CHANNEL, message?.id, emoji_id, emoij, userId);
+			await handleReact(mode ?? ChannelStreamMode.STREAM_MODE_CHANNEL, message?.id, emoji_id, emoij);
 		},
-		[channelId, handleReact, isOnlyEmojiPicker, message, mode, socketRef, userId]
+		[channelId, handleReact, isOnlyEmojiPicker, message, mode, socketRef]
 	);
 
 	return (

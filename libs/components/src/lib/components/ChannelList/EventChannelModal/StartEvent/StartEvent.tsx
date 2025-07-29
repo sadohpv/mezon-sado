@@ -1,7 +1,6 @@
-import { useEscapeKeyClose, useEventManagementQuantity } from '@mezon/core';
+import { useEventManagementQuantity } from '@mezon/core';
 import { selectCurrentClanId, selectEventsByClanId, useAppSelector } from '@mezon/store';
 import { Icons } from '@mezon/ui';
-import { RefObject } from 'react';
 import { useSelector } from 'react-redux';
 import ListEventManagement from './ListEventManagement';
 
@@ -9,7 +8,6 @@ type StartEventModalProps = {
 	onClose: () => void;
 	onOpenCreate: () => void;
 	onEventUpdateId: (eventId: string) => void;
-	rootRef: RefObject<HTMLElement>;
 };
 
 export const StartEventModal = (props: StartEventModalProps) => {
@@ -17,11 +15,10 @@ export const StartEventModal = (props: StartEventModalProps) => {
 	const { numberEventManagement } = useEventManagementQuantity();
 	const currentClanId = useSelector(selectCurrentClanId);
 	const allEventManagement = useAppSelector((state) => selectEventsByClanId(state, currentClanId as string));
-	useEscapeKeyClose(props.rootRef, onClose);
 
 	return (
 		<>
-			<div className="dark:bg-[#1E1F22] bg-bgLightModeSecond dark:text-white text-black flex justify-between items-center p-4">
+			<div className=" flex justify-between items-center p-4 border-b-theme-primary">
 				<div className="flex items-center gap-x-4">
 					<div className="gap-x-2 flex items-center">
 						<Icons.IconEvents />
@@ -32,17 +29,17 @@ export const StartEventModal = (props: StartEventModalProps) => {
 						</h4>
 					</div>
 					<div className="w-[0.1px] h-4 bg-gray-400"></div>
-					<div className="bg-primary px-2 py-1 rounded-md text-white font-medium cursor-pointer" onClick={onOpenCreate}>
+					<div className="btn-primary btn-primary-hover  px-2 py-1 rounded-lg text-white font-medium cursor-pointer" onClick={onOpenCreate}>
 						Create Event
 					</div>
 				</div>
-				<span className="text-5xl leading-3 dark:hover:text-white hover:text-black cursor-pointer" onClick={onClose}>
+				<span className="text-5xl leading-3 text-theme-primary-hover cursor-pointer" onClick={onClose}>
 					×
 				</span>
 			</div>
 
 			{allEventManagement.length !== 0 ? (
-				<div className="dark:bg-[#313339] bg-white h-fit min-h-80 max-h-[80vh]  overflow-y-scroll hide-scrollbar p-4 gap-y-4 flex flex-col">
+				<div className=" h-fit min-h-80 max-h-[80vh]  overflow-y-scroll hide-scrollbar p-4 gap-y-4 flex flex-col">
 					<ListEventManagement
 						allEventManagement={allEventManagement}
 						openModelUpdate={onOpenCreate}
@@ -51,8 +48,8 @@ export const StartEventModal = (props: StartEventModalProps) => {
 					/>
 				</div>
 			) : (
-				<div className="dark:bg-[#313339] bg-white h-80 flex justify-center items-center">
-					<Icons.IconEvents defaultSize="size-[100px] dark:text-contentTertiary text-colorTextLightMode" />
+				<div className=" h-80 flex justify-center items-center">
+					<Icons.IconEvents defaultSize="size-[100px] " />
 				</div>
 			)}
 		</>

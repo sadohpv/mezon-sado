@@ -1,8 +1,9 @@
 import { useEscapeKeyClose } from '@mezon/core';
 import { createSticker, emojiSuggestionActions, selectCurrentClanId, updateSticker, useAppDispatch } from '@mezon/store';
 import { handleUploadEmoticon, useMezon } from '@mezon/transport';
-import { Button, Checkbox, Icons, InputField } from '@mezon/ui';
-import { LIMIT_SIZE_UPLOAD_IMG, resizeFileImage } from '@mezon/utils';
+
+import { Button, ButtonLoading, Checkbox, Icons, InputField } from '@mezon/ui';
+import { LIMIT_SIZE_UPLOAD_IMG, resizeFileImage, sanitizeUrlSecure } from '@mezon/utils';
 import { Snowflake } from '@theinternetfolks/snowflake';
 import { ClanEmoji, ClanSticker } from 'mezon-js';
 import { ApiClanStickerAddRequest, MezonUpdateClanEmojiByIdBody } from 'mezon-js/api.gen';
@@ -101,7 +102,7 @@ const ModalSticker = ({ graphic, handleCloseModal, type }: ModalEditStickerProps
 			handleCloseModal();
 			return;
 		}
-		handleCreateSticker();
+		await handleCreateSticker();
 	};
 
 	const handleCreateSticker = async () => {
@@ -143,7 +144,7 @@ const ModalSticker = ({ graphic, handleCloseModal, type }: ModalEditStickerProps
 		};
 		if (isForSale) {
 			const idPreview = Snowflake.generate();
-			const fileBlur = await createBlurredImageFile(resizeFile);
+			const fileBlur = await createBlurredWatermarkedImageFile(resizeFile, 'SOLD', 2);
 			const pathPreview = (isSticker ? 'stickers/' : 'emojis/') + idPreview + '.webp';
 			await handleUploadEmoticon(client, session, pathPreview, fileBlur as File);
 			request.id = idPreview;
@@ -184,7 +185,7 @@ const ModalSticker = ({ graphic, handleCloseModal, type }: ModalEditStickerProps
 
 	const isForSaleRef = useRef<HTMLInputElement | null>(null);
 
-	function createBlurredImageFile(originalFile: File, blurAmount = 7) {
+	function createBlurredWatermarkedImageFile(originalFile: File, watermarkText = 'SOLD', blurAmount = 2) {
 		return new Promise((resolve, reject) => {
 			const img = new Image();
 			img.src = URL.createObjectURL(originalFile);
@@ -201,10 +202,25 @@ const ModalSticker = ({ graphic, handleCloseModal, type }: ModalEditStickerProps
 				ctx.filter = `blur(${blurAmount}px)`;
 				ctx.drawImage(img, 0, 0);
 
+				ctx.filter = 'none';
+				const fontSize = Math.floor(canvas.width / 2);
+				ctx.font = `bold ${fontSize}px sans-serif`;
+				ctx.fillStyle = 'rgba(128, 128, 128, 0.35)';
+				ctx.textAlign = 'center';
+				ctx.textBaseline = 'middle';
+
+				ctx.save();
+				ctx.translate(canvas.width / 2, canvas.height / 2);
+				ctx.rotate((45 * Math.PI) / 180);
+
+				ctx.fillText(watermarkText, 0, 0);
+
+				ctx.restore();
+
 				canvas.toBlob((blob) => {
 					if (blob) {
-						const newFile = new File([blob], 'blurred-image.png', { type: 'image/png' });
-						resolve(newFile); // trả về file có thể dùng tiếp
+						const newFile = new File([blob], 'blurred-watermarked.png', { type: 'image/png' });
+						resolve(newFile);
 					} else {
 						reject(new Error('Không thể chuyển canvas thành file.'));
 					}
@@ -217,44 +233,54 @@ const ModalSticker = ({ graphic, handleCloseModal, type }: ModalEditStickerProps
 
 	return (
 		<>
-			<div ref={modalRef} tabIndex={-1} className={'relative w-full h-[468px] flex flex-col dark:bg-bgPrimary text-textPrimary '}>
-				<div className={`w-full flex-1 flex flex-col overflow-hidden overflow-y-auto gap-4`}>
-					<div className={`flex flex-col gap-2 items-center select-none dark:text-textPrimary text-textPrimaryLight`}>
-						<p className="text-2xl font-semibold dark:text-bgTextarea text-textPrimaryLight">Upload a file</p>
+			<div
+				ref={modalRef}
+				tabIndex={-1}
+				className={'relative w-full flex flex-col max-w-[684px] flex-1 bg-theme-setting-primary rounded-lg overflow-hidden '}
+			>
+				<div className="flex-1 flex items-center justify-end border-b-theme-primary rounded-t p-4">
+					<Button
+						className="rounded-full aspect-square w-6 h-6 text-5xl leading-3 !p-0 opacity-50 text-theme-primary-hover"
+						onClick={handleCloseModal}
+					>
+						×
+					</Button>
+				</div>
+				<div className={`w-full flex-1 flex flex-col  overflow-y-auto gap-4 relative px-5 py-4 bg-transparent hide-scrollbar`}>
+					<div className={`flex flex-col gap-2 items-center select-none `}>
+						<p className="text-2xl font-semibold text-theme-primary-active">Upload a file</p>
 						<p className="text-base">File should be APNG, PNG, or GIF (512KB max)</p>
 					</div>
-					<div className={'flex flex-col select-none dark:text-textPrimary text-textPrimaryLight'}>
-						<p className="text-xs font-bold h-6 uppercase">PREVIEW</p>
-						<div
-							className={
-								'flex items-center justify-center rounded-lg border-[0.08px] dark:border-borderDivider border-borderLightTabs overflow-hidden'
-							}
-						>
-							<div className={'relative h-56 w-[50%] flex items-center justify-center bg-bgPrimary'}>
+					<div className={'flex flex-col select-none '}>
+						<p className="text-xs font-bold h-6 uppercase text-theme-primary-active">PREVIEW</p>
+						<div className={'flex items-center justify-center rounded-lg border-theme-primary overflow-hidden'}>
+							<div className={'relative h-56 w-[50%] flex items-center justify-center bg-item-theme '}>
 								{editingGraphic.source ? (
 									<PreviewStickerBox preview={editingGraphic.source} />
 								) : (
-									<Icons.UploadImage className="w-16 h-16 text-bgLightModeSecond" />
+									<Icons.UploadImage className="w-16 h-16 " />
 								)}
 							</div>
-							<div className={'h-56 w-[50%] flex items-center justify-center bg-bgLightModeSecond'}>
+							<div className={'h-56 w-[50%] flex items-center justify-center '}>
 								{editingGraphic.source ? (
 									<PreviewStickerBox preview={editingGraphic.source} />
 								) : (
-									<Icons.UploadImage className="w-16 h-16 text-bgPrimary" />
+									<Icons.UploadImage className="w-16 h-16" />
 								)}
 							</div>
 						</div>
 					</div>
-					<div className={'flex flex-row gap-4 dark:text-textPrimary text-textPrimaryLight'}>
+					<div className={'flex flex-row gap-4 '}>
 						<div className={'w-1/2 flex flex-col gap-2'}>
-							<p className={`text-xs font-bold uppercase select-none`}>FILE {graphic && ' (THIS CANNOT BE EDITED)'}</p>
+							<p className={`text-xs font-bold uppercase select-none text-theme-primary-active`}>
+								FILE {graphic && ' (THIS CANNOT BE EDITED)'}
+							</p>
 							<div
-								className={`dark:bg-bgSecondary bg-bgLightSecondary border-[0.08px] dark:border-textLightTheme border-borderLightTabs flex flex-row rounded justify-between items-center py-[6px] px-3 dark:text-textPrimary box-border ${editingGraphic.fileName && 'cursor-not-allowed'}`}
+								className={` border-theme-primary flex flex-row rounded-lg justify-between items-center py-[6px] px-3  ${editingGraphic.fileName && 'cursor-not-allowed'}`}
 							>
 								<p className="select-none flex-1 truncate">{editingGraphic.fileName ?? 'Choose a file'}</p>
 								{!graphic && (
-									<button className="hover:bg-hoverPrimary bg-primary rounded-[4px] py-[2px] px-2 text-nowrap relative select-none text-white overflow-hidden">
+									<button className="btn-primary btn-primary-hover rounded-lg py-[2px] px-2 text-nowrap relative select-none overflow-hidden">
 										Browse
 										<input
 											className="absolute w-full h-full cursor-pointer top-0 right-0 z-10 opacity-0 file:cursor-pointer"
@@ -271,16 +297,16 @@ const ModalSticker = ({ graphic, handleCloseModal, type }: ModalEditStickerProps
 							</div>
 						</div>
 						<div className={'w-1/2 flex flex-col gap-2'}>
-							<p className={`text-xs font-bold uppercase select-none`}>Sticker Name</p>
+							<p className={`text-xs font-bold uppercase select-none text-theme-primary-active`}>Sticker Name</p>
 							<div
 								className={
-									'bg-bgLightSearchHover dark:bg-bgTertiary border-[0.08px] dark:border-textLightTheme border-borderLightTabs flex flex-row rounded justify-between items-center p-2 pl-3 dark:text-textPrimary box-border overflow-hidden'
+									'border-theme-primary bg-input-secondary flex flex-row rounded-lg justify-between items-center p-2 pl-3  box-border overflow-hidden'
 								}
 							>
 								<InputField
 									type="string"
 									placeholder="ex. cat hug"
-									className={'px-[8px] bg-bgLightSearchHover dark:bg-bgTertiary'}
+									className={'px-[8px] bg-transparent '}
 									value={editingGraphic.shortname}
 									onChange={handleChangeShortName}
 									onKeyDown={handleOnEnter}
@@ -288,25 +314,23 @@ const ModalSticker = ({ graphic, handleCloseModal, type }: ModalEditStickerProps
 							</div>
 						</div>
 					</div>
-				</div>
-				<div className={`absolute w-full h-[54px] bottom-0 flex items-end justify-end select-none gap-2`}>
-					<div className="flex items-center flex-1 h-full gap-2">
-						<Checkbox ref={isForSaleRef} id="sale_item" className="accent-blue-600 w-4 h-4" />
-						<label htmlFor="sale_item" className="!text-textPrimaryLight dark:!text-textPrimary">
-							This is for sale
-						</label>
+					<div className={`w-full h-[54px] bottom-0 flex items-center justify-end select-none gap-2`}>
+						<div className="flex items-center flex-1 h-full gap-2">
+							<Checkbox ref={isForSaleRef} id="sale_item" className="accent-blue-600 w-4 h-4" />
+							<label htmlFor="sale_item" className="">
+								This is for sale
+							</label>
+						</div>
+						<Button className="px-2 py-1 border-none hover:underline hover:bg-transparent bg-transparent" onClick={handleCloseModal}>
+							Never Mind
+						</Button>
+						<ButtonLoading
+							className="px-2 py-1 h-9 min-w-fit btn-primary btn-primary-hover rounded-lg"
+							label="Upload"
+							disabled={validateSaveChange}
+							onClick={onSaveChange}
+						/>
 					</div>
-					<Button
-						label="Never Mind"
-						className=" !text-textPrimaryLight dark:!text-textPrimary  rounded px-4 py-1.5 hover:underline hover:bg-transparent bg-transparent"
-						onClick={handleCloseModal}
-					/>
-					<Button
-						label="Save Changes"
-						className={`bg-blue-600 rounded-[4px] px-4 py-1.5 text-nowrap text-white`}
-						disable={validateSaveChange}
-						onClick={onSaveChange}
-					/>
 				</div>
 			</div>
 
@@ -319,9 +343,15 @@ const ModalSticker = ({ graphic, handleCloseModal, type }: ModalEditStickerProps
 export default ModalSticker;
 
 const PreviewStickerBox = ({ preview }: { preview: string }) => {
+	const sanitizedPreview = sanitizeUrlSecure(preview, {
+		allowedProtocols: ['https:', 'http:', 'data:', 'blob:'],
+		allowedDomains: ['cdn.mezon.ai', 'tenor.com'],
+		maxLength: 2048
+	});
+
 	return (
 		<div className={'m-auto absolute w-40 aspect-square overflow-hidden flex items-center justify-center'}>
-			<img className="h-full w-auto object-cover" src={preview} />
+			<img className="h-full w-auto object-cover" alt="sticker" src={sanitizedPreview} />
 		</div>
 	);
 };

@@ -1,6 +1,6 @@
 import { ActionEmitEvent, QUALITY_IMAGE_UPLOAD } from '@mezon/mobile-components';
 import { useTheme } from '@mezon/mobile-ui';
-import { createEmojiSetting, selectCurrentClanId, selectEmojiByClanId, useAppDispatch } from '@mezon/store-mobile';
+import { createEmojiSetting, selectCurrentClanId, selectEmojiByClanId, useAppDispatch, useAppSelector } from '@mezon/store-mobile';
 import { handleUploadEmoticon, useMezon } from '@mezon/transport';
 import { LIMIT_SIZE_UPLOAD_IMG } from '@mezon/utils';
 import { Snowflake } from '@theinternetfolks/snowflake';
@@ -8,7 +8,7 @@ import { Buffer as BufferMobile } from 'buffer';
 import { ApiClanEmojiCreateRequest } from 'mezon-js/api.gen';
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DeviceEventEmitter, Dimensions, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { DeviceEventEmitter, Dimensions, Platform, Pressable, Text, View } from 'react-native';
 import { Image as ImageCompressor } from 'react-native-compressor';
 import RNFS from 'react-native-fs';
 import { Image, openPicker } from 'react-native-image-crop-picker';
@@ -29,7 +29,7 @@ export function ClanEmojiSetting({ navigation }: MenuClanScreenProps<ClanSetting
 	const currentClanId = useSelector(selectCurrentClanId) || '';
 	const { sessionRef, clientRef } = useMezon();
 	const { t } = useTranslation(['clanEmojiSetting']);
-	const emojiList = useSelector(selectEmojiByClanId(currentClanId || ''));
+	const emojiList = useAppSelector((state) => selectEmojiByClanId(state, currentClanId || ''));
 
 	useEffect(() => {
 		navigation.setOptions({
@@ -102,10 +102,10 @@ export function ClanEmojiSetting({ navigation }: MenuClanScreenProps<ClanSetting
 			const shortname = `:${emojiName}:`;
 			const { id, url } = await handleUploadImage({
 				fileData: croppedFile?.data,
-				name: croppedFile.filename,
-				uri: croppedFile.path,
-				size: croppedFile.size,
-				type: croppedFile.mime
+				name: croppedFile?.filename,
+				uri: croppedFile?.path,
+				size: croppedFile?.size,
+				type: croppedFile?.mime
 			});
 			const request: ApiClanEmojiCreateRequest = {
 				id: id,
@@ -127,10 +127,10 @@ export function ClanEmojiSetting({ navigation }: MenuClanScreenProps<ClanSetting
 				const fileData = await RNFS.readFile(pathCompressed?.replace?.('%20', ' ') || '', 'base64');
 				const { id } = await handleUploadImage({
 					fileData: fileData,
-					name: croppedFile.filename,
-					uri: croppedFile.path,
-					size: croppedFile.size,
-					type: croppedFile.mime
+					name: croppedFile?.filename,
+					uri: croppedFile?.path,
+					size: croppedFile?.size,
+					type: croppedFile?.mime
 				});
 				request.id = id;
 			}
@@ -144,17 +144,21 @@ export function ClanEmojiSetting({ navigation }: MenuClanScreenProps<ClanSetting
 		}
 	};
 
-	return (
-		<View style={styles.container}>
-			<ScrollView contentContainerStyle={styles.scrollContainer}>
+	const ListHeaderComponent = () => {
+		return (
+			<View style={styles.header}>
 				<Pressable style={styles.addEmojiButton} onPress={handleAddEmoji}>
 					<Text style={styles.buttonText}>{t('button.upload')}</Text>
 				</Pressable>
 				<Text style={styles.title}>{t('description.descriptions')}</Text>
 				<Text style={styles.lightTitle}>{t('description.requirements')}</Text>
 				<Text style={styles.requireTitle}>{t('description.requireList')}</Text>
-				<EmojiList emojiList={emojiList} />
-			</ScrollView>
+			</View>
+		);
+	};
+	return (
+		<View style={styles.container}>
+			<EmojiList emojiList={emojiList?.length > 0 ? emojiList : []} ListHeaderComponent={ListHeaderComponent} />
 		</View>
 	);
 }

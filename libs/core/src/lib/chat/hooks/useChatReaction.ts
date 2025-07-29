@@ -11,9 +11,11 @@ import {
 	selectAllEmojiRecent,
 	selectCurrentChannel,
 	selectLastEmojiRecent,
-	useAppDispatch
+	useAppDispatch,
+	WriteMessageReactionArgs
 } from '@mezon/store';
 import { transformPayloadWriteSocket } from '@mezon/utils';
+import { ApiClanEmoji } from 'mezon-js/api.gen';
 import { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 export type UseMessageReactionOption = {
@@ -39,6 +41,7 @@ interface ReactionMessageDispatchParams {
 	channelId: string;
 	isFocusTopicBox?: boolean;
 	channelIdOnMessage?: string;
+	sender_name?: string;
 }
 
 export function useChatReaction({ isMobile = false, isClanViewMobile = undefined }: ChatReactionProps = {}) {
@@ -91,9 +94,9 @@ export function useChatReaction({ isMobile = false, isClanViewMobile = undefined
 		if (lastEmojiRecent.emoji_id === emoji_id) {
 			return '';
 		}
-		const foundEmoji = allEmojiRecent.find((emoji) => emoji.id === emoji_id) as any;
+		const foundEmoji = allEmojiRecent.find((emoji) => emoji.id === emoji_id) as ApiClanEmoji & { emoji_recents_id?: string };
 		if (foundEmoji) {
-			return foundEmoji.emoji_recents_id;
+			return foundEmoji?.emoji_recents_id || '';
 		}
 		return '0';
 	}, []);
@@ -111,7 +114,8 @@ export function useChatReaction({ isMobile = false, isClanViewMobile = undefined
 			clanId,
 			channelId,
 			isFocusTopicBox,
-			channelIdOnMessage
+			channelIdOnMessage,
+			sender_name
 		}: ReactionMessageDispatchParams) => {
 			const mode = getActiveMode(channelId);
 			const checkIsClanView = clanId && clanId !== '0';
@@ -125,7 +129,7 @@ export function useChatReaction({ isMobile = false, isClanViewMobile = undefined
 			});
 			const emoji_recent_id = await emojiRecentId(emoji_id);
 
-			const payloadDispatchReaction = {
+			const payloadDispatchReaction: WriteMessageReactionArgs = {
 				id,
 				clanId,
 				channelId,
@@ -134,12 +138,13 @@ export function useChatReaction({ isMobile = false, isClanViewMobile = undefined
 				emoji_id,
 				emoji,
 				count,
-				messageSenderId: userId as string,
+				messageSenderId: message_sender_id,
 				actionDelete: action_delete,
 				isPublic: payload.is_public,
 				userId: userId as string,
 				topic_id: isFocusTopicBox ? channelIdOnMessage : '',
-				emoji_recent_id: emoji_recent_id
+				emoji_recent_id: emoji_recent_id,
+				sender_name
 			};
 			return dispatch(reactionActions.writeMessageReaction(payloadDispatchReaction)).unwrap();
 		},

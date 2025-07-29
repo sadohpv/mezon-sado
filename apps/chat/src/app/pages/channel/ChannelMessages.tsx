@@ -1,5 +1,5 @@
 import { ELoadMoreDirection, IBeforeRenderCb } from '@mezon/chat-scroll';
-import { MessageContextMenuProvider, MessageWithUser } from '@mezon/components';
+import { MessageContextMenuProvider, MessageWithUser, useMessageContextMenu } from '@mezon/components';
 import { useMessageObservers, usePermissionChecker } from '@mezon/core';
 import {
 	MessagesEntity,
@@ -8,11 +8,13 @@ import {
 	getStore,
 	messagesActions,
 	selectAllAccount,
+	selectChannelDraftMessage,
 	selectCurrentChannelId,
 	selectDataReferences,
 	selectFirstMessageOfCurrentTopic,
 	selectHasMoreBottomByChannelId2,
 	selectHasMoreMessageByChannelId2,
+	selectIdMessageRefEdit,
 	selectIdMessageToJump,
 	selectIsJumpingToPresent,
 	selectIsMessageIdExist,
@@ -23,6 +25,7 @@ import {
 	selectMessageIdsByChannelId2,
 	selectMessageIsLoading,
 	selectMessageNotified,
+	selectOpenEditMessageState,
 	selectScrollOffsetByChannelId,
 	selectShowScrollDownButton,
 	selectTheme,
@@ -460,7 +463,7 @@ const ScrollDownButton = memo(
 		return (
 			<button
 				onClick={handleScrollDownClick}
-				className={`dark:bg-bgPrimary bg-bgLightPrimary ${
+				className={`bg-theme-primary ${
 					isVisible ? 'opacity-100' : 'opacity-0'
 				} cursor-pointer absolute z-10 rounded-full bg-clip-padding border text-token-text-secondary border-token-border-light w-8 h-8 flex items-center justify-center bottom-5 right-[12px] transition-all duration-200 hover:scale-105 active:scale-95 active:shadow-inner`}
 			>
@@ -486,16 +489,7 @@ const ScrollDownButton = memo(
 
 ChannelMessages.Skeleton = () => {
 	if (ChannelMessage.Skeleton) {
-		return (
-			<>
-				{/* <ChannelMessage.Skeleton />
-				<ChannelMessage.Skeleton />
-				<ChannelMessage.Skeleton />
-				<ChannelMessage.Skeleton />
-				<ChannelMessage.Skeleton />
-				<ChannelMessage.Skeleton /> */}
-			</>
-		);
+		return <></>;
 	}
 };
 
@@ -562,6 +556,17 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 		const jumpToPresent = useAppSelector((state) => selectIsJumpingToPresent(state, channelId));
 		const firstMsgOfThisTopic = useSelector(selectFirstMessageOfCurrentTopic);
 
+		const openEditMessageState = useSelector(selectOpenEditMessageState);
+		const idMessageRefEdit = useSelector(selectIdMessageRefEdit);
+		const channelDraftMessage = useAppSelector((state) => selectChannelDraftMessage(state, channelId));
+
+		const getIsEditing = useCallback(
+			(messageId: string) => {
+				return channelDraftMessage?.message_id === messageId ? openEditMessageState : openEditMessageState && idMessageRefEdit === messageId;
+			},
+			[channelDraftMessage?.message_id, openEditMessageState, idMessageRefEdit]
+		);
+
 		const scrollOffsetRef = useRef<number>(0);
 
 		useSyncEffect(() => {
@@ -571,9 +576,6 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 		}, [channelId]);
 
 		const [getContainerHeight, prevContainerHeightRef] = useContainerHeight(chatRef, true);
-
-		// const isLoading = useAppSelector(selectMessageIsLoading);
-		// const [loadingDirection, setLoadingDirection] = useState<ELoadMoreDirection | null>(null);
 
 		const isScrollTopJustUpdatedRef = useRef(false);
 		const isViewportNewest = true;
@@ -618,13 +620,8 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 			isUnread,
 			onScrollDownToggle,
 			onNotchToggle,
-			isReady.current,
+			isReady,
 			(event: { direction: LoadMoreDirection }) => {
-				// if (event.direction === LoadMoreDirection.Forwards) {
-				// 	setLoadingDirection(ELoadMoreDirection.bottom);
-				// } else if (event.direction === LoadMoreDirection.Backwards) {
-				// 	setLoadingDirection(ELoadMoreDirection.top);
-				// }
 				onChange(event.direction);
 			}
 		);
@@ -643,10 +640,6 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 				anchorTopRef.current = null;
 			}
 		}, [idMessageToJump]);
-
-		// useSyncEffect(() => {
-		// 	memoFocusingIdRef.current = focusingId;
-		// }, [focusingId]);
 
 		const handleScroll = useLastCallback(() => {
 			if (isScrollTopJustUpdatedRef.current) {
@@ -711,7 +704,6 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 			}
 		}, [lastMessage]);
 
-		// Handles updated message list, takes care of scroll repositioning
 		useLayoutEffectWithPrevDeps(
 			([prevMessageIds, prevIsViewportNewest]) => {
 				if (skipCalculateScroll.current) return;
@@ -721,7 +713,6 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 				const prevContainerHeight = prevContainerHeightRef.current;
 				prevContainerHeightRef.current = containerHeight;
 
-				// Skip initial resize observer callback
 				if (
 					messageIds === prevMessageIds &&
 					isViewportNewest === prevIsViewportNewest &&
@@ -734,16 +725,12 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 				listItemElementsRef.current = Array.from(container.querySelectorAll<HTMLDivElement>('.message-list-item'));
 
 				const lastItemElement = listItemElementsRef.current[listItemElementsRef.current.length - 1];
-				// const firstUnreadElement = memoFirstUnreadIdRef.current
-				// 	? container.querySelector<HTMLDivElement>(`#${getMessageHtmlId(memoFirstUnreadIdRef.current)}`)
-				// 	: undefined;
 
 				const hasLastMessageChanged =
 					messageIds && prevMessageIds && messageIds[messageIds.length - 1] !== prevMessageIds[prevMessageIds.length - 1];
 				const hasViewportShifted = messageIds?.[0] !== prevMessageIds?.[0] && messageIds?.length === MESSAGE_LIST_SLICE / 2 + 1;
 				const wasMessageAdded = hasLastMessageChanged && !hasViewportShifted;
 
-				// Add extra height when few messages to allow scroll animation
 				if (
 					isViewportNewest &&
 					wasMessageAdded &&
@@ -752,12 +739,10 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 					!container.parentElement!.classList.contains('force-messages-scroll') &&
 					forceMeasure(() => (container.firstElementChild as HTMLDivElement)!.clientHeight <= container.offsetHeight * 2)
 				) {
-					// addExtraClass(container.parentElement!, 'force-messages-scroll');
 					container.parentElement!.classList.add('force-messages-scroll');
 
 					setTimeout(() => {
 						if (container.parentElement) {
-							// removeExtraClass(container.parentElement!, 'force-messages-scroll');
 							container.parentElement!.classList.remove('force-messages-scroll');
 						}
 					}, MESSAGE_ANIMATION_DURATION);
@@ -768,38 +753,20 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 					const scrollOffset = scrollOffsetRef.current;
 					let bottomOffset = scrollOffset - (prevContainerHeight || offsetHeight);
 					if (wasMessageAdded) {
-						// If two new messages come at once (e.g. when bot responds) then the first message will update `scrollOffset`
-						// right away (before animation) which creates inconsistency until the animation completes. To work around that,
-						// we calculate `isAtBottom` with a "buffer" of the latest message height (this is approximate).
 						const lastItemHeight = lastItemElement ? lastItemElement.offsetHeight : 0;
 						bottomOffset -= lastItemHeight;
 					}
-					// const isAtBottom = isViewportNewest && prevIsViewportNewest && bottomOffset <= BOTTOM_THRESHOLD;
 					const isAtBottom =
 						chatRef?.current &&
 						Math.abs(chatRef.current.scrollHeight - chatRef.current.clientHeight - chatRef.current.scrollTop) <= BOTTOM_THRESHOLD;
-					// ||
-					// 	(userId === lastMessage?.sender_id &&
-					// 		lastMessage?.create_time &&
-					// 		new Date().getTime() - new Date(lastMessage.create_time).getTime() < 500));
-					// const isAlreadyFocusing = messageIds && memoFocusingIdRef.current === messageIds[messageIds.length - 1];
+
 					const isAlreadyFocusing = false;
-					// Animate incoming message, but if app is in background mode, scroll to the first unread
 					if (isAtBottom && !isAlreadyFocusing) {
-						// Break out of `forceLayout`
 						if (!lastItemElement) return;
 
 						requestMeasure(() => {
 							const shouldScrollToBottom = !isBackgroundModeActive();
 							if (!shouldScrollToBottom) return;
-
-							// animateScroll({
-							// 	container,
-							// 	element: shouldScrollToBottom ? lastItemElement : null!,
-							// 	position: shouldScrollToBottom ? 'end' : 'start',
-							// 	margin: BOTTOM_FOCUS_MARGIN,
-							// 	forceDuration: undefined
-							// });
 						});
 					}
 
@@ -809,8 +776,6 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 					}
 
 					const anchor = anchorIdRef.current && container.querySelector(`#${anchorIdRef.current}`);
-					// const unreadDivider =
-					// 	!anchor && memoUnreadDividerBeforeIdRef.current && container.querySelector<HTMLDivElement>(`.${UNREAD_DIVIDER_CLASS}`);
 
 					let newScrollTop!: number;
 					if (isAtBottom) {
@@ -824,7 +789,6 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 
 					return () => {
 						resetScroll(container, Math.ceil(newScrollTop));
-						// restartCurrentScrollAnimation();
 						scrollOffsetRef.current = Math.max(Math.ceil(scrollHeight - newScrollTop), offsetHeight);
 						if (!memoFocusingIdRef.current) {
 							isScrollTopJustUpdatedRef.current = true;
@@ -834,7 +798,6 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 						}
 					};
 				});
-				// This should match deps for `useSyncEffect` above
 			},
 			[messageIds, isViewportNewest, getContainerHeight, prevContainerHeightRef]
 		);
@@ -846,8 +809,6 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 
 			const preservedItemElements = listItemElementsRef.current.filter((element) => messageIds.includes(element.id.replace('msg-', '')));
 
-			// We avoid the very first item as it may be a partly-loaded album
-			// and also because it may be removed when messages limit is reached
 			const anchor = preservedItemElements[1] || preservedItemElements[0];
 
 			if (!anchor) {
@@ -867,15 +828,10 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 
 		useSyncEffect(
 			() => forceMeasure(() => rememberScrollPositionRef.current()),
-			// This will run before modifying content and should match deps for `useLayoutEffectWithPrevDeps` below
 			[messageIds, userActiveScroll.current, isViewportNewest, rememberScrollPositionRef]
 		);
 
-		useEffect(
-			() => rememberScrollPositionRef.current(),
-			// This is only needed to react on signal updates
-			[getContainerHeight, rememberScrollPositionRef]
-		);
+		useEffect(() => rememberScrollPositionRef.current(), [getContainerHeight, rememberScrollPositionRef]);
 
 		const convertedFirstMsgOfThisTopic = useMemo(() => {
 			if (!firstMsgOfThisTopic?.message) {
@@ -883,8 +839,6 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 			}
 			return convertInitialMessageOfTopic(firstMsgOfThisTopic.message as ChannelMessageType);
 		}, [firstMsgOfThisTopic]);
-
-		// Handle scroll to specific message (jump/pin)
 
 		const msgIdJumpHightlight = useRef<string | null>(null);
 
@@ -918,10 +872,15 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 
 		const [canSendMessage] = usePermissionChecker([EOverriddenPermission.sendMessage], channelId);
 
+		const { showMessageContextMenu, selectedMessageId } = useMessageContextMenu();
+
 		const renderedMessages = useMemo(() => {
 			return messageIds.map((messageId, index) => {
 				const checkMessageTargetToMoved = msgIdJumpHightlight.current === messageId && messageId !== lastMessageId;
 				const messageReplyHighlight = (dataReferences?.message_ref_id && dataReferences?.message_ref_id === messageId) || false;
+				const isSelected = selectedMessageId === messageId;
+				const isEditing = getIsEditing(messageId);
+
 				return (
 					<MemorizedChannelMessage
 						key={messageId}
@@ -944,6 +903,9 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 						canSendMessage={canSendMessage}
 						observeIntersectionForLoading={observeIntersectionForLoading}
 						user={currentClanUser}
+						showMessageContextMenu={showMessageContextMenu}
+						isSelected={isSelected}
+						isEditing={isEditing}
 					/>
 				);
 			});
@@ -962,12 +924,15 @@ const ChatMessageList: React.FC<ChatMessageListProps> = memo(
 			lastMessageUnreadId,
 			mode,
 			username,
+			selectedMessageId,
+			getIsEditing,
 			forceRender
 		]);
 
 		const scrollTimeoutId2 = useRef<NodeJS.Timeout | null>(null);
 		return (
-			<div className="w-full h-full relative messages-container select-text dark:bg-bgPrimary bg-bgLightPrimary">
+			<div className="w-full h-full relative messages-container select-text bg-theme-chat ">
+				<StickyLoadingIndicator messageCount={messageIds?.length} />
 				<div
 					onScroll={handleScroll}
 					onWheelCapture={() => {
@@ -1046,10 +1011,37 @@ export default MemoizedChannelMessages;
 
 (MemoizedChannelMessages as any).displayName = 'MemoizedChannelMessages';
 
+const StickyLoadingIndicator = memo(({ messageCount }: { messageCount: number }) => {
+	const isLoading = useAppSelector(selectMessageIsLoading);
+	const [showLoading, setShowLoading] = useState(false);
+
+	useEffect(() => {
+		let timeoutId: NodeJS.Timeout;
+		if (isLoading && !messageCount) {
+			timeoutId = setTimeout(() => {
+				setShowLoading(true);
+			}, 1000);
+		} else {
+			setShowLoading(false);
+		}
+
+		return () => {
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+			}
+		};
+	}, [isLoading, messageCount]);
+
+	if (!showLoading) return null;
+
+	return <MessageSkeleton className="mr-auto" randomKey={`StickyLoadingIndicator`} />;
+});
+
+StickyLoadingIndicator.displayName = 'StickyLoadingIndicator';
+
 interface MessageSkeletonProps {
 	count?: number;
 	className?: string;
-	imageFrequency?: number; // 0-1 probability of messages having images
 	randomKey?: string;
 }
 
@@ -1069,18 +1061,18 @@ const LoadingSkeletonMessages = memo(
 		topicId?: string;
 	}) => {
 		const hasMoreTop = useAppSelector((state) => selectHasMoreMessageByChannelId2(state, channelId));
-		// hasMoreTop topic check backend alway return true
+		// TODO: check hasMoreTop topic check backend alway return true
 		if (!hasMoreTop || isTopic) return null;
 		return (
 			<div id="msg-loading-top" className="py-2">
-				<MessageSkeleton imageFrequency={imageFrequency} randomKey={`top-${messageId || ''}`} />
+				<MessageSkeleton randomKey={`top-${messageId || ''}`} />
 			</div>
 		);
 	}
 );
 
 export const MessageSkeleton = memo(
-	function MessageSkeleton({ className, imageFrequency = 0.4, randomKey }: MessageSkeletonProps) {
+	function MessageSkeleton({ className, randomKey }: MessageSkeletonProps) {
 		return (
 			<div style={{ width: '60%', height: '1000px', overflow: 'hidden' }} className={buildClassName('flex flex-col px-4 py-2', className)}>
 				{Array.from({ length: 5 }).map((_, index) => {

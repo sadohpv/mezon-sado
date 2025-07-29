@@ -4,7 +4,6 @@ import {
 	selectAllHashtagDm,
 	selectChannelById,
 	selectNumberMemberVoiceChannel,
-	selectTheme,
 	useAppSelector
 } from '@mezon/store';
 import { HighlightMatchBold, Icons } from '@mezon/ui';
@@ -58,7 +57,6 @@ const SuggestItem = ({
 
 	const { directId } = useParams();
 	const commonChannels = useSelector(selectAllHashtagDm);
-	const theme = useSelector(selectTheme);
 	const [specificChannel, setSpecificChannel] = useState<ChannelsEntity | HashtagDm | null>(null);
 	const numberMembersVoice = useAppSelector((state) => selectNumberMemberVoiceChannel(state, channelId as string));
 	const checkVoiceStatus = useMemo(() => {
@@ -87,10 +85,10 @@ const SuggestItem = ({
 
 		if (type === ChannelType.CHANNEL_TYPE_THREAD) {
 			if (!channel_private || channel_private === 0) {
-				return <Icons.ThreadIcon defaultSize="w-5 h-5 dark:text-[#AEAEAE] text-colorTextLightMode" />;
+				return <Icons.ThreadIcon defaultSize="w-5 h-5 text-theme-primary " />;
 			}
 			if (channel_private === 1) {
-				return <Icons.ThreadIconLocker className="w-5 h-5 dark:text-[#AEAEAE] text-colorTextLightMode" />;
+				return <Icons.ThreadIconLocker className="w-5 h-5 text-theme-primary " />;
 			}
 		}
 
@@ -113,11 +111,11 @@ const SuggestItem = ({
 		}
 
 		if (type === ChannelType.CHANNEL_TYPE_APP) {
-			return <Icons.AppChannelIcon className={'w-5 h-5'} fill={theme} />;
+			return <Icons.AppChannelIcon className={'w-5 h-5'}  />;
 		}
 
 		return null;
-	}, [specificChannel, theme]);
+	}, [specificChannel]);
 
 	useEffect(() => {
 		if (channel) {
@@ -139,7 +137,7 @@ const SuggestItem = ({
 
 	return (
 		<div className={`flex flex-row items-center h-[24px] ${wrapSuggestItemStyle ?? 'justify-between'}`}>
-			<div className="flex flex-row items-center gap-2 py-[3px]">
+			<div className="flex flex-row items-center gap-2 py-[3px] text-theme-primary-hover text-theme-primary-hover">
 				{showAvatar && (
 					<div>
 						{color ? (
@@ -151,7 +149,7 @@ const SuggestItem = ({
 								srcImgProxy={createImgproxyUrl(avatarUrl ?? '')}
 								src={avatarUrl}
 								className="size-4"
-								classNameText="text-[9px] min-w-5 min-h-5 pt-[3px]"
+								classNameText="text-[9px] min-w-5 min-h-5 pt-[3px] "
 							/>
 						)}
 					</div>
@@ -162,9 +160,9 @@ const SuggestItem = ({
 				{channelIcon}
 
 				{display && (
-					<span className={`text-[15px] font-thin dark:text-white text-textLightTheme one-line flex items-center`} style={{ color: color }}>
+					<span className={`text-[15px] font-thin text-theme-primary one-line flex items-center`} style={{ color: color }}>
 						<span
-							className={`${isUnread || (count && count > 0) ? 'dark:text-white text-black dark:font-medium font-semibold' : 'font-medium dark:text-channelTextLabel text-colorTextLightMode'}`}
+							className={`${isUnread || (count && count > 0) ? 'text-theme-primary-active font-semibold' : 'font-medium text-theme-primary '}`}
 						>
 							{isHightLight ? HighlightMatchBold(display ?? '', valueHightLight ?? '') : display}
 						</span>
@@ -175,9 +173,9 @@ const SuggestItem = ({
 						)}{' '}
 					</span>
 				)}
-				{checkVoiceStatus && <i className="text-[15px] font-thin dark:text-text-zinc-400 text-colorDanger ">(busy)</i>}
+				{checkVoiceStatus && <i className="text-[15px] font-thin text-colorDanger ">(busy)</i>}
 			</div>
-			<span className={`text-[10px] font-semibold text-[#A1A1AA] one-line ${subTextStyle}`}>
+			<span className={`text-[10px] font-semibold text-theme-primary one-line ${subTextStyle}`}>
 				{getChannel?.type === ChannelType.CHANNEL_TYPE_THREAD ? (
 					<RenderChannelLabelForThread channel_id={getChannel?.parent_id as string} />
 				) : (

@@ -32,8 +32,9 @@ export const style = (colors: Attributes, isTabletLandscape?: boolean) =>
 		titleCategories: {
 			color: colors.text,
 			fontSize: size.medium,
-			fontWeight: '600',
-			paddingBottom: size.s_4
+			fontWeight: 'bold',
+			paddingBottom: size.s_4,
+			textTransform: 'uppercase'
 		},
 		textInputWrapper: {
 			flexDirection: 'row',
@@ -56,8 +57,20 @@ export const style = (colors: Attributes, isTabletLandscape?: boolean) =>
 			borderRadius: size.s_12,
 			overflow: 'hidden'
 		},
+		clanLogoText: {
+			justifyContent: 'center',
+			alignItems: 'center',
+			backgroundColor: colors.secondary,
+			borderRadius: size.s_20,
+			height: size.s_27,
+			width: size.s_27
+		},
+		clanNameText: {
+			color: colors.textStrong,
+			fontSize: size.medium,
+			fontWeight: '600'
+		},
 		wrapperIconEmojiLocked: {
-			backgroundColor: 'rgba(0, 0, 0, 0.7)',
 			position: 'absolute',
 			alignSelf: 'center',
 			justifyContent: 'center',
@@ -68,4 +81,12 @@ export const style = (colors: Attributes, isTabletLandscape?: boolean) =>
 			height: size.s_30,
 			zIndex: 1
 		},
+		categoryHeader: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: size.s_2
+		},
+		chevronIcon: {
+			marginBottom: size.s_4
+		}
 	});

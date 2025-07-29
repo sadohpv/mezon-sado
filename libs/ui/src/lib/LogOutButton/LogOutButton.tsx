@@ -1,6 +1,8 @@
 import { authActions, selectAllAccount, useAppDispatch } from '@mezon/store';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
+import Button from '../Button';
+import ButtonLoading from '../Button/ButtonLoading';
 
 export function LogOutButton() {
 	const [openModal, setOpenModal] = useState<boolean>(false);
@@ -19,12 +21,9 @@ export function LogOutButton() {
 	return (
 		<>
 			{openModal && <LogoutModal handleLogOut={handleLogOut} onClose={handleCloseModal} />}
-			<button
+			<Button
 				onClick={handleOpenModal}
-				className="inline-flex m-4 h-10 items-center justify-center gap-2
-      whitespace-nowrap rounded-full
-      bg-blue-700 px-5 text-sm font-medium tracking-wide text-white transition duration-300
-      hover:bg-blue-500 focus:bg-blue-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:border-emerald-300 disabled:bg-emerald-300 disabled:shadow-none"
+				className="inline-flex m-4  h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 text-sm font-medium tracking-wide text-white  duration-300"
 			>
 				<span>Log Out</span>
 				<span className="relative only:-mx-5">
@@ -43,7 +42,7 @@ export function LogOutButton() {
 						<line x1="21" y1="12" x2="9" y2="12" />
 					</svg>
 				</span>
-			</button>
+			</Button>
 		</>
 	);
 }
@@ -58,24 +57,26 @@ export const LogoutModal: React.FC<ModalProps> = ({ handleLogOut, onClose }) => 
 	return (
 		<div className="fixed  inset-0 flex items-center justify-center z-50">
 			<div className="fixed inset-0 bg-black opacity-80"></div>
-			<div className="relative z-10 dark:bg-bgPrimary bg-bgLightModeSecond p-6 rounded-[5px] text-center">
-				<h2 className="text-[30px] font-semibold mb-4 dark:text-white text-black">Log Out</h2>
-				<p className="dark:text-white-600 dark:text-textDarkTheme text-textLightTheme mb-6 text-[16px]">Are you sure you want to log out?</p>
+			<div className="relative z-10 bg-theme-setting-primary p-6 rounded-[5px] text-center">
+				<h2 className="text-[30px] font-semibold mb-4  text-theme-primary">Log Out</h2>
+				<p
+					className="text-theme-primary 
+				 mb-6 text-[16px]"
+				>
+					Are you sure you want to log out?
+				</p>
 				<div className="flex justify-center mt-10 text-[14px]">
-					<button
-						color="gray"
+					<Button
 						onClick={onClose}
-						className="px-4 py-2 mr-5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 focus:outline-none focus:ring focus:border-blue-300"
+						className="px-4 py-2 mr-5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 focus:ring focus:border-blue-300"
 					>
 						Cancel
-					</button>
-					<button
-						color="blue"
+					</Button>
+					<ButtonLoading
 						onClick={handleLogOut}
-						className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-500 focus:outline-none focus:ring focus:border-blue-300"
-					>
-						Log Out
-					</button>
+						className="px-4 py-2 rounded focus:ring bg-[#da373c] text-white hover:opacity-80"
+						label="Log Out"
+					/>
 				</div>
 			</div>
 		</div>
@@ -86,30 +87,23 @@ export const DeleteAccountModal: React.FC<ModalProps> = ({ handleLogOut, onClose
 	return (
 		<div className="fixed  inset-0 flex items-center justify-center z-50">
 			<div className="fixed inset-0 bg-black opacity-80"></div>
-			<div className="relative z-10 dark:bg-bgPrimary bg-bgLightModeSecond p-6 rounded-[5px] text-center">
-				<h2 className="text-[30px] font-semibold mb-4 dark:text-white text-black">Delete Account</h2>
-				<p className="dark:text-white-600 dark:text-textDarkTheme text-textLightTheme mb-6 text-[16px]">
+			<div className="relative z-10 bg-theme-setting-primary p-6 rounded-lg text-center">
+				<h2 className="text-[30px] font-semibold mb-4 text-theme-primary ">Delete Account</h2>
+				<p
+					className="text-theme-primary
+				 mb-6 text-[16px]"
+				>
 					Are you sure that you want to delete your account? This will immediately log you out of your account and you will not be able to
 					log in again.
 				</p>
 				<div className="flex justify-center mt-10 text-[14px]">
-					<button
-						color="gray"
+					<Button
 						onClick={onClose}
-						className="px-4 py-2 mr-5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 focus:outline-none focus:ring focus:border-blue-300"
+						className="px-4 py-2 mr-5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 focus:ring focus:border-blue-300"
 					>
 						Cancel
-					</button>
-					<button
-						color="blue"
-						onClick={handleLogOut}
-						disabled={isDeleting}
-						className={`px-4 py-2 rounded text-white focus:outline-none focus:ring focus:border-blue-300 ${
-							isDeleting ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-700 hover:bg-blue-500'
-						}`}
-					>
-						Delete
-					</button>
+					</Button>
+					<ButtonLoading onClick={handleLogOut} disabled={isDeleting} className={`px-4 py-2 rounded text-white bg-red-500 hover:opacity-80 `} label="Delete" />
 				</div>
 			</div>
 		</div>

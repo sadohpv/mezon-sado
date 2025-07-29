@@ -1,4 +1,3 @@
-//TODO: recheck
 import { ToastController } from '@mezon/components';
 import { useCustomNavigate } from '@mezon/core';
 import { fcmActions, handleTopicNotification, selectAllAccount, selectAllSession, selectIsLogin, useAppDispatch } from '@mezon/store';
@@ -20,7 +19,6 @@ import React, { useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Outlet, useLoaderData, useLocation } from 'react-router-dom';
 import { IAppLoaderData } from '../loaders/appLoader';
-const theme = 'dark';
 
 type TitleBarProps = {
 	eventName: string;
@@ -48,9 +46,9 @@ const TitleBar: React.FC<TitleBarProps> = ({ eventName }) => {
 	};
 
 	return (
-		<header id="titlebar" className={`dark:bg-bgTertiary bg-bgLightTertiary`} onDoubleClick={handleDoubleClick}>
+		<header id="titlebar" className={`bg-theme-primary`} onDoubleClick={handleDoubleClick}>
 			<div id="drag-region">
-				<div className="dark:text-white ml-3 text-[15.15px] leading-[26.58px] font-semibold text-textPrimaryLight">Mezon</div>
+				<div className="text-theme-primary-active ml-3 text-[15.15px] leading-[26.58px] font-semibold ">Mezon</div>
 				<div id="window-controls">
 					<div
 						className="button window-hover cursor-pointer dark:hover:bg-bgModifierHover hover:bg-bgLightModeButton"
@@ -149,7 +147,7 @@ const AppLayout = () => {
 	}, [navigate]);
 
 	return (
-		<MezonUiProvider themeName={theme}>
+		<MezonUiProvider>
 			<ViewModeHandler />
 			<ToastController />
 			<Outlet />

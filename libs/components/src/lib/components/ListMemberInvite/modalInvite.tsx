@@ -1,20 +1,12 @@
 /* eslint-disable no-console */
 import { useInvite } from '@mezon/core';
-import {
-	fetchSystemMessageByClanId,
-	selectChannelById,
-	selectClanById,
-	selectClanSystemMessage,
-	selectCurrentClanId,
-	selectTheme,
-	useAppDispatch,
-	useAppSelector
-} from '@mezon/store';
-import { Modal } from '@mezon/ui';
+import { fetchSystemMessageByClanId, selectClanById, selectCurrentClanId, useAppDispatch } from '@mezon/store';
+import { Button } from '@mezon/ui';
 import isElectron from 'is-electron';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import ListMemberInvite from '.';
+import { ModalLayout } from '../../components';
 
 const expireAfter = ['30 minutes', '1 hour', '6 hours', '12 hours', '1 day', '7 days', 'Never'];
 
@@ -40,15 +32,15 @@ const ModalInvite = (props: ModalParam) => {
 	const currentClanId = useSelector(selectCurrentClanId);
 	const { createLinkInviteUser } = useInvite();
 	const { onClose, channelID, clanId, setShowClanListMenuContext, isInviteExternalCalling = false } = props;
+	const dispatch = useAppDispatch();
 
 	const effectiveClanId = clanId && clanId !== '0' ? clanId : currentClanId;
 
 	const clan = useSelector(selectClanById(effectiveClanId ?? ''));
-
-	const channel = useAppSelector((state) => selectChannelById(state, channelID ?? '')) || {};
-	const welcomeChannel = useSelector(selectClanSystemMessage);
 	const handleOpenInvite = useCallback(async () => {
 		try {
+			const welcomeChannel = await dispatch(fetchSystemMessageByClanId({ clanId: currentClanId as string })).unwrap();
+
 			const intiveIdChannel = (channelID ? channelID : welcomeChannel.channel_id) as string;
 			const res = await createLinkInviteUser(effectiveClanId ?? '', intiveIdChannel, 10);
 			if (res && res?.invite_link) {
@@ -57,7 +49,7 @@ const ModalInvite = (props: ModalParam) => {
 		} catch {
 			console.log('Error when create invite link');
 		}
-	}, [welcomeChannel.channel_id, channelID, effectiveClanId]);
+	}, [channelID, effectiveClanId]);
 
 	useEffect(() => {
 		handleOpenInvite();
@@ -85,44 +77,45 @@ const ModalInvite = (props: ModalParam) => {
 		}
 	};
 
-	const dispatch = useAppDispatch();
-	const fetchSystemMessage = async () => {
-		if (!currentClanId) return;
-		await dispatch(fetchSystemMessageByClanId({ clanId: currentClanId }));
-	};
-
-	useEffect(() => {
-		fetchSystemMessage();
-	}, [currentClanId]);
-	const appearanceTheme = useSelector(selectTheme);
 	const closeModalEdit = useCallback(() => setModalEdit(false), []);
-	return !modalEdit ? (
-		<Modal
-			title={`Invite friends to ${isInviteExternalCalling ? 'Private Event' : clan?.clan_name}`}
-			onClose={props.onClose}
-			showModal={props.open}
-			hasChannel={channel}
-			classSubTitleBox="ml-[0px] cursor-default"
-			borderBottomTitle="border-b "
-			isInviteModal={true}
-		>
-			{!isInviteExternalCalling ? (
-				<>
-					<ListMemberInvite url={urlInvite} channelID={channelID} />
+	const label = useMemo(() => {}, []);
+
+	if (modalEdit) {
+		return <ModalGenerateLinkOption max={max} expire={expire} setExpire={setExpire} setMax={setMax} closeModalEdit={closeModalEdit} />;
+	}
+
+	return (
+		<ModalLayout onClose={props.onClose}>
+			<div className="bg-theme-setting-primary rounded-xl flex flex-col">
+				<div className="flex-1 flex items-center justify-between border-b-theme-primary rounded-t p-4">
+					<p className="font-bold text-xl text-theme-primary-active">{`Invite friends to ${isInviteExternalCalling ? 'Private Event' : clan?.clan_name}`}</p>
+					<Button
+						className="rounded-full aspect-square w-6 h-6 text-5xl leading-3 !p-0 opacity-50 text-theme-primary-hover"
+						onClick={props.onClose}
+					>
+						×
+					</Button>
+				</div>
+				<div className="flex flex-col w-[480px] px-5 py-4">
+					<ListMemberInvite
+						isInviteExternalCalling={isInviteExternalCalling}
+						url={isInviteExternalCalling ? (props.privateRoomLink as string) : urlInvite}
+						channelID={channelID}
+					/>
 					<div className="relative ">
-						<p className="pt-4 pb-1 text-[12px] mb-12px cursor-default uppercase font-semibold">
-							Or, send a clan invite link to a friend
+						<p className="pt-4 pb-1 text-[12px] mb-12px cursor-default uppercase font-semibold text-theme-primary-active">
+							Or, send a {isInviteExternalCalling ? 'private room' : 'clan invite'} link to a friend
 						</p>
 						<input
 							type="text"
-							className="w-full h-11 border border-solid dark:border-none dark:bg-black bg-[#dfe0e2] rounded-[5px] px-[16px] py-[13px] text-[14px] outline-none"
-							value={urlInvite}
+							className="w-full h-11 border-theme-primary text-theme-primary-active bg-theme-input rounded-lg px-[16px] py-[13px] text-[14px] outline-none"
+							value={isInviteExternalCalling ? (props.privateRoomLink as string) : urlInvite}
 							readOnly
 						/>
 						<button
-							className="absolute right-0 bottom-0 mb-1 text-white font-semibold text-sm px-8 py-1.5
+							className="absolute right-0 bottom-0 mb-1  font-semibold text-sm px-8 py-1.5
 							shadow outline-none focus:outline-none ease-linear transition-all duration-150
-							bg-primary hover:bg-blue-800 text-[16px] leading-6 rounded mr-[8px]"
+							btn-primary btn-primary-hover  text-[16px] leading-6 rounded-lg mr-[8px]"
 							onClick={() => {
 								handleCopyToClipboard(urlInvite);
 								onClose();
@@ -132,93 +125,76 @@ const ModalInvite = (props: ModalParam) => {
 							Copy
 						</button>
 					</div>
-					<p className="pt-1 text-[14px] mb-12px text-[#AEAEAE] inline-flex gap-x-2">
-						<span className="cursor-default dark:text-white text-black">Your invite link expires in {expire} </span>
-						<span className="dark:text-blue-300 text-blue-600 cursor-pointer hover:underline" onClick={() => setModalEdit(true)}>
-							Edit invite link.
-						</span>
-					</p>
-				</>
-			) : (
-				<>
-					<ListMemberInvite isInviteExternalCalling={isInviteExternalCalling} url={props.privateRoomLink as string} channelID={channelID} />
-					<div className="relative ">
-						<p className="pt-4 pb-1 text-[12px] mb-12px cursor-default uppercase font-semibold">
-							Or, send a private room link to a friend
+					{!isInviteExternalCalling && (
+						<p className="pt-1 text-[14px] mb-12px inline-flex gap-x-2">
+							<span className="cursor-default text-theme-primary-active ">Your invite link expires in {expire} </span>
+							<span className=" text-blue-600 cursor-pointer hover:underline" onClick={() => setModalEdit(true)}>
+								Edit invite link.
+							</span>
 						</p>
-						<input
-							type="text"
-							className="w-full h-11 border border-solid dark:border-none dark:bg-black bg-[#dfe0e2] rounded-[5px] px-[16px] py-[13px] text-[14px] outline-none"
-							value={props.privateRoomLink as string}
-							readOnly
-						/>
-						<button
-							className="absolute right-0 bottom-0 mb-1 text-white font-semibold text-sm px-8 py-1.5
-								shadow outline-none focus:outline-none ease-linear transition-all duration-150
-								bg-primary hover:bg-blue-800 text-[16px] leading-6 rounded mr-[8px]"
-							onClick={() => {
-								handleCopyToClipboard(!isInviteExternalCalling ? urlInvite : (props.privateRoomLink as string));
-								onClose();
-								setShowClanListMenuContext?.();
-							}}
-						>
-							Copy
-						</button>
-					</div>
-				</>
-			)}
-		</Modal>
-	) : (
-		<Modal
-			title="Clan invite link settings"
-			onClose={closeModalEdit}
-			showModal={modalEdit}
-			classNameWrapperChild="space-y-5"
-			classNameBox="max-w-[440px]"
-		>
-			<div className="space-y-2">
-				<h3 className="text-xs font-bold dark:text-textSecondary text-textSecondary800 uppercase">Expire After</h3>
-				<select
-					name="expireAfter"
-					className={`block w-full dark:bg-black bg-bgModifierHoverLight dark:text-white text-black border dark:border-black rounded p-2 font-normal text-sm tracking-wide outline-none border-none ${appearanceTheme === 'light' ? 'customScrollLightMode' : 'app-scroll'}`}
-					onChange={(e) => {
-						setExpire(e.target.value);
-					}}
-					value={expire}
-				>
-					{expireAfter.map((item) => (
-						<option key={item} value={item}>
-							{item}
-						</option>
-					))}
-				</select>
+					)}
+				</div>
 			</div>
-			<div className="space-y-2">
-				<h3 className="text-xs font-bold dark:text-textSecondary text-textSecondary800 uppercase">Max Number of Uses</h3>
-				<select
-					name="maxNumberofUses"
-					className={`block w-full dark:bg-black bg-bgModifierHoverLight dark:text-white text-black border dark:border-black rounded p-2 font-normal text-sm tracking-wide outline-none border-none ${appearanceTheme === 'light' ? 'customScrollLightMode' : 'app-scroll'}`}
-					onChange={(e) => {
-						setMax(e.target.value);
-					}}
-					value={max}
-				>
-					{maxNumberofUses.map((item) => (
-						<option key={item} value={item}>
-							{item}
-						</option>
-					))}
-				</select>
+		</ModalLayout>
+	);
+};
+
+interface ModalGenerateLinkOptionProps {
+	expire: string;
+	setExpire: React.Dispatch<React.SetStateAction<string>>;
+	closeModalEdit: () => void;
+	max: string;
+	setMax: React.Dispatch<React.SetStateAction<string>>;
+}
+
+const ModalGenerateLinkOption = ({ setExpire, expire, closeModalEdit, max, setMax }: ModalGenerateLinkOptionProps) => {
+	return (
+		<ModalLayout onClose={closeModalEdit}>
+			<div className="bg-theme-setting-primary rounded-xl flex flex-col w-[480px] px-5 py-5 gap-2">
+				<div className="space-y-2">
+					<h3 className="text-xs font-bold text-theme-primary">Expire After</h3>
+					<select
+						name="expireAfter"
+						className={`block w-full  border  rounded p-2 font-normal text-sm tracking-wide outline-none border-none`}
+						onChange={(e) => {
+							setExpire(e.target.value);
+						}}
+						value={expire}
+					>
+						{expireAfter.map((item) => (
+							<option key={item} value={item}>
+								{item}
+							</option>
+						))}
+					</select>
+				</div>
+				<div className="space-y-2">
+					<h3 className="text-xs font-bold text-theme-primary">Max Number of Uses</h3>
+					<select
+						name="maxNumberofUses"
+						className={`block w-full  rounded p-2 font-normal text-sm tracking-wide outline-none border-none `}
+						onChange={(e) => {
+							setMax(e.target.value);
+						}}
+						value={max}
+					>
+						{maxNumberofUses.map((item) => (
+							<option key={item} value={item}>
+								{item}
+							</option>
+						))}
+					</select>
+				</div>
+				<div className="flex justify-end gap-x-4">
+					<button className="px-4 py-2 rounded-lg  border-theme-primary hover:bg-opacity-85" onClick={closeModalEdit}>
+						Cancel
+					</button>
+					<button className="px-4 py-2 rounded-lg text-white bg-primary hover:bg-opacity-85" onClick={closeModalEdit}>
+						Generate a New Link
+					</button>
+				</div>
 			</div>
-			<div className="flex justify-end gap-x-4">
-				<button className="px-4 py-2 rounded bg-slate-500 hover:bg-opacity-85" onClick={closeModalEdit}>
-					Cancel
-				</button>
-				<button className="px-4 py-2 rounded bg-primary hover:bg-opacity-85" onClick={closeModalEdit}>
-					Generate a New Link
-				</button>
-			</div>
-		</Modal>
+		</ModalLayout>
 	);
 };
 export default ModalInvite;

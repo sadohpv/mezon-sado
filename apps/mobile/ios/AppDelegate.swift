@@ -31,7 +31,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
       // Initialize React Native
       FirebaseApp.configure()
-      try? AVAudioSession.sharedInstance().setCategory(.playback)
+      
+      // Configure audio session with proper error handling
+      do {
+        try AVAudioSession.sharedInstance().setCategory(.playback)
+      } catch {
+        print("Failed to set audio session category: \(error)")
+      }
+      
       setDefaultOrientationForDevice()
 
       let delegate = ReactNativeDelegate()
@@ -126,7 +133,7 @@ class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
   // Remove the override since this method doesn't exist in the superclass
   // If you need to customize the root view, check what methods are actually available
   // in RCTDefaultReactNativeFactoryDelegate or consider adding this as a new method
-  func customizeRootView(_ rootView: UIView) {
+  override func customize(_ rootView: UIView) {
     // Initialize boot splash if you have it
     RNBootSplash.initWithStoryboard("SplashScreen", rootView: rootView)
   }

@@ -8,7 +8,7 @@ import {
 	STORAGE_IS_DISABLE_LOAD_BACKGROUND,
 	STORAGE_MY_USER_ID
 } from '@mezon/mobile-components';
-import { appActions, channelsActions, clansActions, directActions, getStoreAsync, topicsActions } from '@mezon/store-mobile';
+import { appActions, channelsActions, clansActions, directActions, getFirstMessageOfTopic, getStoreAsync, topicsActions } from '@mezon/store-mobile';
 import notifee from '@notifee/react-native';
 import {
 	AndroidBadgeIconType,
@@ -20,13 +20,22 @@ import {
 	NotificationAndroid
 } from '@notifee/react-native/src/types/NotificationAndroid';
 import { NotificationIOS } from '@notifee/react-native/src/types/NotificationIOS';
-import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
+import { getApp } from '@react-native-firebase/app';
+import {
+	AuthorizationStatus,
+	FirebaseMessagingTypes,
+	getMessaging,
+	getToken,
+	hasPermission,
+	requestPermission
+} from '@react-native-firebase/messaging';
 import { safeJSONParse } from 'mezon-js';
 import { Alert, DeviceEventEmitter, Linking, NativeModules, PermissionsAndroid, Platform } from 'react-native';
 import RNCallKeep from 'react-native-callkeep';
 import { PERMISSIONS, requestMultiple, RESULTS } from 'react-native-permissions';
 import { APP_SCREEN } from '../navigation/ScreenTypes';
 import { clanAndChannelIdLinkRegex, clanDirectMessageLinkRegex } from './helpers';
+const messaging = getMessaging(getApp());
 
 // Type definitions and validation helpers
 interface VoIPManagerType {
@@ -76,9 +85,9 @@ export const checkNotificationPermission = async () => {
 		if (Platform.OS === 'android' && Platform.Version >= 33) {
 			await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
 		} else {
-			const authorizationStatus = await messaging().hasPermission();
+			const authorizationStatus = await hasPermission(messaging);
 
-			if (authorizationStatus === messaging.AuthorizationStatus.NOT_DETERMINED) {
+			if (authorizationStatus === AuthorizationStatus.NOT_DETERMINED) {
 				await requestNotificationPermission();
 			}
 		}
@@ -89,7 +98,7 @@ export const checkNotificationPermission = async () => {
 
 const requestNotificationPermission = async () => {
 	try {
-		await messaging().requestPermission({
+		await requestPermission(messaging, {
 			alert: true,
 			sound: true,
 			badge: true
@@ -125,10 +134,10 @@ const openAppSettings = () => {
 const getConfigDisplayNotificationAndroid = async (data: Record<string, string | object>): Promise<NotificationAndroid> => {
 	const defaultConfig: NotificationAndroid = {
 		visibility: AndroidVisibility.PUBLIC,
-		channelId: 'default',
+		channelId: (data?.sound as string) || 'default',
 		smallIcon: 'ic_notification',
-		color: '#000000',
-		sound: 'default',
+		color: '#7029c1',
+		sound: (data?.sound as string) || 'default',
 		smallIconLevel: 10,
 		importance: AndroidImportance.HIGH,
 		showTimestamp: true,
@@ -150,7 +159,7 @@ const getConfigDisplayNotificationAndroid = async (data: Record<string, string |
 
 	try {
 		const groupId = await getOrCreateChannelGroup(channel);
-		const channelId = await createNotificationChannel(channel, groupId || '');
+		const channelId = await createNotificationChannel(channel, groupId || '', (data?.sound as string) || 'default');
 
 		return {
 			...defaultConfig,
@@ -191,7 +200,7 @@ const getOrCreateChannelGroup = async (channelId: string): Promise<string> => {
 	}
 };
 
-const createNotificationChannel = async (channelId: string, groupId: string): Promise<string> => {
+const createNotificationChannel = async (channelId: string, groupId: string, sound: string): Promise<string> => {
 	try {
 		if (!isValidString(channelId) || !isValidString(groupId)) {
 			throw new Error('Invalid channel or group ID');
@@ -202,7 +211,7 @@ const createNotificationChannel = async (channelId: string, groupId: string): Pr
 			name: channelId,
 			groupId,
 			importance: AndroidImportance.HIGH,
-			sound: 'default',
+			sound: sound ? sound : 'default',
 			visibility: AndroidVisibility.PUBLIC
 		});
 	} catch (error) {
@@ -215,7 +224,7 @@ const getConfigDisplayNotificationIOS = async (data: Record<string, string | obj
 	const defaultConfig: NotificationIOS = {
 		critical: true,
 		criticalVolume: 1.0,
-		sound: 'default',
+		sound: (data?.sound as string) || 'default',
 		foregroundPresentationOptions: {
 			badge: true,
 			banner: true,
@@ -317,16 +326,16 @@ export const createLocalNotification = async (title: string, body: string, data:
 
 export const handleFCMToken = async (): Promise<string | undefined> => {
 	try {
-		const authStatus = await messaging().requestPermission({
+		const authStatus = await requestPermission(messaging, {
 			alert: true,
 			sound: true,
 			badge: true
 		});
 
-		const enabled = authStatus === messaging.AuthorizationStatus.AUTHORIZED || authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+		const enabled = authStatus === AuthorizationStatus.AUTHORIZED || authStatus === AuthorizationStatus.PROVISIONAL;
 
 		if (enabled) {
-			const fcmtoken = await messaging().getToken();
+			const fcmtoken = await getToken(messaging);
 			if (isValidString(fcmtoken)) {
 				return fcmtoken;
 			}
@@ -379,7 +388,8 @@ export const isShowNotification = (
 export const navigateToNotification = async (store: any, notification: any, navigation: any, isTabletLandscape = false, time?: number) => {
 	const link = notification?.data?.link;
 	const topicId = notification?.data?.topic;
-	if (link) {
+	const isDirectDM = !!notification?.data?.channel && link?.includes('direct/friends');
+	if (link && !isDirectDM) {
 		const linkMatch = link.match(clanAndChannelIdLinkRegex);
 
 		// IF is notification to channel
@@ -420,9 +430,12 @@ export const navigateToNotification = async (store: any, notification: any, navi
 				await handleOpenTopicDiscustion(store, topicId, channelId, navigation);
 			}
 			setTimeout(() => {
+				if (channelId) {
+					DeviceEventEmitter.emit(ActionEmitEvent.SCROLL_TO_ACTIVE_CHANNEL, channelId);
+				}
 				store.dispatch(appActions.setIsFromFCMMobile(false));
 				save(STORAGE_IS_DISABLE_LOAD_BACKGROUND, false);
-			}, 4000);
+			}, 2000);
 		} else {
 			const linkDirectMessageMatch = link.match(clanDirectMessageLinkRegex);
 
@@ -448,6 +461,20 @@ export const navigateToNotification = async (store: any, notification: any, navi
 				}, 4000);
 			}
 		}
+	} else if (isDirectDM) {
+		const channelDMId = notification?.data?.channel;
+		if (navigation) {
+			await store.dispatch(directActions.setDmGroupCurrentId(channelDMId));
+			if (isTabletLandscape) {
+				navigation.navigate(APP_SCREEN.MESSAGES.HOME);
+			} else {
+				navigation.navigate(APP_SCREEN.MESSAGES.MESSAGE_DETAIL, { directMessageId: channelDMId });
+			}
+		}
+		setTimeout(() => {
+			store.dispatch(appActions.setIsFromFCMMobile(false));
+			save(STORAGE_IS_DISABLE_LOAD_BACKGROUND, false);
+		}, 4000);
 	} else {
 		setTimeout(() => {
 			store.dispatch(appActions.setIsFromFCMMobile(false));
@@ -461,6 +488,7 @@ const handleOpenTopicDiscustion = async (store: any, topicId: string, channelId:
 	promises.push(store.dispatch(topicsActions.setCurrentTopicInitMessage(null)));
 	promises.push(store.dispatch(topicsActions.setCurrentTopicId(topicId || '')));
 	promises.push(store.dispatch(topicsActions.setIsShowCreateTopic(true)));
+	promises.push(store.dispatch(getFirstMessageOfTopic(topicId || '')));
 
 	await Promise.all(promises);
 

@@ -5,6 +5,7 @@ import {
 	FooterProfile,
 	ForwardMessageModal,
 	GroupCallManager,
+	InternetStatusPopover,
 	MessageContextMenuProvider,
 	MessageModalImage,
 	ModalCreateClan,
@@ -86,7 +87,7 @@ function MyApp() {
 	const dispatch = useAppDispatch();
 	const currentClanId = useSelector(selectCurrentClanId);
 	const [openCreateClanModal, closeCreateClanModal] = useModal(() => <ModalCreateClan open={true} onClose={closeCreateClanModal} />);
-	const [openSearchModal, closeSearchModal] = useModal(() => <SearchModal onClose={closeSearchModal} open={true} />);
+	const [openSearchModal, closeSearchModal] = useModal(() => <SearchModal onClose={closeSearchModal} />);
 	const openModalAttachment = useSelector(selectOpenModalAttachment);
 	const closeMenu = useSelector(selectCloseMenu);
 	const statusMenu = useSelector(selectStatusMenu);
@@ -186,11 +187,11 @@ function MyApp() {
 			<MemoizedErrorModals />
 
 			<div
-				className={`flex h-dvh min-[480px]:pl-[72px] ${closeMenu ? (statusMenu ? 'pl-[72px]' : '') : ''} overflow-hidden text-gray-100 relative dark:bg-bgPrimary bg-bgLightModeSecond`}
+				className={`flex h-dvh min-[480px]:pl-[72px] ${closeMenu ? (statusMenu ? 'pl-[72px]' : '') : ''} overflow-hidden text-gray-100 relative  `}
 				onClick={handleClick}
 			>
 				{previewMode && <PreviewOnboardingMode />}
-				{openPopupForward && <ForwardMessageModal openModal={openPopupForward} />}
+				{openPopupForward && <ForwardMessageModal />}
 				<SidebarMenu openCreateClanModal={openCreateClanModal} />
 				<Topbar isHidden={currentClanId !== '0' ? !currentChannel?.id : !directId} />
 				<MainContent />
@@ -228,6 +229,8 @@ function MyApp() {
 				{isShowFirstJoinPopup && <FirstJoinPopup openCreateClanModal={openCreateClanModal} onclose={() => setIsShowFirstJoinPopup(false)} />}
 				{isShowPopupQuickMess && <PopupQuickMess />}
 			</div>
+
+			<InternetStatusPopover />
 		</div>
 	);
 }
@@ -321,12 +324,12 @@ const SidebarMenu = memo(
 
 		return (
 			<div
-				className={`contain-strict h-dvh fixed z-10 left-0 top-0 w-[72px] dark:bg-bgSecondary500 bg-bgLightTertiary duration-100 ${isWindowsDesktop || isLinuxDesktop ? 'mt-[21px]' : ''} ${isMacDesktop ? 'pt-[18px]' : ''} ${closeMenu ? (statusMenu ? '' : 'max-sm:hidden') : ''}`}
+				className={`contain-strict  h-dvh fixed z-10 left-0 top-0 w-[72px]  duration-100 ${isWindowsDesktop || isLinuxDesktop ? 'mt-[21px]' : ''} ${isMacDesktop ? 'pt-[18px]' : ''} ${closeMenu ? (statusMenu ? '' : 'max-sm:hidden') : ''}`}
 				onClick={() => handleMenu}
 				id="menu"
 			>
 				<div
-					className={`top-0 left-0 right-0 flex flex-col items-center py-4 overflow-y-auto hide-scrollbar ${isWindowsDesktop || isLinuxDesktop ? 'max-h-heightTitleBar h-heightTitleBar' : 'h-dvh'} `}
+					className={`top-0 left-0 right-0 flex flex-col items-center pt-4 md:pb-32 pb-4 overflow-y-auto hide-scrollbar ${isWindowsDesktop || isLinuxDesktop ? 'max-h-heightTitleBar h-heightTitleBar' : 'h-[calc(100dvh_-_56px)]'} `}
 				>
 					<div className="flex flex-col items-center">
 						<SidebarLogoItem />
@@ -337,12 +340,9 @@ const SidebarMenu = memo(
 
 					<div className="mt-3">
 						<NavLinkComponent>
-							<div
-								className="flex items-center justify-between text-contentSecondary rounded-md cursor-pointer hover:bg-bgLightModeButton group"
-								onClick={openCreateClanModal}
-							>
-								<div className="w-[40px] h-[40px] rounded-lg dark:bg-bgPrimary bg-[#E1E1E1] flex justify-center items-center cursor-pointer dark:group-hover:bg-slate-800 group-hover:bg-bgLightModeButton  transition-all duration-200 size-12">
-									<Icons.AddCircle className="dark:text-textThreadPrimary text-buttonProfile dark:hover:text-textPrimary hover:text-bgPrimary" />
+							<div className="flex items-center justify-between text-theme-primary group" onClick={openCreateClanModal}>
+								<div className="w-[40px] h-[40px] rounded-xl theme-base-color flex justify-center items-center  cursor-pointer transition-all bg-add-clan-hover duration-200 size-12">
+									<p className="text-2xl font-semibold ">+</p>
 								</div>
 							</div>
 						</NavLinkComponent>
@@ -601,11 +601,9 @@ const MessageModalImageWrapper = () => {
 const MemoizedErrorModals: React.FC = React.memo(() => {
 	const toastError = useSelector(selectToastErrors);
 
-	return (
-		<>
-			{toastError.map((error) => (
-				<ModalUnknowChannel key={error.id} isError={true} errMessage={error.message} idErr={error.id} />
-			))}
-		</>
-	);
+	if (!toastError || toastError?.length < 1) {
+		return null;
+	}
+	const error = toastError[0];
+	return <ModalUnknowChannel key={error.id} isError={true} errMessage={error.message} idErr={error.id} />;
 });

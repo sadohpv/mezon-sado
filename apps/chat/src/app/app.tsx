@@ -14,6 +14,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import { preloadedState } from './mock/state';
 import { Routes } from './routes';
 
+import { ThemeManager } from '@mezon/themes';
+
+ThemeManager.initializeTheme();
+
 const mezon = getMezonConfig();
 
 export const LoadingFallbackWrapper = () => <LoadingFallback />;

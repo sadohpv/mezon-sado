@@ -1,39 +1,25 @@
-import { useAppDispatch, userClanProfileActions } from '@mezon/store';
+import { channelMembersActions, selectCurrentClanId, useAppDispatch, userClanProfileActions } from '@mezon/store';
 import { Icons } from '@mezon/ui';
-import { Dropdown, Label, Modal } from 'flowbite-react';
+import { Dropdown } from 'flowbite-react';
 import { ReactNode, useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { ModalLayout } from '../../../components';
 
 type ModalCustomStatusProps = {
 	name: string;
-	openModal: boolean;
-	onClose?: () => void;
-	customStatus?: string;
-	setCustomStatus: (customStatus: string) => void;
-	handleSaveCustomStatus?: () => void;
-	setResetTimerStatus: (minutes: number) => void;
-	setNoClearStatus: (noClear: boolean) => void;
+	onClose: () => void;
+	status?: string;
 };
 
-const ModalCustomStatus = ({
-	openModal,
-	name,
-	customStatus,
-	onClose,
-	setCustomStatus,
-	handleSaveCustomStatus,
-	setResetTimerStatus,
-	setNoClearStatus
-}: ModalCustomStatusProps) => {
+const ModalCustomStatus = ({ name, status, onClose }: ModalCustomStatusProps) => {
 	const dispatch = useAppDispatch();
 
 	useEffect(() => {
-		if (openModal) {
-			dispatch(userClanProfileActions.setShowModalFooterProfile(false));
-		}
-	}, [dispatch, openModal]);
+		dispatch(userClanProfileActions.setShowModalFooterProfile(false));
+	}, []);
 
 	const handleChangeCustomStatus = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const updatedStatus = e.target.value.slice(0, 128).replace(/\\/g, '\\\\');
+		const updatedStatus = e.target.value.slice(0, 128).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "''");
 		setCustomStatus(updatedStatus);
 	};
 
@@ -53,50 +39,62 @@ const ModalCustomStatus = ({
 			setResetTimerStatus(minutes);
 		}
 	};
+	const currentClanId = useSelector(selectCurrentClanId);
+
+	const [resetTimerStatus, setResetTimerStatus] = useState<number>(0);
+	const [noClearStatus, setNoClearStatus] = useState<boolean>(false);
+	const [customStatus, setCustomStatus] = useState<string>(status ?? '');
+
+	const handleSaveCustomStatus = () => {
+		dispatch(
+			channelMembersActions.updateCustomStatus({
+				clanId: currentClanId ?? '',
+				customStatus: customStatus || '',
+				minutes: resetTimerStatus,
+				noClear: noClearStatus
+			})
+		);
+		dispatch(userClanProfileActions.setShowModalCustomStatus(false));
+		onClose();
+	};
 
 	return (
-		<Modal className="bg-bgModalDark" theme={{ content: { base: 'w-[440px]' } }} show={openModal} dismissible={true} onClose={onClose}>
-			<div className="dark:bg-bgPrimary bg-bgLightMode pt-4 rounded">
+		<ModalLayout onClose={onClose}>
+			<div className="bg-theme-setting-primary pt-4 rounded w-[440px] ">
 				<div>
-					<h1 className="dark:text-textDarkTheme  text-xl font-semibold text-center">Set a custom status</h1>
+					<h1 className="text-theme-primary-active text-xl font-semibold text-center">Set a custom status</h1>
 				</div>
 				<div className="flex w-full flex-col gap-5 pt-4">
 					<div className="px-4">
 						<div className="mb-2 block">
-							<Label
-								value={`What's cookin', ${name}?`}
-								className="dark:text-[#B5BAC1] text-textLightTheme text-xs uppercase font-semibold"
-							/>
+							<p className="text-theme-primary text-xs uppercase font-semibold">What's cookin', {name}</p>
 						</div>
 						<input
 							type="text"
 							defaultValue={customStatus}
-							className="dark:text-[#B5BAC1] text-textLightTheme outline-none w-full h-10 p-[10px] dark:bg-bgInputDark bg-bgLightModeThird text-base rounded placeholder:text-sm"
-							placeholder="Support has arrived!"
+							className="text-theme-primary bg-input-secondary outline-none w-full h-10 p-[10px] text-base rounded placeholder:text-sm border-theme-primary"
+							placeholder="What on your mind?"
 							maxLength={128}
+							autoFocus
 							onChange={handleChangeCustomStatus}
 						/>
 					</div>
 					<div className="px-4">
 						<div className="mb-2 block">
-							<Label
-								htmlFor="clearAfter"
-								value="Clear after"
-								className="dark:text-[#B5BAC1] text-textLightTheme text-xs uppercase font-semibold"
-							/>
+							<p className="text-theme-primary text-xs uppercase font-semibold">Clear after</p>
 						</div>
 						<Dropdown
 							trigger="click"
 							dismissOnClick={false}
 							renderTrigger={() => (
-								<div className="flex items-center justify-between rounded-sm cursor-pointer h-9 dark:bg-bgInputDark bg-bgLightModeThird dark:hover:[&>*]:text-[#fff] hover:[&>*]:text-[#000] px-3">
-									<li className="text-[14px] text-[#B5BAC1] w-full py-[6px] list-none select-none">{timeSetReset}</li>
-									<Icons.ArrowDown defaultFill="#fff" />
+								<div className="flex items-center justify-between rounded-lg cursor-pointer h-9 text-theme-primary-hover bg-input-secondary px-3 text-theme-primary">
+									<li className="text-[14px] text-theme-primary w-full py-[6px] list-none select-none">{timeSetReset}</li>
+									<Icons.ArrowDown />
 								</div>
 							)}
 							label=""
 							placement="bottom-start"
-							className="dark:bg-[#232428] bg-bgLightModeThird border-none py-0 w-[200px] [&>ul]:py-0"
+							className="bg-theme-setting-primary border-none py-0 w-[200px] [&>ul]:py-0"
 						>
 							<ItemSelect children="Today" onClick={() => setStatusTimer(0, false, 'Today')} />
 							<ItemSelect children="4 hours" onClick={() => setStatusTimer(240, false, '4 hours')} />
@@ -107,24 +105,22 @@ const ModalCustomStatus = ({
 					</div>
 					<div className="px-4">
 						<div className="mb-2 block">
-							<Label
-								htmlFor="status"
-								value="Status"
-								className="dark:text-[#B5BAC1] text-textLightTheme text-xs uppercase font-semibold"
-							/>
+							<label htmlFor="status" className="text-theme-primary text-xs uppercase font-semibold">
+								Status
+							</label>
 						</div>
 						<Dropdown
 							trigger="click"
 							dismissOnClick={false}
 							renderTrigger={() => (
-								<div className="flex items-center justify-between rounded-sm h-9 dark:bg-bgInputDark bg-bgLightModeThird dark:hover:[&>*]:text-[#fff] hover:[&>*]:text-[#000] px-3">
-									<li className="text-[14px] text-[#B5BAC1] w-full py-[6px] cursor-pointer list-none select-none">Online</li>
-									<Icons.ArrowDown defaultFill="#fff" />
+								<div className="flex items-center justify-between rounded-lg h-9 text-theme-primary-hover bg-input-secondary px-3 text-theme-primary">
+									<li className="text-[14px] text-theme-primary w-full py-[6px] cursor-pointer list-none select-none">Online</li>
+									<Icons.ArrowDown />
 								</div>
 							)}
 							label=""
 							placement="bottom-start"
-							className="dark:bg-[#232428] bg-bgLightModeThird border-none py-0 w-[200px] [&>ul]:py-0"
+							className="bg-input-secondary border-none py-0 w-[200px] [&>ul]:py-0"
 						>
 							<ItemSelect children="Online" startIcon={<Icons.OnlineStatus />} />
 							<ItemSelect children="Idle" startIcon={<Icons.DarkModeIcon className="text-[#F0B232] -rotate-90" />} />
@@ -132,25 +128,17 @@ const ModalCustomStatus = ({
 							<ItemSelect children="Invisible" startIcon={<Icons.OfflineStatus />} />
 						</Dropdown>
 					</div>
-					<div className="flex justify-end p-4 rounded-b dark:bg-[#2B2D31] bg-[#dedede]">
-						<button
-							className="py-2 h-10 px-4 rounded bg-transparent dark:bg-transparent hover:!bg-transparent hover:!underline focus:!ring-transparent dark:text-textDarkTheme text-textLightTheme"
-							type="button"
-							onClick={onClose}
-						>
+					<div className="flex justify-end p-4 gap-2 rounded-b-theme-primary ">
+						<button className="py-2 h-10 px-4 rounded-lg  hover:underline text-theme-primary" type="button" onClick={onClose}>
 							Cancel
 						</button>
-						<button
-							className="py-2 h-10 px-4 rounded bg-bgSelectItem dark:bg-bgSelectItem hover:!bg-bgSelectItemHover focus:!ring-transparent"
-							type="button"
-							onClick={handleSaveCustomStatus}
-						>
+						<button className="py-2 h-10 px-4 rounded-lg text-white !bg-[#5265ec] hover:!bg-[#4654c0]" type="button" onClick={handleSaveCustomStatus}>
 							Save
 						</button>
 					</div>
 				</div>
 			</div>
-		</Modal>
+		</ModalLayout>
 	);
 };
 
@@ -165,10 +153,10 @@ const ItemSelect = ({ children, dropdown, startIcon, onClick }: ItemSelectProps)
 	return (
 		<div
 			onClick={onClick}
-			className="flex items-center justify-between h-11 rounded-sm dark:bg-bgInputDark bg-bgLightModeThird cursor-pointer  dark:hover:bg-zinc-700 hover:bg-bgLightMode dark:hover:[&>li]:text-[#fff] hover:[&>li]:text-[#000] px-3"
+			className="flex items-center justify-between h-11 rounded-sm bg-theme-setting-nav text-theme-primary-hover cursor-pointer text-theme-primary bg-item-theme-hover-status px-3"
 		>
 			{startIcon && <div className="flex items-center justify-center h-[18px] w-[18px] mr-2">{startIcon}</div>}
-			<li className="text-[14px] dark:text-[#B5BAC1] text-[#777777] w-full list-none leading-[44px]">{children}</li>
+			<li className="text-[14px] w-full list-none leading-[44px] ">{children}</li>
 			<Icons.Check className="w-[18px] h-[18px]" />
 		</div>
 	);

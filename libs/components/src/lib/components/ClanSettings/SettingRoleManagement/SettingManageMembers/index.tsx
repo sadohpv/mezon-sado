@@ -74,14 +74,14 @@ const SettingManageMembers = ({ RolesClan, hasPermissionEdit }: { RolesClan: Rol
 		<div>
 			<div className="w-full flex gap-x-3 pr-5">
 				<InputField
-					className="flex-grow dark:bg-bgTertiary bg-bgLightModeThird text-[15px] w-full py-1 px-2 font-normal border dark:border-bgTertiary border-bgLightModeThird rounded"
+					className="flex-grow text-[15px] w-full py-1 px-2 font-normal border-theme-primary bg-input-secondary"
 					type="text"
 					placeholder="Search Members"
 					value={searchTerm}
 					onChange={(e) => setSearchTerm(e.target.value)}
 				/>
 				<button
-					className="flex-grow text-[15px] bg-blue-600 hover:bg-blue-500 rounded py-[3px] px-2 text-nowrap font-medium text-white"
+					className="flex-grow text-[15px] bg-indigo-500 hover:bg-indigo-600 rounded-lg py-[3px] px-2 text-nowrap font-medium text-white"
 					onClick={() => {
 						handleOpenModal();
 					}}
@@ -137,15 +137,15 @@ const ItemMember = (props: ItemMemberProps) => {
 					srcImgProxy={createImgproxyUrl(avatarPrioritize ?? '')}
 					src={avatarPrioritize}
 				/>
-				<span className="dark:text-white text-black font-medium one-line">{namePrioritize}</span>
-				<span className="dark:text-colorNeutral text-colorTextLightMode font-light">{username}</span>
+				<span className="font-medium one-line">{namePrioritize}</span>
+				<span className="font-light">{username}</span>
 			</div>
 			{!isNewRole ? (
 				<div
 					onClick={onRemove}
-					className="w-4 h-4 rounded-full flex justify-center items-center dark:bg-slate-800 bg-bgLightModeButton mr-5 cursor-pointer"
+					className="w-4 h-4 rounded-full flex justify-center items-center mr-5 cursor-pointer text-theme-primary-hover"
 				>
-					<Icons.Close defaultSize="size-2 dark:text-white text-black" />
+					<Icons.Close defaultSize="size-2 " />
 				</div>
 			) : null}
 		</li>

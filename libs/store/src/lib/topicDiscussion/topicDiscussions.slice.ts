@@ -8,13 +8,11 @@ import {
 	LoadingStatus
 } from '@mezon/utils';
 import { createAsyncThunk, createEntityAdapter, createSelector, createSlice, EntityState, PayloadAction } from '@reduxjs/toolkit';
-import memoizee from 'memoizee';
 import { ApiMessageAttachment, ApiMessageMention, ApiMessageRef, ApiSdTopic } from 'mezon-js/api.gen';
 import { ApiChannelMessageHeader, ApiSdTopicRequest } from 'mezon-js/dist/api.gen';
 import { ensureSession, ensureSocket, getMezonCtx, MezonValueContext } from '../helpers';
 import { RootState } from '../store';
 import { threadsActions } from '../threads/threads.slice';
-const LIST_TOPIC_DISCUSSIONS_CACHED_TIME = 1000 * 60 * 60;
 
 export const TOPIC_DISCUSSIONS_FEATURE_KEY = 'topicdiscussions';
 
@@ -46,19 +44,10 @@ export interface FetchTopicDiscussionsArgs {
 	noCache?: boolean;
 }
 
-const fetchTopicsCached = memoizee(
-	async (mezon: MezonValueContext, clanId: string) => {
-		const response = await mezon.client.listSdTopic(mezon.session, clanId, 50);
-		return { ...response, time: Date.now() };
-	},
-	{
-		promise: true,
-		maxAge: LIST_TOPIC_DISCUSSIONS_CACHED_TIME,
-		normalizer: (args) => {
-			return args[1] + args[0].session.username;
-		}
-	}
-);
+const fetchTopicsCached = async (mezon: MezonValueContext, clanId: string) => {
+	const response = await mezon.client.listSdTopic(mezon.session, clanId, 50);
+	return { ...response, time: Date.now() };
+};
 
 const mapToTopicEntity = (topics: ApiSdTopic[]) => {
 	return topics.map((topic) => ({
@@ -81,16 +70,8 @@ export const getFirstMessageOfTopic = createAsyncThunk('topics/getFirstMessageOf
 export const fetchTopics = createAsyncThunk('topics/fetchTopics', async ({ clanId, noCache }: FetchTopicDiscussionsArgs, thunkAPI) => {
 	try {
 		const mezon = await ensureSession(getMezonCtx(thunkAPI));
-		if (noCache) {
-			fetchTopicsCached.delete(mezon, clanId);
-		}
 		const response = await fetchTopicsCached(mezon, clanId);
-		if (Date.now() - response.time > 100) {
-			return {
-				fromCache: true,
-				topics: []
-			};
-		}
+
 		const topics = mapToTopicEntity(response.topics || []);
 		return {
 			clan_id: clanId,
@@ -372,3 +353,9 @@ export const selectTopicByChannelId = (channelId: string) =>
 	createSelector(getTopicsState, (state: TopicDiscussionsState) => state.channelTopics[channelId] ?? null);
 
 export const selectClickedOnTopicStatus = createSelector(getTopicsState, (state) => state.isFocusTopicBox);
+
+export const selectIsTopicReady = (topicId: string) =>
+	createSelector(selectAllTopics, (topics) => {
+		const topic = topics.find(t => t.id === topicId);
+		return !!(topic && topic.last_sent_message && Object.keys(topic.last_sent_message).length > 0);
+	});

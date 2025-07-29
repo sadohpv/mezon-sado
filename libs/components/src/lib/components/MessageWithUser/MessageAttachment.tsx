@@ -146,7 +146,7 @@ const MessageAttachment = ({
 	isInSearchMessage,
 	defaultMaxWidth
 }: MessageAttachmentProps) => {
-	const validateAttachment = (message.attachments || []).filter((attachment) => Object.keys(attachment).length !== 0);
+	const validateAttachment = (message.attachments || [])?.filter((attachment) => Object.keys(attachment).length !== 0);
 	if (!validateAttachment) return null;
 	return (
 		<Attachments
@@ -262,7 +262,8 @@ const ImageAlbum = ({
 				}
 				dispatch(attachmentActions.fetchChannelAttachments({ clanId, channelId }))
 					.then((data) => {
-						const attachmentList = data.payload as IAttachmentEntity[];
+						const response = (data.payload as { attachments: [] }) ?? { attachments: [] };
+						const attachmentList = response.attachments as IAttachmentEntity[];
 						const imageList = attachmentList?.filter((image) => image.filetype?.includes('image'));
 						const imageListWithUploaderInfo = getAttachmentDataForWindow(imageList, currentChatUsersEntities);
 						const selectedImageIndex = imageList.findIndex((image) => image.url === attachmentData.url);

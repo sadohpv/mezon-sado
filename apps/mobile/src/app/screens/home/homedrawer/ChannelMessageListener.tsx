@@ -9,16 +9,15 @@ import {
 	selectAllRolesClan,
 	selectAllUserClans,
 	selectCurrentClanId,
+	selectCurrentTopicId,
 	selectDmGroupCurrentId,
 	selectGrouplMembers,
-	selectSession,
 	useAppDispatch
 } from '@mezon/store-mobile';
 import { useNavigation } from '@react-navigation/native';
 import { ChannelType } from 'mezon-js';
 import React, { useCallback, useEffect } from 'react';
 import { DeviceEventEmitter, Linking, View } from 'react-native';
-import { useSelector } from 'react-redux';
 import { useWebRTCStream } from '../../../components/StreamContext/StreamContext';
 import { APP_SCREEN } from '../../../navigation/ScreenTypes';
 import { linkGoogleMeet } from '../../../utils/helpers';
@@ -71,6 +70,11 @@ const ChannelMessageListener = React.memo(() => {
 				const clanIdStore = selectCurrentClanId(store.getState());
 				const currentDirectId = selectDmGroupCurrentId(store.getState());
 				const currentClanId = currentDirectId ? '0' : clanIdStore;
+				const topicIdStore = selectCurrentTopicId(store.getState());
+
+				if (topicIdStore) {
+					navigation.goBack();
+				}
 
 				if (type === ChannelType.CHANNEL_TYPE_GMEET_VOICE && channel?.meeting_code) {
 					const urlVoice = `${linkGoogleMeet}${channel?.meeting_code}`;

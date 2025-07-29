@@ -1,7 +1,7 @@
 import { ChatContext } from '@mezon/core';
 import { ActionEmitEvent, STORAGE_CLAN_ID, STORAGE_IS_LAST_ACTIVE_TAB_DM, load, save } from '@mezon/mobile-components';
 import { useTheme } from '@mezon/mobile-ui';
-import { clansActions, directActions, selectDmGroupCurrentId, useAppDispatch } from '@mezon/store-mobile';
+import { clansActions, directActions, getStore, selectDmGroupCurrentId, selectIdMessageToJump, useAppDispatch } from '@mezon/store-mobile';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import React, { memo, useCallback, useContext, useEffect, useRef } from 'react';
 import { AppState, DeviceEventEmitter, Platform, StatusBar, View } from 'react-native';
@@ -30,7 +30,7 @@ export const DirectMessageDetailListener = memo(({ dmType, directMessageId }: { 
 		dispatch(directActions.fetchDirectMessage({ noCache: true }));
 	};
 
-	const directMessageLoader = async () => {
+	const directMessageLoader = useCallback(async () => {
 		save(STORAGE_IS_LAST_ACTIVE_TAB_DM, 'true');
 		await dispatch(
 			directActions.joinDirectMessage({
@@ -42,7 +42,7 @@ export const DirectMessageDetailListener = memo(({ dmType, directMessageId }: { 
 			})
 		);
 		handleReconnect('DM detail reconnect attempt loader');
-	};
+	}, [directMessageId, dispatch, dmType, handleReconnect]);
 
 	useFocusEffect(
 		useCallback(() => {
@@ -50,9 +50,12 @@ export const DirectMessageDetailListener = memo(({ dmType, directMessageId }: { 
 				StatusBar.setBackgroundColor(themeValue.primary);
 			}
 			requestAnimationFrame(async () => {
+				const store = getStore();
+				const idMessageToJump = selectIdMessageToJump(store.getState());
+				if (idMessageToJump?.id) return;
 				await directMessageLoader();
 			});
-		}, [])
+		}, [directMessageLoader, themeValue.primary])
 	);
 
 	useEffect(() => {

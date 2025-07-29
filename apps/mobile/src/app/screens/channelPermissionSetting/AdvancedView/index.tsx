@@ -1,11 +1,10 @@
-import { size, Text, useTheme } from '@mezon/mobile-ui';
-import { selectAllUserChannel } from '@mezon/store';
-import { fetchUserChannels, rolesClanActions, selectRolesByChannelId, useAppDispatch } from '@mezon/store-mobile';
+import { size, useTheme, verticalScale } from '@mezon/mobile-ui';
+import { fetchUserChannels, rolesClanActions, selectAllUserChannel, selectRolesByChannelId, useAppDispatch } from '@mezon/store-mobile';
 import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import { memo, useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useSelector } from 'react-redux';
 import { APP_SCREEN } from '../../../navigation/ScreenTypes';
 import { MemberItem } from '../components/MemberItem';
@@ -67,7 +66,12 @@ export const AdvancedView = memo(({ isAdvancedEditMode, channel }: IAdvancedView
 			if (!type && headerTitle && isShowHeader) {
 				return (
 					<View style={{ paddingTop: size.s_12, paddingLeft: size.s_8, marginBottom: size.s_10 }}>
-						<Text color={themeValue.white} h4>
+						<Text
+							style={{
+								fontSize: verticalScale(18),
+								color: themeValue.white
+							}}
+						>
 							{headerTitle}:
 						</Text>
 					</View>
@@ -93,7 +97,7 @@ export const AdvancedView = memo(({ isAdvancedEditMode, channel }: IAdvancedView
 	);
 
 	return (
-		<View style={{ flex: 1 }}>
+		<View style={{ flex: 1, backgroundColor: themeValue.primary }}>
 			{listOfRoleAndMemberInChannel.length ? (
 				<FlashList
 					data={listOfRoleAndMemberInChannel}
@@ -104,7 +108,13 @@ export const AdvancedView = memo(({ isAdvancedEditMode, channel }: IAdvancedView
 				/>
 			) : (
 				<View style={{ alignItems: 'center', flex: 1, justifyContent: 'center' }}>
-					<Text color={themeValue.textDisabled}>{t('channelPermission.roleAndMemberEmpty')}</Text>
+					<Text
+						style={{
+							color: themeValue.textDisabled
+						}}
+					>
+						{t('channelPermission.roleAndMemberEmpty')}
+					</Text>
 				</View>
 			)}
 

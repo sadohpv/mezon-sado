@@ -1,7 +1,6 @@
-import { VideoTrack } from '@livekit/react-native';
+import { useLocalParticipant, useParticipants, useTracks, VideoTrack } from '@livekit/react-native';
 import { size, useTheme } from '@mezon/mobile-ui';
-import { useAppSelector } from '@mezon/store';
-import { selectMemberClanByUserName } from '@mezon/store-mobile';
+import { selectMemberClanByUserName, useAppSelector } from '@mezon/store-mobile';
 import { Track } from 'livekit-client';
 import React, { useMemo } from 'react';
 import { Text, View } from 'react-native';
@@ -10,12 +9,15 @@ import { IconCDN } from '../../../../../../../../src/app/constants/icon_cdn';
 import MezonAvatar from '../../../../../../componentUI/MezonAvatar';
 import { style } from '../styles';
 
-const FocusedScreenPopup = ({ sortedParticipants, tracks, localParticipant }) => {
+const FocusedScreenPopup = () => {
+	const { localParticipant } = useLocalParticipant();
+	const participants = useParticipants();
+	const tracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare, Track.Source.ScreenShareAudio]);
 	const { themeValue } = useTheme();
 	const styles = style(themeValue);
-	const otherParticipants = sortedParticipants.filter((p) => p.identity !== localParticipant.identity);
-	const selfParticipant = sortedParticipants.find((p) => p.identity === localParticipant.identity);
-	const randomParticipant = sortedParticipants[0];
+	const otherParticipants = participants.filter((p) => p.identity !== localParticipant.identity);
+	const selfParticipant = participants.find((p) => p.identity === localParticipant.identity);
+	const randomParticipant = participants[0];
 	const username = randomParticipant.identity;
 	const member = useAppSelector((state) => selectMemberClanByUserName(state, username));
 	const voiceUsername = member?.clan_nick || member?.user?.display_name || username;

@@ -87,13 +87,14 @@ const DraggableModalTabs: React.FC<DraggableModalTabsProps> = ({
 	);
 
 	const handleCloseAllTabs = useCallback(
-		(event: React.MouseEvent) => {
+		async (event: React.MouseEvent) => {
 			event.stopPropagation();
 
 			const curClanId = selectCurrentClanId(store.getState());
 			dispatch(channelsActions.resetAppChannelsListShowOnPopUp({ clanId: curClanId as string }));
+			appChannelList.forEach((item) => handleOnCloseCallback(event, curClanId as string, item.channel_id as string));
 		},
-		[dispatch]
+		[dispatch, handleOnCloseCallback, appChannelList]
 	);
 
 	const handlePlusClick = useCallback(
@@ -215,13 +216,13 @@ const DraggableModalTabItem: React.FC<DraggableModalTabItemProps> = ({ app, hand
 									{isJoinVoice ? (
 										<Icons.StopCall className="size-4 text-red-600" />
 									) : (
-										<Icons.StartCall className="size-3 dark:hover:text-white hover:text-black dark:text-[#B5BAC1] text-colorTextLightMode" />
+										<Icons.StartCall className="size-3 dark:hover:text-white hover:text-black text-theme-primary" />
 									)}
 								</button>
 								{isJoinVoice && (
 									<button onClick={() => dispatch(channelAppActions.setEnableVoice(!isTalking))}>
 										{isTalking ? (
-											<Icons.MicEnable className="size-4 dark:hover:text-white hover:text-black dark:text-[#B5BAC1] text-colorTextLightMode" />
+											<Icons.MicEnable className="size-4 dark:hover:text-white hover:text-black text-theme-primary" />
 										) : (
 											<Icons.MicDisable className="size-4 text-red-600" />
 										)}

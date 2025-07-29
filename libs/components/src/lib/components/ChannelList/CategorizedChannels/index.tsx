@@ -124,7 +124,12 @@ const CategorizedItem: React.FC<CategorizedChannelsProps> = ({ category }) => {
 		const windowHeight = window.innerHeight;
 
 		if (event.button === MouseButton.RIGHT) {
-			await dispatch(defaultNotificationCategoryActions.getDefaultNotificationCategory({ categoryId: category?.id ?? '' }));
+			await dispatch(
+				defaultNotificationCategoryActions.getDefaultNotificationCategory({
+					clanId: currentClan?.id as string,
+					categoryId: category?.id ?? ''
+				})
+			);
 			const distanceToBottom = windowHeight - event.clientY;
 			setCoords({ mouseX, mouseY, distanceToBottom });
 			openRightClickModal();
@@ -169,15 +174,16 @@ const CategorizedItem: React.FC<CategorizedChannelsProps> = ({ category }) => {
 			<div className="flex flex-row px-2 relative gap-1" onMouseDown={handleMouseClick} ref={panelRef} role={'button'}>
 				<button
 					onClick={handleToggleCategory}
-					className="dark:text-channelTextLabel text-colorTextLightMode flex items-center px-0.5 w-full font-title tracking-wide dark:hover:text-gray-100 hover:text-black uppercase text-sm font-medium"
+					className="text-theme-primary flex items-center px-0.5 w-full font-title tracking-wide text-theme-primary-hover uppercase text-sm font-medium"
 				>
 					{categoryExpandState ? <Icons.ArrowDown /> : <Icons.ArrowRight />}
 					<span className="one-line">{category.category_name}</span>
 				</button>
+
 				{!category.isFavor && (
 					<UserRestrictionZone policy={isShowCreateChannel}>
 						<button
-							className="focus-visible:outline-none dark:text-channelTextLabely text-colorTextLightMode dark:hover:text-white hover:text-black"
+							className="focus-visible:outline-none text-theme-primary text-theme-primary-hover"
 							onClick={() => handleOpenCreateChannelModal(category)}
 						>
 							<Icons.Plus />

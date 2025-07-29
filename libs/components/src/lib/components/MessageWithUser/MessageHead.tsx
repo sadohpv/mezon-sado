@@ -44,7 +44,7 @@ const BaseMessageHead = ({
 	return (
 		<>
 			<div
-				className="text-base font-medium tracking-normal cursor-pointer break-all username hover:underline flex items-center"
+				className="text-base font-medium tracking-normal cursor-pointer break-all username text-theme-primary-active hover:underline flex items-center"
 				onClick={onClick}
 				role="button"
 				style={{
@@ -62,7 +62,7 @@ const BaseMessageHead = ({
 						<img loading="lazy" src={userRolesClan.highestPermissionRoleIcon} alt="" className="'w-5 h-5 ml-1" />
 					)}
 			</div>
-			<div className="pl-1 pt-[5px] dark:text-zinc-400 text-colorTextLightMode text-[10px]">{messageTime}</div>
+			<div className="pl-1 pt-[5px] text-theme-primary text-[12px] font-medium">{messageTime}</div>
 		</>
 	);
 };

@@ -15,7 +15,6 @@ import {
 	DirectEntity,
 	directMetaActions,
 	e2eeActions,
-	EStateFriend,
 	gifsStickerEmojiActions,
 	selectAudioDialTone,
 	selectCloseMenu,
@@ -23,7 +22,6 @@ import {
 	selectCurrentDM,
 	selectDirectById,
 	selectDmGroupCurrent,
-	selectFriendById,
 	selectHasKeyE2ee,
 	selectIsSearchMessage,
 	selectIsShowCreateThread,
@@ -142,10 +140,6 @@ const DirectMessage = () => {
 	const isHaveCallInChannel = useMemo(() => {
 		return currentDmGroup?.user_id?.some((i) => i === signalingData?.[0]?.callerId);
 	}, [currentDmGroup?.user_id, signalingData]);
-	const infoFriend = useAppSelector((state) => selectFriendById(state, currentDirect?.user_id?.[0] || ''));
-	const isBlocked = useMemo(() => {
-		return infoFriend?.state === EStateFriend.BLOCK;
-	}, [infoFriend?.state]);
 
 	const HEIGHT_EMOJI_PANEL = 457;
 	const WIDTH_EMOJI_PANEL = 500;
@@ -154,15 +148,15 @@ const DirectMessage = () => {
 	const distanceToRight = window.innerWidth - positionOfSmileButton.right;
 	let topPositionEmojiPanel: string;
 
-	useEffect(() => {
-		dispatch(
-			directActions.joinDirectMessage({
-				directMessageId: currentDmGroup?.channel_id ?? '',
-				channelName: '',
-				type: Number(type)
-			})
-		);
-	}, [currentDmGroup?.channel_id]);
+	// useEffect(() => {
+	// 	dispatch(
+	// 		directActions.joinDirectMessage({
+	// 			directMessageId: currentDmGroup?.channel_id ?? '',
+	// 			channelName: '',
+	// 			type: Number(type)
+	// 		})
+	// 	);
+	// }, [currentDmGroup?.channel_id]);
 
 	if (distanceToBottom < HEIGHT_EMOJI_PANEL) {
 		topPositionEmojiPanel = 'auto';
@@ -208,7 +202,7 @@ const DirectMessage = () => {
 		<>
 			{draggingState && <FileUploadByDnD currentId={currentDmGroup?.channel_id ?? ''} />}
 			<div
-				className={` flex flex-col flex-1 shrink min-w-0 bg-transparent h-heightWithoutTopBar overflow-visible relative mt-[50px]`}
+				className={` flex flex-col flex-1 shrink min-w-0 bg-transparent h-heightWithoutTopBar overflow-visible relative mt-[50px] bg-theme-chat text-theme-text`}
 				onDragEnter={handleDragEnter}
 			>
 				<div
@@ -281,13 +275,13 @@ const DirectMessage = () => {
 							</div>
 						)}
 
-						<div className="flex-shrink-0 flex flex-col dark:bg-bgPrimary bg-bgLightPrimary h-auto relative">
-							{currentDmGroup?.type === ChannelType.CHANNEL_TYPE_DM && (currentDmGroup.user_id?.length === 0 || isBlocked) ? (
+						<div className="flex-shrink-0 flex flex-col bg-theme-chat  h-auto relative">
+							{currentDmGroup?.type === ChannelType.CHANNEL_TYPE_DM && currentDmGroup.user_id?.length === 0 ? (
 								<div
 									style={{ height: 44 }}
-									className="opacity-80 dark:bg-[#34363C] bg-[#F5F6F7] ml-4 mb-4 py-2 pl-2 w-widthInputViewChannelPermission dark:text-[#4E504F] text-[#D5C8C6] rounded one-line"
+									className="opacity-80 bg-theme-input  ml-4 mb-4 py-2 pl-2 w-widthInputViewChannelPermission text-theme-primary rounded one-line"
 								>
-									{isBlocked ? " You can't reply to this conversation" : ' You do not have permission to send message'}
+									You do not have permission to send message
 								</div>
 							) : (
 								<>
@@ -321,7 +315,7 @@ const DirectMessage = () => {
 							dataMemberCreate={{ createId: currentDmGroup?.creator_id || '' }}
 						>
 							<div
-								className={`contain-strict dark:bg-bgSecondary bg-bgLightSecondary overflow-y-scroll h-[calc(100vh_-_50px)] thread-scroll ${isShowMemberListDM ? 'flex' : 'hidden'} ${closeMenu ? 'w-full' : 'w-[241px]'}`}
+								className={`contain-strict text-theme-primary bg-active-friend-list overflow-y-scroll h-[calc(100vh_-_50px)] thread-scroll ${isShowMemberListDM ? 'flex' : 'hidden'} ${closeMenu ? 'w-full' : 'w-[241px]'}`}
 							>
 								<MemberListGroupChat directMessageId={directId} createId={currentDmGroup?.creator_id} />
 							</div>
@@ -329,9 +323,7 @@ const DirectMessage = () => {
 					)}
 
 					{Number(type) === ChannelType.CHANNEL_TYPE_DM && isUseProfileDM && (
-						<div
-							className={`dark:bg-bgTertiary bg-bgLightSecondary ${isUseProfileDM ? 'flex' : 'hidden'} ${closeMenu ? 'w-full' : 'w-widthDmProfile'}`}
-						>
+						<div className={`bg-active-friend-list ${isUseProfileDM ? 'flex' : 'hidden'} ${closeMenu ? 'w-full' : 'w-widthDmProfile'}`}>
 							<ModalUserProfile
 								onClose={handleClose}
 								userID={Array.isArray(currentDmGroup?.user_id) ? currentDmGroup?.user_id[0] : currentDmGroup?.user_id}

@@ -1,7 +1,14 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { ActionEmitEvent, AngleRight, ENotificationActive, ENotificationChannelId } from '@mezon/mobile-components';
 import { size, useTheme } from '@mezon/mobile-ui';
-import { DirectEntity, notificationSettingActions, selectCurrentClanId, selectNotifiSettingsEntitiesById, useAppDispatch } from '@mezon/store-mobile';
+import {
+	DirectEntity,
+	notificationSettingActions,
+	selectCurrentClanId,
+	selectNotifiSettingsEntitiesById,
+	useAppDispatch,
+	useAppSelector
+} from '@mezon/store-mobile';
 import { FOR_15_MINUTES, FOR_1_HOUR, FOR_24_HOURS, FOR_3_HOURS, FOR_8_HOURS, IChannel } from '@mezon/utils';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { format } from 'date-fns';
@@ -123,14 +130,14 @@ const MuteThreadDetailModal = ({ route }: MuteThreadDetailModalProps) => {
 		});
 	}, [currentChannel?.channel_label, isChannel, isDMThread, navigation, styles.headerLeftBtn, t, themeValue.text, themeValue.textStrong]);
 
-	const getNotificationChannelSelected = useSelector(selectNotifiSettingsEntitiesById(currentChannel?.channel_id));
+	const getNotificationChannelSelected = useAppSelector((state) => selectNotifiSettingsEntitiesById(state, currentChannel?.channel_id || ''));
 	const currentClanId = useSelector(selectCurrentClanId);
 	const dispatch = useAppDispatch();
 
 	const openBottomSheet = () => {
 		const data = {
 			heightFitContent: true,
-			children: <NotificationSetting />
+			children: <NotificationSetting channel={currentChannel}/>
 		};
 		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_BOTTOM_SHEET, { isDismiss: false, data });
 	};
@@ -177,7 +184,7 @@ const MuteThreadDetailModal = ({ route }: MuteThreadDetailModalProps) => {
 		navigation.goBack();
 	};
 
-	const handleScheduleMute = (duration: number) => {
+	const handleScheduleMute = async (duration: number) => {
 		if (duration !== Infinity) {
 			const now = new Date();
 			const unmuteTime = new Date(now.getTime() + duration);
@@ -190,7 +197,12 @@ const MuteThreadDetailModal = ({ route }: MuteThreadDetailModalProps) => {
 				time_mute: unmuteTimeISO,
 				...(isCurrentChannel && { is_current_channel: false })
 			};
-			dispatch(notificationSettingActions.setNotificationSetting(body));
+			const response = await dispatch(notificationSettingActions.setNotificationSetting(body));
+			if (response?.meta?.requestStatus === 'fulfilled') {
+				dispatch(
+					notificationSettingActions.updateNotiState({ channelId: currentChannel?.channel_id || '', active: ENotificationActive.OFF })
+				);
+			}
 		} else {
 			const body = {
 				channel_id: currentChannel?.channel_id || '',
@@ -199,7 +211,12 @@ const MuteThreadDetailModal = ({ route }: MuteThreadDetailModalProps) => {
 				active: ENotificationActive.OFF,
 				...(isCurrentChannel && { is_current_channel: false })
 			};
-			dispatch(notificationSettingActions.setMuteNotificationSetting(body));
+			const response = await dispatch(notificationSettingActions.setMuteNotificationSetting(body));
+			if (response?.meta?.requestStatus === 'fulfilled') {
+				dispatch(
+					notificationSettingActions.updateNotiState({ channelId: currentChannel?.channel_id || '', active: ENotificationActive.OFF })
+				);
+			}
 		}
 		navigateToThreadDetail();
 	};

@@ -34,16 +34,16 @@ import { ApiChannelMessageHeader, ApiMessageAttachment, ApiMessageMention, ApiMe
 import { MessageButtonClicked } from 'mezon-js/socket';
 import { accountActions, selectAllAccount } from '../account/account.slice';
 import { resetChannelBadgeCount } from '../badge/badgeHelpers';
+import { CacheMetadata, createApiKey, createCacheMetadata, markApiFirstCalled, shouldForceApiCall } from '../cache-metadata';
 import { channelMetaActions } from '../channels/channelmeta.slice';
-import { selectShowScrollDownButton } from '../channels/channels.slice';
+import { selectLoadingStatus, selectShowScrollDownButton } from '../channels/channels.slice';
+import { selectClansLoadingStatus } from '../clans/clans.slice';
 import { selectCurrentDM } from '../direct/direct.slice';
 import { checkE2EE, selectE2eeByUserIds } from '../e2ee/e2ee.slice';
 import { MezonValueContext, ensureSession, ensureSocket, getMezonCtx } from '../helpers';
-import { memoizeAndTrack } from '../memoize';
 import { ReactionEntity } from '../reactionMessage/reactionMessage.slice';
 import { RootState } from '../store';
 import { referencesActions, selectDataReferences } from './references.slice';
-const FETCH_MESSAGES_CACHED_TIME = 1000 * 60 * 60;
 const NX_CHAT_APP_ANNONYMOUS_USER_ID = process.env.NX_CHAT_APP_ANNONYMOUS_USER_ID || 'anonymous';
 
 export const MESSAGES_FEATURE_KEY = 'messages';
@@ -117,6 +117,7 @@ export interface MessagesState {
 		string,
 		EntityState<MessagesEntity, string> & {
 			id: string;
+			cache?: CacheMetadata;
 		}
 	>;
 	channelViewPortMessageIds: Record<string, string[]>;
@@ -184,26 +185,76 @@ export const mapMessageChannelToEntityAction = createAsyncThunk(
 
 export const TYPING_TIMEOUT = 3000;
 
-export const fetchMessagesCached = memoizeAndTrack(
-	async (mezon: MezonValueContext, clanId: string, channelId: string, messageId?: string, direction?: number, topicId?: string) => {
-		const response = await mezon.client.listChannelMessages(mezon.session, clanId, channelId, messageId, direction, LIMIT_MESSAGE, topicId);
-		return { ...response, time: Date.now() };
-	},
-	{
-		promise: true,
-		maxAge: FETCH_MESSAGES_CACHED_TIME,
-		normalizer: (args) => {
-			// set default value
-			if (args[3] === undefined) {
-				args[3] = '';
+export const fetchMessagesCached = async (
+	getState: () => RootState,
+	ensuredMezon: MezonValueContext,
+	clanId: string,
+	channelId: string,
+	messageId?: string,
+	direction?: number,
+	topicId?: string,
+	noCache = false
+) => {
+	const state = getState();
+	const channelData = state[MESSAGES_FEATURE_KEY].channelMessages[channelId];
+	const apiKey = createApiKey('fetchMessages', clanId, channelId, messageId || '', direction || 1, topicId || '');
+	const shouldForceCall = shouldForceApiCall(apiKey, channelData?.cache, noCache);
+
+	if (!shouldForceCall && channelData?.ids?.length > 0) {
+		const cachedMessages = channelData.ids.map((id) => channelData.entities[id]).filter(Boolean);
+		return {
+			messages: cachedMessages,
+			fromCache: true
+		};
+	}
+
+	// const response = await fetchDataWithSocketFallback(
+	// 	ensuredMezon,
+	// 	{
+	// 		api_name: 'ListChannelMessages',
+	// 		list_channel_message_req: {
+	// 			channel_id: channelId,
+	// 			message_id: messageId,
+	// 			direction,
+	// 			clan_id: clanId,
+	// 			topic_id: topicId,
+	// 			limit: LIMIT_MESSAGE
+	// 		}
+	// 	},
+	// 	() => ensuredMezon.client.listChannelMessages(ensuredMezon.session, clanId, channelId, messageId, direction, LIMIT_MESSAGE, topicId),
+	// 	'channel_message_list'
+	// );
+
+	async function listChannelMessagesWithRetry(retryCount = 5) {
+		try {
+			return await ensuredMezon.client.listChannelMessages(
+				ensuredMezon.session,
+				clanId,
+				channelId,
+				messageId,
+				direction,
+				LIMIT_MESSAGE,
+				topicId
+			);
+		} catch (error) {
+			if (retryCount > 1) {
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+				return listChannelMessagesWithRetry(retryCount - 1);
+			} else {
+				throw error;
 			}
-			if (args[4] === undefined) {
-				args[4] = 1;
-			}
-			return args[1] + args[2] + args[3] + args[4] + args[5] + args[0].session.username;
 		}
 	}
-);
+
+	const response = await listChannelMessagesWithRetry();
+
+	markApiFirstCalled(apiKey);
+
+	return {
+		...response,
+		fromCache: false
+	};
+};
 
 type fetchMessageChannelPayload = {
 	clanId: string;
@@ -314,12 +365,18 @@ export const fetchMessages = createAsyncThunk(
 				currentUser = await thunkAPI.dispatch(accountActions.getUserProfile()).unwrap();
 			}
 
-			if (noCache) {
-				fetchMessagesCached.delete(mezon, clanId, channelId, messageId, direction, topicId);
-			}
-			const response = await fetchMessagesCached(mezon, clanId, channelId, messageId, direction, topicId);
+			const response = await fetchMessagesCached(
+				thunkAPI.getState as () => RootState,
+				mezon,
+				clanId,
+				channelId,
+				messageId,
+				direction,
+				topicId,
+				noCache
+			);
 
-			const fromCache = response.time && Date.now() - response.time >= 1000;
+			const fromCache = response.fromCache || false;
 
 			if (!response.messages) {
 				return {
@@ -362,7 +419,7 @@ export const fetchMessages = createAsyncThunk(
 				};
 			}
 
-			let messages = response.messages.map((item) => {
+			let messages = response.messages.map((item: ChannelMessage) => {
 				return mapMessageChannelToEntity(item, response.last_seen_message?.id);
 			});
 
@@ -564,20 +621,43 @@ type UpdateMessageArgs = {
 	messageId: string;
 	mode: number;
 	badge_count: number;
+	message_time?: number;
 };
 
 export const updateLastSeenMessage = createAsyncThunk(
 	'messages/updateLastSeenMessage',
-	async ({ clanId, channelId, messageId, mode, badge_count }: UpdateMessageArgs, thunkAPI) => {
+	async ({ clanId, channelId, messageId, mode, badge_count, message_time }: UpdateMessageArgs, thunkAPI) => {
 		try {
 			const mezon = await ensureSocket(getMezonCtx(thunkAPI));
 			const now = Math.floor(Date.now() / 1000);
-			await mezon.socketRef.current?.writeLastSeenMessage(clanId, channelId, mode, messageId, now, badge_count);
+
+			if (!mezon.socketRef.current?.isOpen()) return;
+
+			const state = thunkAPI.getState() as RootState;
+			const channelsLoadingStatus = selectLoadingStatus(state);
+			const clansLoadingStatus = selectClansLoadingStatus(state);
+			if (channelsLoadingStatus !== 'loaded' || clansLoadingStatus !== 'loaded') {
+				return;
+			}
+
+			const response = await mezon.socketRef.current?.writeLastSeenMessage(
+				clanId,
+				channelId,
+				mode,
+				messageId,
+				message_time ?? now,
+				badge_count
+			);
+
+			if (response?.channel_id !== channelId) {
+				return;
+			}
+
 			resetChannelBadgeCount(thunkAPI.dispatch, {
 				clanId,
 				channelId,
 				badgeCount: badge_count,
-				timestamp: now,
+				timestamp: message_time ?? now,
 				messageId
 			});
 		} catch (e) {
@@ -642,84 +722,72 @@ export const sendMessage = createAsyncThunk('messages/sendMessage', async (paylo
 	const checkEnableE2EE = checkE2EE(clanId, channelId, thunkAPI);
 
 	async function doSend() {
-		try {
-			const mezon = await ensureSocket(getMezonCtx(thunkAPI));
+		const mezon = await ensureSocket(getMezonCtx(thunkAPI));
 
-			const session = mezon.sessionRef.current;
-			const client = mezon.clientRef.current;
-			const socket = mezon.socketRef.current;
+		const session = mezon.sessionRef.current;
+		const client = mezon.clientRef.current;
+		const socket = mezon.socketRef.current;
 
-			if (!client || !session || !socket || !channelId) {
-				throw new Error('Client is not initialized');
-			}
-
-			let uploadedFiles: ApiMessageAttachment[] = [];
-			// Check if there are attachments
-			if (attachments && attachments.length > 0) {
-				if (isMobile) {
-					uploadedFiles = await getMobileUploadedAttachments({ attachments, channelId, clanId, client, session });
-				} else {
-					uploadedFiles = await getWebUploadedAttachments({ attachments, channelId, clanId, client, session });
-				}
-			}
-
-			if (checkEnableE2EE) {
-				const state = thunkAPI.getState() as RootState;
-				const currentDM = selectCurrentDM(state);
-				const keys = selectE2eeByUserIds(state, currentDM.user_id as string[]);
-
-				const missingKeys = keys.filter((entity) => !entity?.PK);
-				if (missingKeys.length > 0) {
-					throw new Error(
-						"Some participants haven't set up encryption yet. Please wait for them to complete setup before sending encrypted messages."
-					);
-				}
-
-				const pubKeys = await getPublicKeys(keys.filter((item) => item?.PK).map((item) => item.PK));
-				const otherUserPublicKeys: PublicKeyMaterial[] = pubKeys;
-				if (content?.t) {
-					const encryptedMessage = await MessageCrypt.encryptMessage(content.t, otherUserPublicKeys, senderId);
-					content = { ...content, t: encryptedMessage, e2ee: 1 };
-				}
-			}
-
-			const res = await socket.writeChatMessage(
-				clanId,
-				channelId,
-				mode,
-				isPublic,
-				content,
-				mentions,
-				uploadedFiles,
-				references,
-				anonymous,
-				mentionEveryone,
-				'',
-				code
-			);
-
-			return res;
-		} catch (error) {
-			console.error('Failed to send message:', error);
-			throw error;
+		if (!client || !session || !socket || !channelId) {
+			throw new Error('Client is not initialized');
 		}
+
+		let uploadedFiles: ApiMessageAttachment[] = [];
+		if (attachments && attachments.length > 0) {
+			if (isMobile) {
+				uploadedFiles = await getMobileUploadedAttachments({ attachments, channelId, clanId, client, session });
+			} else {
+				uploadedFiles = await getWebUploadedAttachments({ attachments, channelId, clanId, client, session });
+			}
+		}
+
+		if (checkEnableE2EE) {
+			const state = thunkAPI.getState() as RootState;
+			const currentDM = selectCurrentDM(state);
+			const keys = selectE2eeByUserIds(state, currentDM.user_id as string[]);
+
+			const missingKeys = keys.filter((entity) => !entity?.PK);
+			if (missingKeys.length > 0) {
+				throw new Error(
+					"Some participants haven't set up encryption yet. Please wait for them to complete setup before sending encrypted messages."
+				);
+			}
+
+			const pubKeys = await getPublicKeys(keys.filter((item) => item?.PK).map((item) => item.PK));
+			const otherUserPublicKeys: PublicKeyMaterial[] = pubKeys;
+			if (content?.t) {
+				const encryptedMessage = await MessageCrypt.encryptMessage(content.t, otherUserPublicKeys, senderId);
+				content = { ...content, t: encryptedMessage, e2ee: 1 };
+			}
+		}
+
+		const res = await socket.writeChatMessage(
+			clanId,
+			channelId,
+			mode,
+			isPublic,
+			content,
+			mentions,
+			uploadedFiles,
+			references,
+			anonymous,
+			mentionEveryone,
+			'',
+			code
+		);
+
+		return res;
 	}
 
-	async function sendWithRetry(retryCount: number, fakeMess: MessagesEntity): ReturnType<typeof doSend> {
+	async function sendWithRetry(retryCount: number): ReturnType<typeof doSend> {
 		try {
 			const res = await doSend();
 			return res;
 		} catch (error) {
 			if (retryCount > 0) {
-				const r = await sendWithRetry(retryCount - 1, fakeMess);
+				const r = await sendWithRetry(retryCount - 1);
 				return r;
 			} else {
-				thunkAPI.dispatch(
-					messagesActions.newMessage({
-						...fakeMess,
-						isSending: undefined
-					})
-				);
 				throw error;
 			}
 		}
@@ -753,23 +821,27 @@ export const sendMessage = createAsyncThunk('messages/sendMessage', async (paylo
 			thunkAPI.dispatch(messagesActions.addNewMessage(fakeMess));
 		}
 
-		const res = await sendWithRetry(1, fakeMess);
+		try {
+			const res = await sendWithRetry(1);
 
-		if (!isViewingOlderMessages) {
-			const timestamp = Date.now() / 1000;
-			thunkAPI.dispatch(channelMetaActions.setChannelLastSeenTimestamp({ channelId, timestamp }));
+			if (!isViewingOlderMessages) {
+				const timestamp = Date.now() / 1000;
+				thunkAPI.dispatch(channelMetaActions.setChannelLastSeenTimestamp({ channelId, timestamp }));
 
-			const mess = { ...fakeMess, id: res.message_id, create_time: res.create_time };
+				const mess = { ...fakeMess, id: res.message_id, create_time: res.create_time };
 
-			thunkAPI.dispatch(messagesActions.markAsSent({ id, mess }));
+				thunkAPI.dispatch(messagesActions.markAsSent({ id, mess }));
+			}
+		} catch (error) {
+			thunkAPI.dispatch(messagesActions.markAsError({ messageId: id, channelId }));
+			captureSentryError(error, 'messages/sendMessage');
+			throw error;
 		}
 	}
 
 	try {
 		await fakeItUntilYouMakeIt();
 	} catch (error) {
-		thunkAPI.dispatch(messagesActions.markAsError({ messageId: id, channelId }));
-		captureSentryError(error, 'messages/sendMessage');
 		return thunkAPI.rejectWithValue('Error sending message');
 	}
 });
@@ -808,6 +880,11 @@ export const sendEphemeralMessage = createAsyncThunk('messages/sendEphemeralMess
 			uploadedFiles = await getWebUploadedAttachments({ attachments, channelId, clanId, client, session });
 		}
 
+		let avatarToUse = avatar;
+		if (avatarToUse?.endsWith('croppedWEBP')) {
+			avatarToUse = undefined;
+		}
+
 		await socket.writeEphemeralMessage(
 			receiverId,
 			clanId,
@@ -820,7 +897,7 @@ export const sendEphemeralMessage = createAsyncThunk('messages/sendEphemeralMess
 			references,
 			false,
 			false,
-			undefined,
+			avatarToUse || undefined,
 			TypeMessage.Ephemeral
 		);
 
@@ -1056,15 +1133,15 @@ export const messagesSlice = createSlice({
 							const sendingMessages = state.channelMessages[topic_id]?.ids.filter(
 								(id) => state.channelMessages[topic_id].entities[id].isSending
 							);
-							if (sendingMessages && sendingMessages.length) {
-								for (const mid of sendingMessages) {
-									const message = state.channelMessages[topic_id].entities[mid];
-									if (message?.content?.t === newContent?.t && message?.channel_id === channelId) {
-										state.channelMessages[topic_id] = handleRemoveOneMessage({ state, channelId: topic_id, messageId: mid });
-										break;
-									}
-								}
-							}
+							// if (sendingMessages && sendingMessages.length) {
+							// 	for (const mid of sendingMessages) {
+							// 		const message = state.channelMessages[topic_id].entities[mid];
+							// 		if (message?.content?.t === newContent?.t && message?.channel_id === channelId) {
+							// 			state.channelMessages[topic_id] = handleRemoveOneMessage({ state, channelId: topic_id, messageId: mid });
+							// 			break;
+							// 		}
+							// 	}
+							// }
 						}
 					} else {
 						handleAddOneMessage({ state, channelId, adapterPayload: action.payload });
@@ -1318,6 +1395,12 @@ export const messagesSlice = createSlice({
 		},
 		resetLoading: (state) => {
 			state.loadingStatus = 'loaded';
+		},
+		invalidateCache: (state, action: PayloadAction<string>) => {
+			const channelId = action.payload;
+			if (state.channelMessages[channelId]?.cache) {
+				state.channelMessages[channelId].cache = undefined;
+			}
 		}
 	},
 	extraReducers: (builder) => {
@@ -1340,6 +1423,15 @@ export const messagesSlice = createSlice({
 					const isNew = channelId && action.payload.messages.some(({ id }) => !state.channelMessages?.[channelId]?.entities?.[id]);
 					if (!direction && (!isNew || !channelId) && (!isClearMessage || (isClearMessage && fromCache)) && !foundE2ee) {
 						return;
+					}
+
+					if (!fromCache && channelId) {
+						if (!state.channelMessages[channelId]) {
+							state.channelMessages[channelId] = channelMessagesAdapter.getInitialState({
+								id: channelId
+							});
+						}
+						state.channelMessages[channelId].cache = createCacheMetadata();
 					}
 
 					direction = direction || Direction_Mode.BEFORE_TIMESTAMP;

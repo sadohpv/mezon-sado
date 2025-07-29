@@ -1,7 +1,5 @@
-import { ActionEmitEvent } from '@mezon/mobile-components';
 import { baseColor, useTheme } from '@mezon/mobile-ui';
-import { FC, ReactNode, memo, useEffect, useRef } from 'react';
-import { DeviceEventEmitter } from 'react-native';
+import { FC, ReactNode, memo, useState } from 'react';
 import { Pressable, ScrollView } from 'react-native-gesture-handler';
 import { style } from '../../styles';
 
@@ -10,28 +8,21 @@ type CategoryListProps = {
 		name: string;
 		icon: ReactNode;
 	}>;
-	selectedCategory: string;
+	setSelectedCategory: (name: string) => void;
 };
 
-const CategoryList: FC<CategoryListProps> = ({ categoriesWithIcons, selectedCategory }) => {
+const CategoryList: FC<CategoryListProps> = ({ categoriesWithIcons, setSelectedCategory }) => {
 	const { themeValue } = useTheme();
+	const [currentCate, setCurrentCate] = useState<string>('');
 	const styles = style(themeValue);
-	const scrollViewRef = useRef<ScrollView>(null);
 
-	useEffect(() => {
-		if (!scrollViewRef?.current || !selectedCategory || categoriesWithIcons?.length === 0) return;
-		const selectedIndex = categoriesWithIcons?.findIndex((item) => item?.name === selectedCategory);
-		if (selectedIndex !== -1) {
-			scrollViewRef.current.scrollTo({
-				x: selectedIndex * 24,
-				animated: false
-			});
-		}
-	}, [selectedCategory, categoriesWithIcons]);
+	const onPress = (name) => {
+		setCurrentCate(name);
+		setSelectedCategory(name);
+	};
 
 	return (
 		<ScrollView
-			ref={scrollViewRef}
 			horizontal
 			showsHorizontalScrollIndicator={false}
 			style={styles.wrapperCateContainer}
@@ -41,10 +32,10 @@ const CategoryList: FC<CategoryListProps> = ({ categoriesWithIcons, selectedCate
 				categoriesWithIcons.map((item, index) => (
 					<Pressable
 						key={`${item.name}_cate_emoji${index}`}
-						onPress={() => DeviceEventEmitter.emit(ActionEmitEvent.ON_SCROLL_TO_CATEGORY_EMOJI, { name: item.name })}
+						onPress={() => onPress(item?.name)}
 						style={{
 							...styles.cateItem,
-							backgroundColor: item.name === selectedCategory ? baseColor.blurple : 'transparent'
+							backgroundColor: item.name === currentCate ? baseColor.blurple : 'transparent'
 						}}
 					>
 						{item.icon}

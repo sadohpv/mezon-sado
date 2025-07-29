@@ -1,12 +1,20 @@
 import { ArrowLeftIcon, FilterSearchIcon, IOption, IUerMention } from '@mezon/mobile-components';
 import { Colors, size, useTheme } from '@mezon/mobile-ui';
-import { DirectEntity } from '@mezon/store-mobile';
-import { IChannel } from '@mezon/utils';
 import { useNavigation } from '@react-navigation/native';
 import debounce from 'lodash.debounce';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NativeSyntheticEvent, Pressable, Text, TextInput, TextInputKeyPressEventData, TouchableOpacity, View } from 'react-native';
+import {
+	NativeSyntheticEvent,
+	Platform,
+	Pressable,
+	StatusBar,
+	Text,
+	TextInput,
+	TextInputKeyPressEventData,
+	TouchableOpacity,
+	View
+} from 'react-native';
 import Tooltip from 'react-native-walkthrough-tooltip';
 import MezonIconCDN from '../../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../constants/icon_cdn';
@@ -18,9 +26,10 @@ type InputSearchMessageChannelProps = {
 	onChangeOptionFilter: (option: IOption) => void;
 	inputValue: string;
 	userMention: IUerMention;
-	currentChannel: IChannel | DirectEntity;
 	optionFilter: IOption;
 	onKeyPress: (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => void;
+	nameChannel?: string;
+	isClearSearch?: boolean;
 };
 
 const InputSearchMessageChannel = ({
@@ -29,7 +38,9 @@ const InputSearchMessageChannel = ({
 	inputValue,
 	userMention,
 	optionFilter,
-	onKeyPress
+	onKeyPress,
+	nameChannel,
+	isClearSearch = false
 }: InputSearchMessageChannelProps) => {
 	const [textInput, setTextInput] = useState<string>(inputValue);
 	const [isVisibleToolTip, setIsVisibleToolTip] = useState<boolean>(false);
@@ -40,6 +51,18 @@ const InputSearchMessageChannel = ({
 	const { themeValue } = useTheme();
 	const styles = style(themeValue);
 
+	const shouldShowBadge = useMemo(
+		() => nameChannel || optionFilter?.title || userMention?.display,
+		[nameChannel, optionFilter?.title, userMention?.display]
+	);
+
+	const badgeText = useMemo(() => {
+		if (optionFilter?.title || userMention?.display) {
+			return `${optionFilter?.title || ''} ${userMention?.display || ''}`;
+		}
+		return `in: ${nameChannel || ''}`;
+	}, [optionFilter?.title, userMention?.display, nameChannel]);
+
 	const debouncedOnChangeText = useCallback(
 		debounce((e) => {
 			onChangeText(e);
@@ -47,19 +70,29 @@ const InputSearchMessageChannel = ({
 		[]
 	);
 
-	const handleTextChange = (e) => {
-		setTextInput(e);
-		debouncedOnChangeText(e);
-		if (!e?.length) {
-			onChangeOptionFilter(null);
-		}
-	};
+	const handleTextChange = useCallback(
+		(e) => {
+			setTextInput(e);
+			debouncedOnChangeText(e);
+			if (!e?.length) {
+				onChangeOptionFilter(null);
+			}
+		},
+		[debouncedOnChangeText, onChangeOptionFilter]
+	);
 
 	const clearTextInput = () => {
 		setTextInput('');
 		onChangeText('');
 		onChangeOptionFilter(null);
 	};
+
+	useEffect(() => {
+		if (isClearSearch) {
+			setTextInput('');
+			onChangeText('');
+		}
+	}, [isClearSearch, nameChannel]);
 
 	useEffect(() => {
 		if (optionFilter || userMention) {
@@ -83,18 +116,19 @@ const InputSearchMessageChannel = ({
 				<View style={{ marginRight: size.s_6 }}>
 					<MezonIconCDN icon={IconCDN.magnifyingIcon} width={20} height={20} color={Colors.textGray} />
 				</View>
-				{optionFilter?.title || userMention?.display ? (
+				{shouldShowBadge ? (
 					<View
 						style={{
 							backgroundColor: themeValue.badgeHighlight,
 							borderRadius: size.s_18,
 							paddingHorizontal: size.s_10,
 							paddingVertical: size.s_2,
-							maxWidth: 200
+							maxWidth: size.s_100,
+							marginRight: Platform.OS === 'ios' ? size.s_6 : 0
 						}}
 					>
 						<Text numberOfLines={1} style={styles.textBadgeHighLight}>
-							{`${optionFilter?.title || ''} ${userMention?.display || ''}`}
+							{badgeText}
 						</Text>
 					</View>
 				) : null}
@@ -104,7 +138,7 @@ const InputSearchMessageChannel = ({
 					value={textInput}
 					onChangeText={handleTextChange}
 					style={styles.input}
-					placeholderTextColor={themeValue.text}
+					placeholderTextColor={themeValue.textDisabled}
 					placeholder={optionFilter?.title || userMention?.display ? '' : t('search')}
 					autoFocus
 				></TextInput>
@@ -130,10 +164,12 @@ const InputSearchMessageChannel = ({
 						}}
 					/>
 				}
-				contentStyle={{ minWidth: 220, padding: 0, borderRadius: size.s_10, backgroundColor: Colors.primary }}
+				contentStyle={{ minWidth: size.s_220, padding: 0, borderRadius: size.s_10, backgroundColor: Colors.primary }}
 				arrowSize={{ width: 0, height: 0 }}
 				placement="bottom"
 				onClose={() => setIsVisibleToolTip(false)}
+				showChildInTooltip={false}
+				topAdjustment={Platform.OS === 'android' ? -StatusBar.currentHeight : 0}
 			>
 				<TouchableOpacity
 					activeOpacity={0.7}
@@ -152,4 +188,4 @@ const InputSearchMessageChannel = ({
 	);
 };
 
-export default InputSearchMessageChannel;
+export default memo(InputSearchMessageChannel);

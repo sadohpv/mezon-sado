@@ -20,7 +20,7 @@ interface IChatBoxProps {
 	directMessageId?: string;
 	canSendMessage?: boolean;
 	isPublic: boolean;
-	isFriendTargetBlocked?: boolean;
+	topicChannelId?: string;
 }
 
 export const ChatBoxMain = memo((props: IChatBoxProps) => {
@@ -44,6 +44,7 @@ export const ChatBoxMain = memo((props: IChatBoxProps) => {
 			if (value?.type === EMessageActionType.EditMessage) {
 				saveMessageActionNeedToResolve(value);
 			} else {
+				if (!value?.targetMessage?.channel_id) return;
 				resetCachedMessageActionNeedToResolve(value?.targetMessage?.channel_id);
 			}
 		});
@@ -68,6 +69,7 @@ export const ChatBoxMain = memo((props: IChatBoxProps) => {
 	};
 	const deleteMessageActionNeedToResolve = useCallback(() => {
 		setMessageActionNeedToResolve(null);
+		DeviceEventEmitter.emit(ActionEmitEvent.SHOW_KEYBOARD, null);
 	}, []);
 
 	return (
@@ -83,7 +85,7 @@ export const ChatBoxMain = memo((props: IChatBoxProps) => {
 			{messageActionNeedToResolve && (props?.canSendMessage || isDM) && (
 				<ActionMessageSelected messageActionNeedToResolve={messageActionNeedToResolve} onClose={deleteMessageActionNeedToResolve} />
 			)}
-			{(!props?.canSendMessage && !isDM) || (props?.isFriendTargetBlocked && props?.mode === ChannelStreamMode.STREAM_MODE_DM) ? (
+			{!props?.canSendMessage && !isDM ? (
 				<View
 					style={{
 						zIndex: 10,
@@ -107,9 +109,7 @@ export const ChatBoxMain = memo((props: IChatBoxProps) => {
 								textAlign: 'center'
 							}}
 						>
-							{props?.isFriendTargetBlocked && props?.mode === ChannelStreamMode.STREAM_MODE_DM
-								? t('blockedUserMessage')
-								: t('noSendMessagePermission')}
+							{t('noSendMessagePermission')}
 						</Text>
 					</View>
 				</View>
@@ -122,6 +122,7 @@ export const ChatBoxMain = memo((props: IChatBoxProps) => {
 					hiddenIcon={props?.hiddenIcon}
 					messageAction={props?.messageAction}
 					isPublic={props?.isPublic}
+					topicChannelId={props?.topicChannelId}
 				/>
 			)}
 		</View>

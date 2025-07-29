@@ -1,8 +1,8 @@
-import { Text, useColorsRoleById } from '@mezon/mobile-ui';
+import { useColorsRoleById, useTheme } from '@mezon/mobile-ui';
 import { DEFAULT_MESSAGE_CREATOR_NAME_DISPLAY_COLOR, convertTimeString } from '@mezon/utils';
 import { ChannelStreamMode } from 'mezon-js';
 import React, { useMemo } from 'react';
-import { TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import ImageNative from '../../../../../components/ImageNative';
 import { styles } from './styles';
 
@@ -17,11 +17,14 @@ interface IProps {
 }
 export const InfoUserMessage = ({ createTime, isShow, onPress, onLongPress, senderDisplayName, messageSenderId, mode }: IProps) => {
 	const userRolesClan = useColorsRoleById(messageSenderId);
+	const { themeValue } = useTheme();
 	const colorSenderName = useMemo(() => {
 		return mode === ChannelStreamMode.STREAM_MODE_CHANNEL || mode === ChannelStreamMode.STREAM_MODE_THREAD
-			? userRolesClan.highestPermissionRoleColor
+			? userRolesClan?.highestPermissionRoleColor?.startsWith('#')
+				? userRolesClan.highestPermissionRoleColor
+				: themeValue.text
 			: DEFAULT_MESSAGE_CREATOR_NAME_DISPLAY_COLOR;
-	}, [mode, userRolesClan.highestPermissionRoleColor]);
+	}, [mode, themeValue.text, userRolesClan.highestPermissionRoleColor]);
 
 	const imageRoleUrl = useMemo(() => {
 		return mode === ChannelStreamMode.STREAM_MODE_CHANNEL || mode === ChannelStreamMode.STREAM_MODE_THREAD
@@ -32,7 +35,11 @@ export const InfoUserMessage = ({ createTime, isShow, onPress, onLongPress, send
 	if (isShow) {
 		return (
 			<TouchableOpacity activeOpacity={0.8} onPress={onPress} onLongPress={onLongPress} style={styles.messageBoxTop}>
-				<Text style={{ ...styles.usernameMessageBox, color: colorSenderName }} numberOfLines={1} ellipsizeMode="tail">
+				<Text
+					style={{ ...styles.usernameMessageBox, color: colorSenderName?.startsWith?.('#') ? colorSenderName : themeValue.text }}
+					numberOfLines={1}
+					ellipsizeMode="tail"
+				>
 					{senderDisplayName}
 				</Text>
 				{!!imageRoleUrl && <ImageNative url={imageRoleUrl} style={styles.roleIcon} resizeMode={'contain'} />}

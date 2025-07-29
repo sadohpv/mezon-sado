@@ -1,7 +1,6 @@
 import { PaperclipIcon, STORAGE_MY_USER_ID, convertTimestampToTimeAgo, load } from '@mezon/mobile-components';
 import { Colors, useTheme } from '@mezon/mobile-ui';
-import { useAppDispatch, useAppSelector } from '@mezon/store';
-import { directActions, selectDirectById, selectIsUnreadDMById } from '@mezon/store-mobile';
+import { directActions, selectDirectById, selectIsUnreadDMById, useAppDispatch, useAppSelector } from '@mezon/store-mobile';
 import { IExtendedMessage, createImgproxyUrl } from '@mezon/utils';
 import { ChannelStreamMode, ChannelType, safeJSONParse } from 'mezon-js';
 import React, { useMemo } from 'react';
@@ -17,10 +16,10 @@ import { DmListItemLastMessage } from './DMListItemLastMessage';
 import { TypingDmItem } from './TypingDMItem';
 import { style } from './styles';
 
-export const DmListItem = React.memo((props: { id: string; navigation: any; onLongPress; onPress? }) => {
+export const DmListItem = React.memo((props: { id: string; navigation: any; onLongPress }) => {
 	const { themeValue } = useTheme();
 	const styles = style(themeValue);
-	const { id, navigation, onLongPress, onPress } = props;
+	const { id, navigation, onLongPress } = props;
 	const directMessage = useAppSelector((state) => selectDirectById(state, id));
 
 	const isUnReadChannel = useAppSelector((state) => selectIsUnreadDMById(state, directMessage?.id as string));
@@ -33,14 +32,12 @@ export const DmListItem = React.memo((props: { id: string; navigation: any; onLo
 	}, [directMessage?.last_sent_message?.sender_id]);
 
 	const redirectToMessageDetail = async () => {
-		await dispatch(directActions.setDmGroupCurrentId(directMessage?.id));
-		if (isTabletLandscape) {
-			onPress && onPress(directMessage?.id);
-		} else {
+		if (!isTabletLandscape) {
 			navigation.navigate(APP_SCREEN.MESSAGES.MESSAGE_DETAIL, {
 				directMessageId: directMessage?.id
 			});
 		}
+		dispatch(directActions.setDmGroupCurrentId(directMessage?.id));
 	};
 
 	const isTypeDMGroup = useMemo(() => {
@@ -146,7 +143,9 @@ export const DmListItem = React.memo((props: { id: string; navigation: any; onLo
 								{(
 									directMessage?.channel_label ||
 									(typeof directMessage?.usernames === 'string' ? directMessage?.usernames : directMessage?.usernames?.[0] || '')
-								)?.charAt?.(0)}
+								)
+									?.charAt?.(0)
+									?.toUpperCase()}
 							</Text>
 						</View>
 					)}

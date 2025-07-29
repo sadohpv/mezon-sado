@@ -2,9 +2,9 @@ import { debounce } from '@mezon/mobile-components';
 import { size, useTheme } from '@mezon/mobile-ui';
 import { selectAllUserClans, useAppSelector } from '@mezon/store-mobile';
 import { UsersClanEntity } from '@mezon/utils';
-import { FlashList } from '@shopify/flash-list';
 import { memo, useCallback, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { FlatList, View } from 'react-native';
 import MezonInput from '../../../../componentUI/MezonInput';
 import { normalizeString } from '../../../../utils/helpers';
 import { SeparatorWithLine } from '../../../Common';
@@ -17,6 +17,7 @@ interface IMemberListProps {
 export const MemberList = memo((props: IMemberListProps) => {
 	const { onMemberSelect } = props;
 	const { themeValue } = useTheme();
+	const { t } = useTranslation('clanMenu');
 	const [searchMemberText, setSearchMemberText] = useState('');
 	const debouncedSetSearchText = debounce((text) => setSearchMemberText(text), 300);
 	const clanUserList = useAppSelector(selectAllUserClans);
@@ -41,18 +42,29 @@ export const MemberList = memo((props: IMemberListProps) => {
 	);
 
 	return (
-		<View style={{ backgroundColor: themeValue.secondary, flex: 1 }}>
-			<View style={{ paddingHorizontal: size.s_12 }}>
-				<MezonInput onTextChange={debouncedSetSearchText} placeHolder={'Search Member'} />
+		<View style={{ backgroundColor: themeValue.primary, flex: 1 }}>
+			<View style={{ paddingHorizontal: size.s_12, marginTop: size.s_10 }}>
+				<MezonInput onTextChange={debouncedSetSearchText} placeHolder={t('common.searchMembers')} />
 			</View>
-			<FlashList
+			<FlatList
 				data={filteredMemberList}
-				keyExtractor={(item) => item.id}
+				keyExtractor={(item, index) => `${item?.id}_${index}_member`}
 				ItemSeparatorComponent={SeparatorWithLine}
 				renderItem={renderMemberItem}
-				estimatedItemSize={180}
-				removeClippedSubviews={true}
 				keyboardShouldPersistTaps={'handled'}
+				onEndReachedThreshold={0.1}
+				initialNumToRender={5}
+				maxToRenderPerBatch={5}
+				windowSize={15}
+				updateCellsBatchingPeriod={10}
+				decelerationRate={'fast'}
+				disableVirtualization={true}
+				removeClippedSubviews={true}
+				getItemLayout={(_, index) => ({
+					length: size.s_80,
+					offset: size.s_80 * index,
+					index
+				})}
 			/>
 		</View>
 	);

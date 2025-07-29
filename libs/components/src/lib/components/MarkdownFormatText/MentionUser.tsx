@@ -7,7 +7,15 @@ import {
 	selectMemberByUsername,
 	useAppSelector
 } from '@mezon/store';
-import { HEIGHT_PANEL_PROFILE, HEIGHT_PANEL_PROFILE_DM, TITLE_MENTION_HERE, getNameForPrioritize } from '@mezon/utils';
+import {
+	HEIGHT_PANEL_PROFILE,
+	HEIGHT_PANEL_PROFILE_DM,
+	TITLE_MENTION_HERE,
+	WIDTH_CHANNEL_LIST_BOX,
+	WIDTH_CLAN_SIDE_BAR,
+	WIDTH_PANEL_PROFILE,
+	getNameForPrioritize
+} from '@mezon/utils';
 import { ChannelStreamMode, ChannelType } from 'mezon-js';
 import { RefObject, memo, useCallback, useMemo, useState } from 'react';
 import { useModal } from 'react-modal-hook';
@@ -110,6 +118,7 @@ const MentionUser = ({
 			if (checkAnonymous) {
 				return;
 			}
+			const screenX = window.innerWidth;
 			const heightPanel =
 				mode === ChannelStreamMode.STREAM_MODE_CHANNEL || mode === ChannelStreamMode.STREAM_MODE_THREAD
 					? HEIGHT_PANEL_PROFILE
@@ -117,12 +126,22 @@ const MentionUser = ({
 			if (window.innerHeight - e.clientY > heightPanel) {
 				setPositionShortUser({
 					top: e.clientY,
-					left: 366 + e.currentTarget.offsetWidth
+					left:
+						e.clientX < WIDTH_CLAN_SIDE_BAR + WIDTH_CHANNEL_LIST_BOX + WIDTH_PANEL_PROFILE
+							? WIDTH_CLAN_SIDE_BAR + WIDTH_CHANNEL_LIST_BOX + e.currentTarget.offsetWidth + 24
+							: screenX < e.clientX + WIDTH_PANEL_PROFILE
+								? screenX - WIDTH_PANEL_PROFILE
+								: e.clientX
 				});
 			} else {
 				setPositionShortUser({
 					top: window.innerHeight - heightPanel,
-					left: 366 + e.currentTarget.offsetWidth
+					left:
+						e.clientX < WIDTH_CLAN_SIDE_BAR + WIDTH_CHANNEL_LIST_BOX + WIDTH_PANEL_PROFILE
+							? WIDTH_CLAN_SIDE_BAR + WIDTH_CHANNEL_LIST_BOX + e.currentTarget.offsetWidth + 24
+							: screenX < e.clientX + WIDTH_PANEL_PROFILE
+								? screenX - WIDTH_PANEL_PROFILE
+								: e.clientX
 				});
 			}
 			setIsShowPanelChannel(!showProfileUser);
@@ -134,14 +153,11 @@ const MentionUser = ({
 	return (
 		<>
 			{displayToken?.type === MentionType.ROLE_EXIST && (
-				<span className="font-medium px-[0.1rem] rounded-sm bg-[#E3F1E4] hover:bg-[#B1E0C7] text-[#0EB08C] dark:bg-[#3D4C43] dark:hover:bg-[#2D6457]">{`${displayToken.display}`}</span>
+				<span className="font-medium px-[0.1rem] rounded-sm color-mention-everyone-hover bg-mention-everyone-hover bg-mention-everyone color-mention-everyone   ">{`${displayToken.display}`}</span>
 			)}
 			{displayToken?.type === MentionType.HERE && (
 				<span
-					className={`font-medium px-0.1 rounded-sm 'cursor-text'
-					${isJumMessageEnabled ? 'cursor-pointer hover:!text-white' : 'hover:none'}
-
-					 whitespace-nowrap !text-[#3297ff]  dark:bg-[#3C4270] bg-[#D1E0FF]  ${isJumMessageEnabled ? 'hover:bg-[#5865F2]' : 'hover:none'}`}
+					className={`font-medium px-0.1 rounded-sm cursor-text whitespace-nowrap bg-mention color-mention   ${isJumMessageEnabled ? 'hover-mention underline decoration-1' : 'hover:none'}`}
 				>
 					{displayToken.display}
 				</span>
@@ -152,9 +168,7 @@ const MentionUser = ({
 					onMouseDown={!isJumMessageEnabled || isTokenClickAble ? (e) => handleOpenShortUser(e) : () => {}}
 					// eslint-disable-next-line @typescript-eslint/no-empty-function
 					style={{ textDecoration: 'none' }}
-					className={`outline-none font-medium px-0.1 rounded-sm
-				${isJumMessageEnabled ? 'cursor-pointer hover:!text-white' : 'hover:none'}
-				 whitespace-nowrap !text-[#3297ff]  dark:bg-[#3C4270] bg-[#D1E0FF]  ${isJumMessageEnabled ? 'hover:bg-[#5865F2]' : 'hover:none'}`}
+					className={`outline-none font-medium px-0.1 rounded-sm whitespace-nowrap bg-mention color-mention hover-mention   ${isJumMessageEnabled ? '' : 'hover:none'}`}
 				>
 					{displayToken.display}
 				</button>
@@ -175,10 +189,11 @@ const UserProfilePopup = ({ username, userID, channelId, mode, isDm, positionSho
 			mode === ChannelStreamMode.STREAM_MODE_CHANNEL || mode === ChannelStreamMode.STREAM_MODE_THREAD ? '' : '1'
 		)
 	)[0];
+
 	const userGetByNameOrId = useMemo(() => {
 		return getUserByUserId || getUserByUsername;
 	}, [getUserByUserId, getUserByUsername]);
-	const userId = userGetByNameOrId?.id;
+	const userId = userGetByNameOrId?.id ?? userID;
 
 	const currentChannel = useSelector(selectCurrentChannel);
 	const positionStyle = currentChannel?.type === ChannelType.CHANNEL_TYPE_STREAMING ? { right: `120px` } : { left: `${positionShortUser?.left}px` };
@@ -197,7 +212,7 @@ const UserProfilePopup = ({ username, userID, channelId, mode, isDm, positionSho
 
 	return (
 		<div
-			className={`fixed z-50 max-[480px]:!left-16 max-[700px]:!left-9 dark:bg-black bg-gray-200 w-[300px] max-w-[89vw] rounded-lg flex flex-col duration-300 ease-in-out animate-fly_in`}
+			className={`fixed z-50 max-[480px]:!left-16 max-[700px]:!left-9 bg-outside-footer w-[300px] max-w-[89vw] rounded-lg flex flex-col duration-300 ease-in-out animate-fly_in`}
 			style={{
 				top: `${positionShortUser?.top}px`,
 				...positionStyle

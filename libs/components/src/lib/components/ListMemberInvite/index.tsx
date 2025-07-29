@@ -9,7 +9,7 @@ import {
 	useAppSelector
 } from '@mezon/store';
 import { UsersClanEntity } from '@mezon/utils';
-import { ChangeEvent, useCallback, useMemo, useRef, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useThrottledCallback } from 'use-debounce';
 import ListMemberInviteItem from './ListMemberInviteItem';
@@ -27,7 +27,12 @@ const ListMemberInvite = (props: ModalParam) => {
 	const [sendIds, setSendIds] = useState<Record<string, boolean>>({});
 	const [filteredListDMBySearch, setFilterListSearch] = useState<DirectEntity[] | undefined>(listDMInvite);
 
-	const handleFilterListSearch = () => {
+	const handleFilterListSearch = useCallback(() => {
+		if (!searchTerm.trim()) {
+			setFilterListSearch(listDMInvite);
+			return;
+		}
+
 		const listSearch = listDMInvite?.filter((dmGroup) => {
 			if (dmGroup.usernames?.toString()?.toLowerCase().includes(searchTerm.toLowerCase())) {
 				return dmGroup.usernames?.toString()?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -35,7 +40,15 @@ const ListMemberInvite = (props: ModalParam) => {
 			return dmGroup.channel_label?.toLowerCase().includes(searchTerm.toLowerCase());
 		});
 		setFilterListSearch(listSearch);
-	};
+	}, [searchTerm, listDMInvite]);
+
+	useEffect(() => {
+		if (!searchTerm.trim()) {
+			setFilterListSearch(listDMInvite);
+		} else {
+			handleFilterListSearch();
+		}
+	}, [listDMInvite, searchTerm, handleFilterListSearch]);
 
 	const throttledSetSearchTerm = useThrottledCallback(handleFilterListSearch, 300);
 	const handleInputChange = useCallback(
@@ -91,16 +104,14 @@ const ListMemberInvite = (props: ModalParam) => {
 				value={searchTerm}
 				onChange={handleInputChange}
 				placeholder="Search for friends"
-				className="w-full h-10 mb-1 dark:bg-black bg-[#dfe0e2] rounded-[5px] px-[16px] py-[13px] text-[14px] outline-none"
+				className="w-full h-10 mb-1 bg-theme-input  border-theme-primary rounded-lg px-[16px] py-[13px] text-[14px] outline-none"
 			/>
-			<p className="ml-[0px] mt-1 mb-4 dark:text-[#AEAEAE] text-black text-[15px] cursor-default">
+			<p className="ml-[0px] mt-1 mb-4  text-[15px] cursor-default">
 				This channel is private, only select members and roles can view this channel.
 			</p>
 
-			<hr className="border-solid dark:border-borderDefault border-gray-200 rounded-t "></hr>
-			<div
-				className={`py-[10px] pr-2 cursor-default overflow-y-auto max-h-[200px] overflow-x-hidden ${appearanceTheme === 'light' ? 'customScrollLightMode' : 'thread-scroll'}`}
-			>
+			<hr className="border-t-theme-primary"></hr>
+			<div className={`py-[10px] cursor-default overflow-y-auto max-h-[200px] overflow-x-hidden thread-scroll `}>
 				{isInviteExternalCalling ? (
 					<div className="flex flex-col gap-3">
 						{filteredDataToInvite?.length > 0 ? (
@@ -140,7 +151,7 @@ const ListMemberInvite = (props: ModalParam) => {
 					</div>
 				)}
 			</div>
-			<hr className="border-solid dark:border-borderDefault border-gray-200 rounded-t " />
+			<hr className="border-t-theme-primary rounded-t " />
 		</>
 	);
 };

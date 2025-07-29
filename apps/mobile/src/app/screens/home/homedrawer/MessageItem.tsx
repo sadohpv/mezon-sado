@@ -1,12 +1,11 @@
 /* eslint-disable no-console */
 import { ActionEmitEvent, validLinkGoogleMapRegex, validLinkInviteRegex } from '@mezon/mobile-components';
-import { Text, useTheme } from '@mezon/mobile-ui';
+import { Colors, useTheme } from '@mezon/mobile-ui';
 import {
 	ChannelsEntity,
 	MessagesEntity,
 	getStore,
 	getStoreAsync,
-	selectBlockedUsersForMessage,
 	selectCurrentChannel,
 	selectDmGroupCurrent,
 	selectMemberClanByUserId2,
@@ -18,7 +17,7 @@ import { ChannelStreamMode, safeJSONParse } from 'mezon-js';
 import { ApiMessageMention } from 'mezon-js/api.gen';
 import React, { useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Animated, DeviceEventEmitter, PanResponder, Platform, Pressable, View } from 'react-native';
+import { Animated, DeviceEventEmitter, PanResponder, Platform, Pressable, Text, View } from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
 import MezonIconCDN from '../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../constants/icon_cdn';
@@ -35,7 +34,6 @@ import { ContainerMessageActionModal } from './components/MessageItemBS/Containe
 import { MessageAction } from './components/MessageReaction';
 import MessageSendTokenLog from './components/MessageSendTokenLog';
 import MessageTopic from './components/MessageTopic/MessageTopic';
-import MessageWithBlocked from './components/MessageWithBlocked';
 import { RenderMessageItemRef } from './components/RenderMessageItemRef';
 import { RenderTextMarkdownContent } from './components/RenderTextMarkdown';
 import UserProfile from './components/UserProfile';
@@ -163,7 +161,11 @@ const MessageItem = React.memo(
 			? message?.display_name || message?.username || ''
 			: message?.clan_nick || message?.display_name || message?.user?.username || (checkAnonymous ? 'Anonymous' : message?.username);
 
-		const usernameMessage = isDM ? message?.display_name || message?.user?.username : checkAnonymous ? 'Anonymous' : message?.user?.username;
+		const usernameMessage = isDM
+			? message?.display_name || message?.user?.username
+			: checkAnonymous
+				? 'Anonymous'
+				: message?.user?.username || message?.username;
 
 		const isSendTokenLog = message?.code === TypeMessage.SendToken;
 
@@ -238,29 +240,10 @@ const MessageItem = React.memo(
 				)
 			};
 			DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_BOTTOM_SHEET, { isDismiss: false, data });
+			DeviceEventEmitter.emit(ActionEmitEvent.ON_PANEL_KEYBOARD_BOTTOM_SHEET, {
+				isShow: false
+			});
 		}, [dispatch, message, mode, preventAction, senderDisplayName]);
-
-		const isMessageFromBlockedUser = useMemo(() => {
-			const store = getStore();
-			const blockedUsers = selectBlockedUsersForMessage(store.getState());
-			if (props.mode === ChannelStreamMode.STREAM_MODE_DM) return false;
-
-			const senderId = message?.sender_id;
-			if (!blockedUsers?.length || !userId || !senderId) return false;
-
-			return blockedUsers.some(
-				(blockedUser) =>
-					(blockedUser?.source_id === userId && blockedUser?.user?.id === senderId) ||
-					(blockedUser?.source_id === senderId && blockedUser?.user?.id === userId)
-			);
-		}, [props.mode, userId, message?.sender_id]);
-
-		if (isMessageFromBlockedUser) {
-			if (previousMessage?.sender_id !== message?.sender_id) {
-				return <MessageWithBlocked />;
-			}
-			return null;
-		}
 
 		// Message welcome
 		if (message?.sender_id === '0' && !message?.content?.t && message?.username?.toLowerCase() === 'system') {
@@ -329,7 +312,7 @@ const MessageItem = React.memo(
 						isEphemeralMessage && styles.ephemeralMessage
 					]}
 				>
-					{!isMessageSystem && (
+					{!isMessageSystem && !message?.content?.fwd && (
 						<RenderMessageItemRef
 							message={message}
 							preventAction={preventAction}
@@ -447,7 +430,7 @@ const MessageItem = React.memo(
 									)}
 								</View>
 							</View>
-							{message.isError && <Text style={{ color: 'red' }}>{t('unableSendMessage')}</Text>}
+							{message.isError && <Text style={{ color: Colors.textRed }}>{t('unableSendMessage')}</Text>}
 							{!preventAction && !!message?.reactions?.length ? (
 								<MessageAction
 									userId={userId}

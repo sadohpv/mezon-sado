@@ -18,10 +18,11 @@ import {
 	useAppDispatch,
 	useAppSelector
 } from '@mezon/store-mobile';
-import { Direction_Mode } from '@mezon/utils';
+import { Direction_Mode, LIMIT_MESSAGE } from '@mezon/utils';
+import { useNavigation } from '@react-navigation/native';
 import { ChannelStreamMode } from 'mezon-js';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DeviceEventEmitter, TouchableOpacity, View } from 'react-native';
+import { DeviceEventEmitter, Keyboard, TouchableOpacity, View } from 'react-native';
 import { useSelector } from 'react-redux';
 import MezonIconCDN from '../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../constants/icon_cdn';
@@ -62,6 +63,7 @@ const ChannelMessages = React.memo(({ channelId, topicId, clanId, mode, isDM, is
 	const flatListRef = useRef(null);
 	const timeOutRef = useRef(null);
 	const [isShowJumpToPresent, setIsShowJumpToPresent] = useState(false);
+	const navigation = useNavigation<any>();
 
 	const userId = useSelector(selectAllAccount)?.user?.id;
 
@@ -102,11 +104,13 @@ const ChannelMessages = React.memo(({ channelId, topicId, clanId, mode, isDM, is
 							viewOffset: 20
 						});
 					}, 100);
-					timeout = setTimeout(() => {
-						dispatch(messagesActions.setIdMessageToJump(null));
-					}, 2000);
 				}
 			}
+			timeout = setTimeout(() => {
+				dispatch(messagesActions.setIdMessageToJump(null));
+				isLoadMore.current[ELoadMoreDirection.top] = false;
+				isLoadMore.current[ELoadMoreDirection.bottom] = false;
+			}, 2000);
 		};
 
 		if (idMessageToJump?.id && !isLoadingJumpMessage) {
@@ -118,10 +122,23 @@ const ChannelMessages = React.memo(({ channelId, topicId, clanId, mode, isDM, is
 		};
 	}, [channelId, dispatch, idMessageToJump?.id, isLoadingJumpMessage, messages]);
 
+	useEffect(() => {
+		const sub = navigation.addListener('transitionStart', (e) => {
+			if (e?.data?.closing) {
+				Keyboard.dismiss();
+			}
+		});
+		return () => {
+			DeviceEventEmitter.emit(ActionEmitEvent.ON_PANEL_KEYBOARD_BOTTOM_SHEET, {
+				isShow: false
+			});
+			sub();
+		};
+	}, [navigation]);
+
 	const isCanLoadMore = useCallback(
 		async (direction: ELoadMoreDirection) => {
 			try {
-				setIsDisableLoadMore(true);
 				const store = getStore();
 				const isFetching = selectMessageIsLoading(store.getState());
 				if (isLoadMore?.current?.[direction] || isFetching) return false;
@@ -133,7 +150,7 @@ const ChannelMessages = React.memo(({ channelId, topicId, clanId, mode, isDM, is
 					const hasMoreTop = selectHasMoreMessageByChannelId2(store.getState(), channelId);
 					if (!hasMoreTop) return false;
 				}
-
+				setIsDisableLoadMore(true);
 				isLoadMore.current[direction] = true;
 				return true;
 			} catch (error) {
@@ -146,6 +163,7 @@ const ChannelMessages = React.memo(({ channelId, topicId, clanId, mode, isDM, is
 
 	const onLoadMore = useCallback(
 		async (direction: ELoadMoreDirection) => {
+			if (messages?.length < LIMIT_MESSAGE - 10 || idMessageToJump?.id) return;
 			try {
 				if (direction === ELoadMoreDirection.top) {
 					const canLoadMore = await isCanLoadMore(ELoadMoreDirection.top);
@@ -187,7 +205,7 @@ const ChannelMessages = React.memo(({ channelId, topicId, clanId, mode, isDM, is
 				console.error('Error in onLoadMore:', error);
 			}
 		},
-		[dispatch, clanId, topicChannelId, channelId, topicId, isCanLoadMore]
+		[messages?.length, idMessageToJump?.id, dispatch, clanId, topicChannelId, channelId, topicId, isCanLoadMore]
 	);
 
 	const renderItem = useCallback(

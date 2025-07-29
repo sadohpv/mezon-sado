@@ -21,7 +21,13 @@
       "topicDiscussion": "Thảo luận chủ đề",
       "resend": "Gửi lại",
       "buzz": "Buzz!!",
-      "markMessage": "Đánh dấu tin nhắn"
+      "markMessage": "Đánh dấu tin nhắn",
+      "allAlbums": "Tất cả album",
+      "linkOptions": "Tùy chọn liên kết",
+      "openLink": "Mở liên kết",
+      "copyLink": "Sao chép liên kết",
+      "shareLink": "Chia sẻ liên kết",
+      "copyLinkSuccess": "Đã sao chép liên kết vào clipboard"
   },
   "chatBox": {
       "replyingTo": "Đang trả lời",
@@ -32,12 +38,15 @@
     "selectUser": "Chọn người nhận tin nhắn riêng tư",
     "description": "Gửi tin nhắn riêng tư (chỉ người được chọn mới thấy)",
     "onlyVisibleToRecipient": "Chỉ người nhận mới thấy được"
-},
+  },
+  "pasteImage": "Dán Ảnh",
   "toast": {
       "copyText": "Đã sao chép văn bản tin nhắn",
       "attachmentIsLoading": "Tệp đính kèm đang tải, vui lòng đợi một chút",
       "pinMessage": "Tin nhắn đã được ghim",
-      "markMessage": "Đã đánh dấu tin nhắn"
+      "markMessage": "Đã đánh dấu tin nhắn",
+      "markMessageUnread": "Đã đánh dấu chưa đọc",
+      "markMessageUnreadFailed": "Không thể bỏ đọc"
   },
   "directMessage": {
       "you": "Bạn"
@@ -74,7 +83,9 @@
   },
   "tapToSeeAttachment": "Nhấn để xem tệp đính kèm",
   "findThePerfectReaction": "Tìm biểu cảm hoàn hảo",
+  "findThePerfectGif": "Tìm ảnh động hoàn hảo",
   "findThePerfectSticker": "Tìm nhãn dán hoàn hảo",
+  "searchResult": "Kết quả tìm kiếm",
   "pinMessage": "Ghim tin nhắn",
   "unpinMessage": "Bỏ ghim tin nhắn",
   "confirmPinMessage": "Bạn có chắc muốn ghim tin nhắn này không?",
@@ -83,7 +94,7 @@
   "unpinSuccess": "Bỏ ghim tin nhắn thành công",
   "Yes": "Có",
   "No": "Không",
-  "unableSendMessage": "Không thể gửi tin nhắn. Vui lòng thử lại.",
+  "unableSendMessage": "Không thể gửi tin nhắn. Ấn giữ để xem các tùy chọn.",
   "manage": {
       "edit": "Chỉnh sửa",
       "roles": "Vai trò",
@@ -115,5 +126,12 @@
     "confirmText": "Gửi",
     "description": "Nhập nội dung Buzz!!",
     "cancel": "Hủy"
-  }
+  },
+  "tab": {
+    "emoji": "Biểu cảm",
+    "gif": "GIFs",
+    "sticker": "Nhãn dán"
+  },
+  "turnOffAnonymous": "Tắt ẩn danh",
+  "turnOnAnonymous": "Bật ẩn danh"
 }

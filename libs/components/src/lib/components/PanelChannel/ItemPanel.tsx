@@ -5,7 +5,7 @@ type ItemPanelProps = {
 	dropdown?: string;
 	danger?: boolean;
 	type?: 'radio' | 'checkbox' | 'none';
-	onClick?: () => void;
+	onClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
 	notificationId?: number;
 	defaultNotifi?: boolean;
 	defaultChecked?: boolean;

@@ -6,11 +6,22 @@ type Place = 'bottom' | 'right' | 'left' | 'top' | `${'left' | 'right'}-${'botto
 type MenuTriggerProps = {
 	children: ReactNode;
 	className?: string;
+	dissmissOnClick?: boolean;
 };
-const Trigger = ({ children, className }: MenuTriggerProps) => {
-	const { triggerRef, toggleOpen } = useDropdownMenuContext();
+const Trigger = ({ children, className, dissmissOnClick = false }: MenuTriggerProps) => {
+	const { triggerRef, toggleOpen, openListMenu, trigger } = useDropdownMenuContext();
+	const handleClickTrigger = useCallback(() => {
+		if (!dissmissOnClick) {
+			toggleOpen();
+		}
+	}, [toggleOpen]);
+	const handleHoverTrigger = useCallback(() => {
+		if (trigger === 'hover') {
+			openListMenu();
+		}
+	}, [openListMenu]);
 	return (
-		<div ref={triggerRef} className={`flex-1 ${className}`} onClick={toggleOpen}>
+		<div ref={triggerRef} onMouseEnter={handleHoverTrigger} className={`flex-1 ${className}`} onClick={handleClickTrigger}>
 			{children}
 		</div>
 	);
@@ -22,6 +33,7 @@ interface MenuProps {
 	className?: string;
 	place?: Place;
 	holdOnClick?: boolean;
+	trigger?: 'hover' | 'click';
 }
 
 type DropdownMenuContextValue = {
@@ -30,6 +42,11 @@ type DropdownMenuContextValue = {
 	toggleOpen: () => void;
 	position?: React.CSSProperties;
 	holdOnClickHandle: () => void;
+	openListMenu: () => void;
+	containerRef: React.RefObject<HTMLDivElement>;
+	place: Place;
+	trigger?: 'hover' | 'click';
+	handleFloatingEnter: () => void;
 };
 
 const DropdownMenuContext = createContext<DropdownMenuContextValue | null>(null);
@@ -42,7 +59,7 @@ export function useDropdownMenuContext(): DropdownMenuContextValue {
 	return context;
 }
 
-const Dropdown = ({ children, className, place = 'bottom', holdOnClick = false }: MenuProps) => {
+const Dropdown = ({ children, className, place = 'bottom', holdOnClick = false, trigger = 'click' }: MenuProps) => {
 	const [open, setOpen] = useState(false);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const triggerRef = useRef<HTMLDivElement>(null);
@@ -52,6 +69,10 @@ const Dropdown = ({ children, className, place = 'bottom', holdOnClick = false }
 
 	const closeListMenu = useCallback(() => {
 		setOpen(false);
+	}, []);
+
+	const openListMenu = useCallback(() => {
+		setOpen(true);
 	}, []);
 
 	useEffect(() => {
@@ -90,16 +111,34 @@ const Dropdown = ({ children, className, place = 'bottom', holdOnClick = false }
 		if (holdOnClick) return;
 		closeListMenu();
 	};
+
+	const timeoutRef = useRef<number>();
+	const handleLeaveDropdown = useCallback(() => {
+		if (trigger === 'hover') {
+			timeoutRef.current = window.setTimeout(() => {
+				closeListMenu();
+			}, 200);
+		}
+	}, [closeListMenu]);
+
+	const handleFloatingEnter = () => {
+		clearTimeout(timeoutRef.current);
+	};
 	const value = {
 		open,
 		triggerRef,
 		toggleOpen,
 		position,
-		holdOnClickHandle
+		holdOnClickHandle,
+		containerRef,
+		openListMenu,
+		place,
+		trigger,
+		handleFloatingEnter
 	};
 	return (
 		<DropdownMenuContext.Provider value={value}>
-			<div ref={containerRef} className="relative flex items-center justify-center">
+			<div ref={containerRef} onMouseLeave={handleLeaveDropdown} className="relative flex items-center justify-center">
 				{children}
 			</div>
 		</DropdownMenuContext.Provider>

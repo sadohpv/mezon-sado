@@ -1,6 +1,6 @@
 import { useMemberContext } from '@mezon/core';
-import { Icons } from '@mezon/ui';
-import { Dropdown, Pagination } from 'flowbite-react';
+import { Icons, Menu } from '@mezon/ui';
+import { Pagination } from 'flowbite-react';
 import { useMemo, useState } from 'react';
 import MemberTopBar from './MemberTopBar';
 import TableMember from './TableMember';
@@ -32,35 +32,35 @@ const MemberClan = () => {
 				<div className="flex flex-row justify-between items-center px-4 h-[54px] my-2">
 					<div className={'flex flex-row items-center'}>
 						Show
-						<Dropdown
-							value={pageSize}
-							renderTrigger={() => (
+						<Menu>
+							<Menu.Trigger>
 								<div className={'flex flex-row items-center justify-center text-center rounded mx-1 px-3 w-12'}>
 									<span className="mr-1">{pageSize}</span>
 									<Icons.ArrowDown />
 								</div>
-							)}
-							label={''}
-						>
-							<Dropdown.Item
-								className={'dark:hover:bg-bgModifierHover hover:bg-bgModifierHoverLight'}
-								onClick={() => handleChangePageSize(10)}
-							>
-								10
-							</Dropdown.Item>
-							<Dropdown.Item
-								className={'dark:hover:bg-bgModifierHover hover:bg-bgModifierHoverLight'}
-								onClick={() => handleChangePageSize(50)}
-							>
-								50
-							</Dropdown.Item>
-							<Dropdown.Item
-								className={'dark:hover:bg-bgModifierHover hover:bg-bgModifierHoverLight'}
-								onClick={() => handleChangePageSize(100)}
-							>
-								100
-							</Dropdown.Item>
-						</Dropdown>
+							</Menu.Trigger>
+
+							<Menu.Content>
+								<Menu.Item
+									className={'dark:hover:bg-bgModifierHover hover:bg-bgModifierHoverLight'}
+									onClick={() => handleChangePageSize(10)}
+								>
+									10
+								</Menu.Item>
+								<Menu.Item
+									className={'dark:hover:bg-bgModifierHover hover:bg-bgModifierHoverLight'}
+									onClick={() => handleChangePageSize(50)}
+								>
+									50
+								</Menu.Item>
+								<Menu.Item
+									className={'dark:hover:bg-bgModifierHover hover:bg-bgModifierHoverLight'}
+									onClick={() => handleChangePageSize(100)}
+								>
+									100
+								</Menu.Item>
+							</Menu.Content>
+						</Menu>
 						members of {filteredMembers.length}
 					</div>
 					<Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />

@@ -13,10 +13,9 @@ import {
 	useAppDispatch,
 	useAppSelector
 } from '@mezon/store';
-import { Icons, Image, InputField, TextArea } from '@mezon/ui';
+import { Image, InputField, TextArea } from '@mezon/ui';
 import { checkIsThread, IChannel, ValidateSpecialCharacters, ValidateURL } from '@mezon/utils';
 import { unwrapResult } from '@reduxjs/toolkit';
-import { Dropdown } from 'flowbite-react';
 import { ModalSaveChanges } from 'libs/components/src/lib/components';
 import { ChannelType } from 'mezon-js';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -372,41 +371,7 @@ const BottomBlock = ({
 	return (
 		<div className="flex flex-col gap-10 mt-10 text-sm text-colorTextLightMode dark:text-textPrimary">
 			<hr className="border-t border-solid dark:border-borderDivider" />
-			<div className="flex flex-col gap-2">
-				<div className="text-xs font-bold text-theme-primary">SlowMode</div>
-				<div className="w-full relative">
-					<Dropdown
-						trigger="click"
-						renderTrigger={() => (
-							<div className="w-full h-[50px] rounded-md border-theme-primary text-theme-message bg-input-secondary flex flex-row px-3 justify-between items-center">
-								<p className="truncate max-w-[90%]">{slowModeDropdown}</p>
-								<div>
-									<Icons.ArrowDownFill />
-								</div>
-							</div>
-						)}
-						label=""
-						placement="bottom-end"
-						className={`bg-theme-setting-primary  border-none ml-[3px] py-[6px] px-[8px] max-h-[200px] overflow-y-scroll w-[200px] ${appearanceTheme === 'light' ? 'customSmallScrollLightMode' : 'thread-scroll'} z-20`}
-					>
-						{slowModeValues.map((item, index) => {
-							return (
-								<Dropdown.Item
-									onClick={() => setSlowDropdown(item)}
-									key={index}
-									children={item}
-									className="truncate text-theme-primary bg-theme-setting-nav"
-								/>
-							);
-						})}
-					</Dropdown>
-				</div>
-				<div className="text-theme-primary">
-					Members will be restricted to sending one message and creating one thread per specified interval, unless they have 'Manage
-					Channel' or 'Manage Messages' permissions.
-				</div>
-			</div>
-			<hr className="border-t border-solid dark:border-borderDivider" />
+
 			<div className="flex flex-col gap-3">
 				<div className="flex justify-between">
 					<div className="font-semibold text-base text-theme-primary">Age-Restricted Channel</div>
@@ -458,40 +423,6 @@ const BottomBlock = ({
 				</>
 			)} */}
 
-			<hr className="border-t border-solid dark:border-borderDivider" />
-			<div className="flex flex-col gap-2">
-				<div className="text-xs font-bold text-theme-primary">Hide After Inactivity</div>
-				<div className="w-full relative">
-					<Dropdown
-						trigger="click"
-						renderTrigger={() => (
-							<div className="w-full h-[50px] rounded-md border-theme-primary text-theme-message bg-input-secondary flex flex-row px-3 justify-between items-center">
-								<p className="truncate max-w-[90%]">{hideTimeDropdown}</p>
-								<div>
-									<Icons.ArrowDownFill />
-								</div>
-							</div>
-						)}
-						label=""
-						placement="bottom-end"
-						className={`bg-theme-setting-primary  border-none ml-[3px] py-[6px] px-[8px] max-h-[200px] overflow-y-scroll w-[200px] ${appearanceTheme === 'light' ? 'customSmallScrollLightMode' : 'thread-scroll'} z-20`}
-					>
-						{hideInactivityTimes.map((item, index) => {
-							return (
-								<Dropdown.Item
-									onClick={() => setHideTimeDropdown(item)}
-									key={index}
-									children={item}
-									className="truncate !bg-var(--theme-setting-nav)"
-								/>
-							);
-						})}
-					</Dropdown>
-				</div>
-				<div className="text-theme-primary">
-					New threads will not show in the channel list after being inactive for the specified duration.
-				</div>
-			</div>
 			<div className="flex justify-center pb-10">
 				<Image src={logoImgSrc} width={48} height={48} className="object-cover w-[280px]" />
 			</div>

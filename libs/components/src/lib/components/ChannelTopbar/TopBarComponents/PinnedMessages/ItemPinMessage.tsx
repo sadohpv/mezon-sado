@@ -116,7 +116,14 @@ const ItemPinMessage = (props: ItemPinMessageProps) => {
 					</div>
 					{!!pinMessageAttachments?.length &&
 						(() => {
-							const attachment = decodeAttachments(pinMessageAttachments);
+							let attachment;
+							try {
+								attachment = decodeAttachments(pinMessageAttachments);
+							} catch (e) {
+								attachment = {
+									attachments: []
+								};
+							}
 							const enhancedAttachment = {
 								...attachment,
 								create_time: validCreateTime,

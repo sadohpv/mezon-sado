@@ -273,7 +273,7 @@ export const MessageLine = ({
 						mention={element.username}
 					/>
 				);
-			} else if (element.kindOf === ETokenMessage.MENTIONS && element.role_id) {
+			} else if (element.kindOf === ETokenMessage.MENTIONS && element.role_id && element.role_id !== '0') {
 				formattedContent.push(
 					<RoleMentionContent
 						key={`mentionRole-${s}-${messageId}`}

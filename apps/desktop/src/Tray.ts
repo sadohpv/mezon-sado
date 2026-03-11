@@ -1,12 +1,17 @@
 import type { MenuItem, MenuItemConstructorOptions } from 'electron';
 import { Menu, Notification, Tray, app, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
-import { join } from 'path';
+import fs from 'fs';
+import path, { join } from 'path';
 import App from './app/app';
 
 const assetsDir = join(__dirname, 'assets', 'desktop-taskbar.ico');
 const assetsDirLinux = join(__dirname, 'assets', 'trayicon-linux.png');
-
+function logToFile(message: string) {
+	const logPath = path.join(app.getPath('userData'), 'squirrel.log'); // tạo file trong userData
+	const timestamp = new Date().toISOString();
+	fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`);
+}
 export class TrayIcon {
 	private tray?: Tray;
 	private images: Record<string, Electron.NativeImage>;
@@ -70,6 +75,7 @@ export class TrayIcon {
 					type: 'normal',
 					click() {
 						isQuitting = true;
+						logToFile('label Quit Mezon');
 						App.application.quit();
 					}
 				}

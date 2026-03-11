@@ -4,9 +4,15 @@
 
 import { spawn } from 'child_process';
 import { app } from 'electron';
-import { basename, join, resolve } from 'path';
+import fs from 'fs';
+import path, { basename, join, resolve } from 'path';
 import { environment } from '../../environments/environment';
 
+function logToFile(message: string) {
+	const logPath = path.join(app.getPath('userData'), 'squirrel.log'); // tạo file trong userData
+	const timestamp = new Date().toISOString();
+	fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`);
+}
 export default class SquirrelEvents {
 	private static isAppFirstRun = false;
 
@@ -14,7 +20,7 @@ export default class SquirrelEvents {
 	private static appFolder = resolve(process.execPath, '..');
 	private static appRootFolder = resolve(SquirrelEvents.appFolder, '..');
 	private static updateExe = resolve(join(SquirrelEvents.appRootFolder, 'Update.exe'));
-	private static exeName = resolve(join(SquirrelEvents.appRootFolder, 'app-' + environment.version, basename(process.execPath)));
+	private static exeName = resolve(join(SquirrelEvents.appRootFolder, `app-${environment.version}`, basename(process.execPath)));
 
 	static handleEvents(): boolean {
 		if (process.argv.length === 1 || process.platform !== 'win32') {
@@ -36,6 +42,7 @@ export default class SquirrelEvents {
 				return true;
 
 			case '--squirrel-obsolete':
+				logToFile('--squirrel-obsolete');
 				app.quit();
 				return true;
 
@@ -54,9 +61,17 @@ export default class SquirrelEvents {
 
 	private static update(args: Array<string>) {
 		try {
-			spawn(SquirrelEvents.updateExe, args, { detached: true }).on('close', () => setTimeout(app.quit, 1000));
+			spawn(SquirrelEvents.updateExe, args, { detached: true }).on('close', () =>
+				setTimeout(() => {
+					logToFile('--SquirrelEvents.updateExe');
+					app.quit();
+				}, 1000)
+			);
 		} catch (error) {
-			setTimeout(app.quit, 1000);
+			setTimeout(() => {
+				logToFile('--private static update');
+				app.quit();
+			}, 1000);
 		}
 	}
 }

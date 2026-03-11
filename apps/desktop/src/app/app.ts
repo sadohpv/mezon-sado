@@ -2,8 +2,9 @@ import type { MenuItemConstructorOptions } from 'electron';
 import { BrowserWindow, Menu, Notification, app, dialog, ipcMain, powerMonitor, screen, shell } from 'electron';
 import log from 'electron-log/main';
 import { autoUpdater } from 'electron-updater';
+import fs from 'fs';
 import activeWindows from 'mezon-active-windows';
-import { join } from 'path';
+import path, { join } from 'path';
 import ua from 'universal-analytics';
 import tray from '../Tray';
 import { EActivityCoding, EActivityGaming, EActivityMusic } from './activities';
@@ -13,7 +14,6 @@ import { ACTIVE_WINDOW, FINISH_RENDER, LOCK_SCREEN, TRIGGER_SHORTCUT, UNLOCK_SCR
 import setupRequestPermission from './requestPermission';
 import { initBadge } from './services/badge';
 import { forceQuit } from './utils';
-
 const isQuitting = false;
 const ACTIVITY_CODING = Object.values(EActivityCoding);
 const ACTIVITY_MUSIC = Object.values(EActivityMusic);
@@ -32,6 +32,12 @@ dialog.showOpenDialog = function (...args) {
 	log.error('[Disabled Dialog] showOpenDialog called:', args);
 	return Promise.resolve({ canceled: true, filePaths: [] });
 };
+
+function logToFile(message: string) {
+	const logPath = path.join(app.getPath('userData'), 'squirrel.log'); // tạo file trong userData
+	const timestamp = new Date().toISOString();
+	fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`);
+}
 
 export default class App {
 	static mainWindow: Electron.BrowserWindow;
@@ -63,6 +69,7 @@ export default class App {
 
 	private static onWindowAllClosed() {
 		App.cleanupIntervals();
+		logToFile('private static onWindowAllClosed');
 		App.application.quit();
 	}
 
@@ -301,6 +308,7 @@ export default class App {
 				}
 			});
 		} else {
+			logToFile('gotTheLock Failed');
 			App.application.quit();
 			return;
 		}

@@ -2,6 +2,7 @@ import { BrowserWindow, app, clipboard, desktopCapturer, dialog, ipcMain, native
 import log from 'electron-log/main';
 import Store from 'electron-store';
 import fs from 'fs';
+import path from 'path';
 import App from './app/app';
 import {
 	ACTION_SHOW_IMAGE,
@@ -65,12 +66,20 @@ export type ImageWindowProps = {
 
 app.setAppUserModelId('app.mezon.ai');
 
+function logToFile(message: string) {
+	const logPath = path.join(app.getPath('userData'), 'squirrel.log'); // tạo file trong userData
+	const timestamp = new Date().toISOString();
+	fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`);
+}
+
 export default class Main {
 	static initialize() {
 		if (SquirrelEvents.handleEvents()) {
 			// squirrel event handled (except first run event) and app will exit in 1000ms, so don't do anything else
+			logToFile('Squirrel event handled. App will quit in 1000ms.');
 			app.quit();
 		}
+		logToFile('No squirrel event, continue initializing app...');
 	}
 
 	static bootstrapApp() {

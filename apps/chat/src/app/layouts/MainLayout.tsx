@@ -105,6 +105,10 @@ const GlobalEventListener = () => {
 				electronBridge?.setBadgeCount(null);
 				return;
 			}
+			if (notificationCount) {
+				console.warn('allNotificationReplyMentionAllClan: ', allNotificationReplyMentionAllClan);
+				console.warn('totalUnreadMessages: ', totalUnreadMessages);
+			}
 			electronBridge?.setBadgeCount(notificationCount);
 		} else {
 			document.title = notificationCount > 0 ? `(${displayCountBrowser}) Mezon` : 'Mezon';

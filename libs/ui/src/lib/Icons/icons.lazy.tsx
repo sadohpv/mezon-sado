@@ -110,7 +110,6 @@ export const IconReplyMessDeleted = createLazyIconWithFallback(() => import('./i
 export const IconReplyMessDeletedWeb = createLazyIconWithFallback(() => import('./icons'), 'IconReplyMessDeletedWeb');
 export const IConShareEventLocation = createLazyIconWithFallback(() => import('./icons'), 'IConShareEventLocation');
 export const IconShareEventVoice = createLazyIconWithFallback(() => import('./icons'), 'IconShareEventVoice');
-export const IconShareContact = createLazyIconWithFallback(() => import('./icons'), 'IconShareContact');
 export const WebhooksIcon = createLazyIconWithFallback(() => import('./icons'), 'WebhooksIcon');
 export const ClockIcon = createLazyIconWithFallback(() => import('./icons'), 'ClockIcon');
 export const OwnerIcon = createLazyIconWithFallback(() => import('./icons'), 'OwnerIcon');

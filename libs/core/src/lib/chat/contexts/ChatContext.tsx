@@ -553,7 +553,8 @@ const ChatContextProvider: React.FC<ChatContextProviderProps> = ({ children, isM
 									channelId: message.channel_id,
 									timestamp,
 									senderId: message.sender_id,
-									clanId: message.clan_id || '0'
+									clanId: message.clan_id || '0',
+									messageId: message.id
 								})
 							);
 						}
@@ -606,7 +607,8 @@ const ChatContextProvider: React.FC<ChatContextProviderProps> = ({ children, isM
 								channelId: message.channel_id,
 								timestamp,
 								senderId: message.sender_id,
-								clanId: message.clan_id || '0'
+								clanId: message.clan_id || '0',
+								messageId: message.id
 							})
 						);
 					}

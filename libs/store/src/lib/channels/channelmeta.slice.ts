@@ -16,6 +16,7 @@ export interface ChannelMetaEntity {
 	isMute: boolean;
 	senderId: string;
 	lastSeenMessageId?: string;
+	lastSentMessageId?: string;
 	count_mess_unread?: number;
 	last_sent_message?: ApiChannelMessageHeader;
 }
@@ -31,6 +32,7 @@ function extractChannelMeta(channel: ApiChannelDescription & { id?: string }, cl
 			Number.isNaN(channel.last_sent_message?.timestamp_seconds) || !channel.last_sent_message?.timestamp_seconds
 				? 0
 				: channel.last_sent_message?.timestamp_seconds,
+		lastSentMessageId: channel.last_sent_message?.id || '',
 		clanId: (clanId || channel.clan_id) ?? '0',
 		isMute: channel.is_mute ?? false,
 		senderId: channel.last_sent_message?.sender_id ?? '0',
@@ -72,12 +74,16 @@ export const channelMetaSlice = createSlice({
 	reducers: {
 		add: channelMetaAdapter.addOne,
 		upsertOne: channelMetaAdapter.upsertOne,
-		setChannelLastSentTimestamp: (state, action: PayloadAction<{ channelId: string; timestamp: number; senderId: string; clanId: string }>) => {
+		setChannelLastSentTimestamp: (
+			state,
+			action: PayloadAction<{ channelId: string; timestamp: number; senderId: string; clanId: string; messageId: string }>
+		) => {
 			if (action.payload.clanId === '0') {
 				dmMetaAdapter.updateOne(state.dmEntities, {
 					id: action.payload.channelId,
 					changes: {
-						lastSentTimestamp: Math.floor(action.payload.timestamp)
+						lastSentTimestamp: Math.floor(action.payload.timestamp),
+						lastSeenMessageId: action.payload.messageId
 					}
 				});
 				return;
@@ -85,7 +91,8 @@ export const channelMetaSlice = createSlice({
 			channelMetaAdapter.updateOne(state, {
 				id: action.payload.channelId,
 				changes: {
-					lastSentTimestamp: Math.floor(action.payload.timestamp)
+					lastSentTimestamp: Math.floor(action.payload.timestamp),
+					lastSeenMessageId: action.payload.messageId
 				}
 			});
 		},
@@ -411,3 +418,10 @@ export const selectIsUnreadDMById = createSelector([getDmMetadataState, (_state,
 export const selectDmLastSentMessage = createSelector([getDmMetadataState, (_state, channelId: string) => channelId], (dmState, channelId) => {
 	return dmState?.entities?.[channelId]?.last_sent_message;
 });
+
+export const selectLastMessageIdByChannel = createSelector(
+	[getChannelMetaState, getDmMetadataState, (_state, _, channelId: string) => channelId],
+	(channelState, dmState, channelId) => {
+		return selectById(channelState, channelId).lastSentMessageId || dmState.entities?.[channelId].lastSentMessageId;
+	}
+);

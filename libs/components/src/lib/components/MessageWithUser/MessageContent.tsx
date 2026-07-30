@@ -1,6 +1,7 @@
 import {
 	badgeService,
 	EventName,
+	isSendingMessage,
 	selectIsShowCreateThread,
 	selectIsShowCreateTopic,
 	selectMemberClanByUserId,
@@ -46,7 +47,9 @@ type IMessageContentProps = {
 	onContextMenu?: (event: React.MouseEvent<HTMLElement>) => void;
 };
 
-const MessageContent = ({ message, mode, isSearchMessage, isEphemeral, isSending, onContextMenu }: IMessageContentProps) => {
+const MessageContent = ({ message, mode, isSearchMessage, isEphemeral, onContextMenu }: IMessageContentProps) => {
+	const isSending = useSelector((state) => isSendingMessage(state, message.channel_id, message.id));
+
 	const lines = message?.content?.t;
 	const contentUpdatedMention = addMention(message.content, message?.mentions as any);
 	const isOnlyContainEmoji = isValidEmojiData(contentUpdatedMention);

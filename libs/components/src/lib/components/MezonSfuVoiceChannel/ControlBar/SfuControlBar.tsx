@@ -1,5 +1,6 @@
 import { generateE2eId } from '@mezon/utils';
 import { useState } from 'react';
+import type { ScreenShareMode } from '../MyVideoConference/screenShareQuality';
 import { RecordingControl } from '../Recording/RecordingControl';
 import { SfuAgentControl } from './AgentControl';
 import { CameraControl } from './CameraControl';
@@ -26,6 +27,9 @@ interface SfuControlBarProps {
 	microphoneEnabled: boolean;
 	cameraEnabled: boolean;
 	screenSharing: boolean;
+	screenShareMode: ScreenShareMode;
+	changingScreenShareMode: boolean;
+	onScreenShareModeChange: (mode: ScreenShareMode) => void;
 	isGridView: boolean;
 	showEmojiPanel: boolean;
 	showSoundPanel: boolean;
@@ -67,6 +71,9 @@ export const SfuControlBar = ({
 	microphoneEnabled,
 	cameraEnabled,
 	screenSharing,
+	screenShareMode,
+	changingScreenShareMode,
+	onScreenShareModeChange,
 	isGridView,
 	showEmojiPanel,
 	showSoundPanel,
@@ -125,7 +132,9 @@ export const SfuControlBar = ({
 						</div>
 					</>
 				)}
-				<RecordingControl channelLabel={channelLabel} />
+				<div className="max-md:hidden">
+					<RecordingControl channelLabel={channelLabel} />
+				</div>
 			</div>
 			<div className="flex items-center justify-center gap-3 max-md:gap-2" data-e2e={generateE2eId('clan_page.screen.voice_room.control_bar')}>
 				{joinRole === 'audience' && (
@@ -163,7 +172,13 @@ export const SfuControlBar = ({
 				)}
 				{joinRole === 'speaker' && (
 					<div className="max-md:hidden">
-						<ScreenShareControl active={screenSharing} onToggle={onScreenShareToggle} />
+						<ScreenShareControl
+							active={screenSharing}
+							onToggle={onScreenShareToggle}
+							mode={screenShareMode}
+							changingMode={changingScreenShareMode}
+							onModeChange={onScreenShareModeChange}
+						/>
 					</div>
 				)}
 				<SfuAgentControl roomId={roomId} isExternalCalling={isExternalCalling} />
